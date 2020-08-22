@@ -2,6 +2,12 @@
 #include "src/surrender.h"
 #include <complex.h>
 
+/* This is the code we use to test if things are working. It may look kinda
+ * ugly. Please excuse the mess, we change this literally all the time and why
+ * bother keeping it pretty if you're going to end up destroying the whole
+ * thing at random?
+ */
+
 #if defined(__i386__)
 
 static __inline__ unsigned long long rdtsc(void)
