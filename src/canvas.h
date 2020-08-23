@@ -210,4 +210,34 @@
      * Enable vertical to flip vertically. Leave disabled for horizontal.
      */
     void SR_InplaceFlip(SR_Canvas *src, bool vertical);
+
+    /* Convert a source canvas (e.g an image loaded from disk) to a texture
+     * atlas of a given tile width/height.
+     * 
+     * Mallocs a new atlas and mallocs a copy of the entire source canvas.
+     * Destroy the source canvas after you're done.
+     */
+    SR_Atlas SR_CanvToAltas(
+        SR_Canvas *src,
+        unsigned short tile_w,
+        unsigned short tile_h);
+
+    /* Return a canvas stored at the given column and row in the texture atlas.
+     * Col/row is modulo'd by column count and row count, so that's why you can
+     * never end up with an out of bounds texture.
+     */
+    SR_Canvas SR_GetAtlasCanv(
+        SR_Atlas *atlas,
+        unsigned char col,
+        unsigned char row);
+
+    /* Destroy the texture atlas, including all of the textures stored within
+     * it. Set keep_contents to true to destroy only the atlas and keep the
+     * canvases inside of it in memory.
+     */
+    void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_contents);
+
+    // Abstraction macros, if you really want to use them
+    #define SR_GetAtlasRows(atlas) (atlas->rows)
+    #define SR_GetAtlasColumns(atlas) (atlas->columns)
 #endif
