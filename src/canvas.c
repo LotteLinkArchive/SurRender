@@ -460,3 +460,67 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
         }
     }
 }
+
+SR_Atlas SR_CanvToAltas(
+    SR_Canvas *src,
+    unsigned short tile_w,
+    unsigned short tile_h)
+{
+    register unsigned char x, y;
+    SR_Atlas temp;
+    SR_Canvas temp_c;
+
+    temp.tile_width = tile_w;
+    temp.tile_height = tile_h;
+
+    temp.columns = (unsigned char)ceilf((float)src->width / tile_w);
+    temp.rows = (unsigned char)ceilf((float)src->height / tile_h);
+
+    temp.canvies = malloc(temp.columns * temp.rows * sizeof(SR_Canvas));
+
+    if (!temp.canvies) goto sratc_exit;
+
+    for (x = 0; x < temp.columns; x++) {
+        for (y = 0; y < temp.rows; y++) {
+            temp_c = SR_CopyCanvas(src,
+                (unsigned short)x * tile_w,
+                (unsigned short)y * tile_h,
+                tile_w, tile_h);
+            temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
+        }
+    }
+
+sratc_exit:
+    return temp;
+}
+
+SR_Canvas SR_GetAtlasCanv(
+    SR_Atlas *atlas,
+    unsigned char col,
+    unsigned char row)
+{
+    if (!atlas->canvies)
+    {
+        SR_Canvas temp;
+        temp.width = atlas->tile_width;
+        temp.height = atlas->tile_height;
+        temp.ratio = (float)temp.width / temp.height;
+        temp.pixels = NULL;
+        return temp;
+    }
+
+    return atlas->canvies[(
+            (unsigned short)atlas->columns *
+            (row % atlas->rows)
+        ) + (col % atlas->columns)];
+}
+
+void SR_DestroyAtlas(SR_Atlas *atlas)
+{
+    if (!atlas->canvies) return;
+
+    for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++)
+        SR_DestroyCanvas(&atlas->canvies[i]);
+
+    free(atlas->canvies);
+}
