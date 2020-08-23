@@ -165,7 +165,7 @@ SR_Canvas SR_BilinearCanvasScale(
             SR_CanvasGetPixel(src, gxi + 1, gyi + 1));
 
         uint32_t result = 0;
-        for (uint8_t i = 0; i < 4; i++) {
+        for (uint8_t i = 0; i < 4; i++)
             result |= (uint8_t)blerp(
                 getByte(c00, i),
                 getByte(c10, i),
@@ -173,7 +173,6 @@ SR_Canvas SR_BilinearCanvasScale(
                 getByte(c11, i),
                 gx - gxi, gy - gyi
             ) << (8 * i);
-        }
 
         SR_CanvasSetPixel(&dest, x, y, SR_WholetoRGBA(result));
     }
