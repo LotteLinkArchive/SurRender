@@ -19,6 +19,8 @@
     typedef struct SR_Atlas {
         unsigned char columns;
         unsigned char rows;
+        unsigned short tile_width;
+        unsigned short tile_height;
         SR_Canvas *canvies;
     } SR_Atlas;
 
