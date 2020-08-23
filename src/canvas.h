@@ -92,7 +92,7 @@
         if (!canvas->pixels) return;
 
         canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->width, y % canvas->height) ] = pixel;
+            canvas, x % canvas->width, y % canvas->height)] = pixel;
     }
 
     // Get a pixel in the canvas
