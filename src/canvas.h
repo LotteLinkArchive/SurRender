@@ -3,8 +3,7 @@
     #include "glbl.h"
     #include "colours.h"
 
-    /*
-     * This is a canvas, which contains a width and height in pixels, an aspect
+    /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
      */
     typedef struct SR_Canvas {
@@ -13,6 +12,15 @@
         float ratio;
         SR_RGBAPixel *pixels;
     } SR_Canvas;
+
+    /* This is a texture atlas, essentially an array of 2D canvases. 
+     * See the functions below to learn how to create one for yourself.
+     */
+    typedef struct SR_Atlas {
+        unsigned char columns;
+        unsigned char rows;
+        SR_Canvas *canvies;
+    } SR_Atlas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
      * data which you will probably need in order to "place" the canvas
