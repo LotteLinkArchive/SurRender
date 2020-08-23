@@ -515,12 +515,13 @@ SR_Canvas SR_GetAtlasCanv(
         ) + (col % atlas->columns)];
 }
 
-void SR_DestroyAtlas(SR_Atlas *atlas)
+void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_contents)
 {
     if (!atlas->canvies) return;
 
-    for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++)
-        SR_DestroyCanvas(&atlas->canvies[i]);
+    if (!keep_contents)
+        for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++)
+            SR_DestroyCanvas(&atlas->canvies[i]);
 
     free(atlas->canvies);
 }
