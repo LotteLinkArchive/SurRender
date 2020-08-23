@@ -110,7 +110,7 @@ void SR_MergeCanvasIntoCanvas(
     register char mode)
 {
     register unsigned short x, y;
-    for (x = 0; x < src_canvas->width; x++) {
+    for (x = 0; x < src_canvas->width; x++)
         for (y = 0; y < src_canvas->height; y++) {
             // Uses the function for blending individual RGBA values.
             SR_CanvasSetPixel(
@@ -126,7 +126,6 @@ void SR_MergeCanvasIntoCanvas(
                     alpha_modifier,
                     mode));
         }
-    }
 }
 
 // Private
@@ -364,7 +363,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 
     // This is the accurate rotation system, but it only works on degrees
     // where x % 90 == 0
-    for (xC = 0; xC < w; xC++) {
+    for (xC = 0; xC < w; xC++)
         for (yC = 0; yC < h; yC++) {
             pixbuf = SR_CanvasGetPixel(src, xC, yC);
             switch (((unsigned short)degrees) % 360) {
@@ -388,7 +387,6 @@ SR_OffsetCanvas SR_CanvasRotate(
                 ny - final.offset_y,
                 pixbuf);
         }
-    }
 
     goto srcvrot_finished;
 
@@ -401,7 +399,7 @@ srcvrot_mismatch:
     half_w = w >> 1;
     half_h = h >> 1;
 
-    for (x = -half_w; x < half_w; x++) {
+    for (x = -half_w; x < half_w; x++)
         for (y = -half_h; y < half_h; y++) {
             nxM = (x * the_cos + y * the_sin + half_w) - final.offset_x;
             nyM = (y * the_cos - x * the_sin + half_h) - final.offset_y;
@@ -411,7 +409,6 @@ srcvrot_mismatch:
             SR_CanvasSetPixel(&final.canvas, nxM    , nyM    , pixel);
             SR_CanvasSetPixel(&final.canvas, nxM - 1, nyM    , pixel);
         }
-    }
 
 srcvrot_finished:
     if (safety_padding && autocrop) {
@@ -448,7 +445,7 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
     wmax = vertical ? src->width : src->width >> 1;
     hmax = vertical ? src->height >> 1 : src->height;
 
-    for (x = 0; x < wmax; x++) {
+    for (x = 0; x < wmax; x++)
         for (y = 0; y < hmax; y++) {
             xdest = vertical ? x : (src->width  - 1) - x;
             ydest = vertical ? (src->height - 1) - y : y;
@@ -458,7 +455,6 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
             SR_CanvasSetPixel(src, xdest, ydest, pixel);
             SR_CanvasSetPixel(src, x, y, temp);
         }
-    }
 }
 
 SR_Atlas SR_CanvToAltas(
@@ -480,7 +476,7 @@ SR_Atlas SR_CanvToAltas(
 
     if (!temp.canvies) goto sratc_exit;
 
-    for (x = 0; x < temp.columns; x++) {
+    for (x = 0; x < temp.columns; x++)
         for (y = 0; y < temp.rows; y++) {
             temp_c = SR_CopyCanvas(src,
                 (unsigned short)x * tile_w,
@@ -488,7 +484,6 @@ SR_Atlas SR_CanvToAltas(
                 tile_w, tile_h);
             temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
         }
-    }
 
 sratc_exit:
     return temp;
