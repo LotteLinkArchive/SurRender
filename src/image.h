@@ -6,12 +6,13 @@
 
     #define STB_IMAGE_IMPLEMENTATION
     #define STBI_ONLY_BMP
+    #define STBI_NO_LINEAR
     #include "stb_image.h"
 
     // Load a Radix memory blob as an image and convert it into a canvas
     SR_Canvas SR_ImageMemToCanvas(RadixMemoryBlob image);
 
-    // Load an image file into a new canvas
+    // Load an image file into a new canvas (currently only supports BMP)
     SR_Canvas SR_ImageFileToCanvas(char *filename);
 
     // WARNING: All created canvases must be freed as they are mallocated.
