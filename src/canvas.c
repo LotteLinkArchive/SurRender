@@ -170,9 +170,8 @@ void SR_MergeCanvasIntoCanvas(
 // Private
 #define getByte(value, n) (value >> (n * 8) & 0xFF)
 #define lerp(s, e, t) ((s) + ((e) - (s)) * (t))
-static inline __attribute__((always_inline)) float blerp(
-    float c00, float c10, float c01, float c11, float tx, float ty)
-    { return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty); }
+#define blerp(c00, c10, c01, c11, tx, ty) \
+(lerp(lerp((c00), (c10), (tx)), lerp((c01), (c11), (tx)), (ty)))
 
 // Private
 SR_Canvas SR_BilinearCanvasScale(
