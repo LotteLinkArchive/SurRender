@@ -126,8 +126,8 @@ SR_Canvas SR_RefCanv(
     bool allow_destroy_host)
 {
     SR_Canvas temp = {
-        .xclip  = xclip,
-        .yclip  = yclip,
+        .xclip  = xclip % src->width,
+        .yclip  = yclip % src->height,
         .hflags = 0b00000001,
         .width  = width,
         .height = height,
