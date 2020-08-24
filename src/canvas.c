@@ -510,6 +510,7 @@ SR_Atlas SR_CanvToAltas(
     temp.columns = (unsigned char)ceilf((float)src->width / tile_w);
     temp.rows = (unsigned char)ceilf((float)src->height / tile_h);
 
+    temp.src = src;
     temp.canvies = malloc(temp.columns * temp.rows * sizeof(SR_Canvas));
 
     if (!temp.canvies) goto sratc_exit;
@@ -559,12 +560,11 @@ void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_source)
 {
     if (!atlas->canvies) return;
 
-    for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++) {
-        // Force host destruction
-        if (i == 0 && !keep_source) atlas->canvies[i].hflags &= 0b11111101;
+    if (!keep_source && atlas->src->pixels)
+        SR_DestroyCanvas(atlas->src);
 
+    for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++)
         SR_DestroyCanvas(&atlas->canvies[i]);
-    }
 
     free(atlas->canvies);
     atlas->canvies = NULL;

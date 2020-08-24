@@ -35,6 +35,7 @@
      * See the functions below to learn how to create one for yourself.
      */
     typedef struct SR_Atlas {
+        SR_Canvas *src;
         unsigned char columns;
         unsigned char rows;
         unsigned short tile_width;
