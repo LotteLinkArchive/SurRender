@@ -255,8 +255,10 @@
     /* Convert a source canvas (e.g an image loaded from disk) to a texture
      * atlas of a given tile width/height.
      * 
-     * Mallocs a new atlas and mallocs a copy of the entire source canvas.
-     * Destroy the source canvas after you're done.
+     * Mallocs a new atlas, but **absorbs** the source canvas. In other words,
+     * DO NOT DESTROY THE SOURCE CANVAS. Call SR_DestroyAtlas on the ATLAS
+     * intead, which will destroy the source canvas for you in a controlled
+     * environment. Ya feel me?
      */
     SR_Atlas SR_CanvToAltas(
         SR_Canvas *src,
@@ -273,10 +275,9 @@
         unsigned char row);
 
     /* Destroy the texture atlas, including all of the textures stored within
-     * it. Set keep_contents to true to destroy only the atlas and keep the
-     * canvases inside of it in memory.
+     * it (because it destroys the source canvas unless told to do otherwise)
      */
-    void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_contents);
+    void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_source);
 
     // Abstraction macros, if you really want to use them
     #define SR_GetAtlasRows(atlas) (atlas->rows)
