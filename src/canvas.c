@@ -72,7 +72,9 @@ unsigned short SR_CanvasGetHeight(SR_Canvas *canvas)
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
     if (canvas->pixels && !(canvas->hflags & 0b00000010))
-        free(canvas->pixels); canvas->pixels = NULL;
+        free(canvas->pixels);
+    
+    canvas->pixels = NULL;
 }
 
 // Check if a canvas has been destroyed - i.e it's a null pointer
