@@ -105,7 +105,7 @@
     (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
     // Set the value of a pixel in the canvas
-    __inline__ void SR_CanvasSetPixel(
+    inline __attribute__((always_inline)) void SR_CanvasSetPixel(
         register SR_Canvas *canvas,
         register unsigned short x,
         register unsigned short y,
@@ -118,7 +118,7 @@
     }
 
     // Get a pixel in the canvas
-    __inline__ SR_RGBAPixel SR_CanvasGetPixel(
+    inline __attribute__((always_inline)) SR_RGBAPixel SR_CanvasGetPixel(
         SR_Canvas *canvas,
         register unsigned short x,
         register unsigned short y)
