@@ -452,14 +452,14 @@ srcvrot_finished:
         // but saves memory.
         unsigned short * bbox = SR_NZBoundingBox(&final.canvas);
         if (bbox) {
-            temp = SR_CopyCanvas(
+            temp = SR_RefCanv(
                 &final.canvas,
                 bbox[0],
                 bbox[1],
                 (bbox[2] - bbox[0]) + 1,
-                (bbox[3] - bbox[1]) + 1);
+                (bbox[3] - bbox[1]) + 1,
+                true);
 
-            SR_DestroyCanvas(&final.canvas);
             final.canvas = temp;
 
             final.offset_x += bbox[0];
