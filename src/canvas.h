@@ -137,7 +137,7 @@
     void SR_DestroyCanvas(SR_Canvas *canvas);
 
     // Check if the canvas has been successfully allocated
-    bool SR_CanvasIsValid(SR_Canvas *canvas);
+    #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels));
 
     /* Malloc a new canvas of given size and start copying every pixel from the
      * specified old canvas to the new one, starting at the given position.

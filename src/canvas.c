@@ -70,10 +70,6 @@ void SR_DestroyCanvas(SR_Canvas *canvas)
     canvas->pixels = NULL;
 }
 
-// Check if a canvas has been destroyed - i.e it's a null pointer
-bool SR_CanvasIsValid(SR_Canvas *canvas)
-    { return BOOLIFY(canvas->pixels); }
-
 SR_Canvas SR_CopyCanvas(
     register SR_Canvas *canvas,
     register unsigned short copy_start_x,
