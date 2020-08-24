@@ -13,7 +13,7 @@ uint8_t * LD_Blob_STBI(RadixMemoryBlob image, int *x, int *y, int *n)
 
 SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
 {
-    SR_Canvas temp;
+    SR_Canvas temp = {};
     temp.pixels = image;
 
     if (!temp.pixels) goto ldstbicanv_missing;

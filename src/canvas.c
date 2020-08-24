@@ -43,8 +43,8 @@ void SR_ZeroFill(SR_Canvas *canvas)
 
 SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
 {
-    SR_Canvas temp;
-    temp.pixels = NULL; // Just for realloc's sake.
+    SR_Canvas temp = {};
+    temp.pixels = NULL; // Just for realloc's sake. Can NULL be non-zero?
 
     // As long as we set pixels to NULL, ResizeCanvas can be used here too.
     SR_ResizeCanvas(&temp, width, height);
@@ -495,7 +495,7 @@ SR_Canvas SR_GetAtlasCanv(
 {
     if (!atlas->canvies)
     {
-        SR_Canvas temp;
+        SR_Canvas temp = {};
         temp.width = atlas->tile_width;
         temp.height = atlas->tile_height;
         temp.ratio = (float)temp.width / temp.height;
