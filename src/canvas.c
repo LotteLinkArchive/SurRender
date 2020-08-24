@@ -112,6 +112,29 @@ srcc_finish:
     return new;
 }
 
+SR_Canvas SR_RefCanv(
+    SR_Canvas *src,
+    unsigned short xclip,
+    unsigned short yclip,
+    unsigned short width,
+    unsigned short height,
+    bool allow_destroy_host)
+{
+    SR_Canvas temp = {
+        .xclip  = xclip,
+        .yclip  = yclip,
+        .hflags = 0b00000001,
+        .width  = width,
+        .height = height,
+        .ratio  = (float)width / height,
+        .pixels = src->pixels
+    };
+    
+    if (!allow_destroy_host) temp.hflags |= 0b00000010;
+
+    return temp;
+}
+
 void SR_MergeCanvasIntoCanvas(
     register SR_Canvas *dest_canvas,
     register SR_Canvas *src_canvas,

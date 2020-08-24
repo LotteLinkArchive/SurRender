@@ -152,6 +152,27 @@
         unsigned short new_width,
         unsigned short new_height);
 
+    /* Takes pretty much the same arguments as SR_CopyCanvas, except it doesn't
+     * malloc a new canvas - it returns essentially a segment of the original
+     * canvas instead. This doesn't allocate any memory, but it relies on the
+     * host canvas still existing in memory.
+     * 
+     * If you destroy the host canvas, the reference canvas becomes a dangling
+     * pointer. If you destroy the reference canvas, the host canvas becomes
+     * a dangling pointer. See the problem here?
+     * 
+     * The allow_destroy_host allows you to destroy the reference canvas, which
+     * actually just destroys the host canvas, but will turn any references to
+     * the host canvas into a dangling pointer, so be careful.
+     */
+    SR_Canvas SR_RefCanv(
+        SR_Canvas *src,
+        unsigned short xclip,
+        unsigned short yclip,
+        unsigned short width,
+        unsigned short height,
+        bool allow_destroy_host);
+
     /* Allows you to blend/merge a source canvas on to a destination canvas.
      * Can be pasted at a given offset (paste_start_x and paste_start_y)
      * Uses alpha modifier and mode values just like SR_RGBABlender. Usually
