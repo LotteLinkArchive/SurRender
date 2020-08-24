@@ -36,6 +36,15 @@ void SR_ZeroFill(SR_Canvas *canvas)
 {
     if (!canvas->pixels) return;
 
+    if (canvas->xclip || canvas->yclip) {
+        register unsigned short x, y;
+        for (x = 0; x < canvas->width; x++)
+            for (y = 0; y < canvas->height; y++)
+                SR_CanvasSetPixel(&canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
+
+        return;
+    }
+
     // Fill the canvas with zeros, resulting in RGBA(0, 0, 0, 0).
     // To fill with something like RGBA(0, 0, 0, 255), see shapes.h.
     memset(canvas->pixels, 0, SR_CanvasCalcSize(canvas));
@@ -83,7 +92,9 @@ SR_Canvas SR_CopyCanvas(
     if (copy_start_x == 0 &&
         copy_start_y == 0 &&
         new.width    == canvas->width &&
-        new.height   == canvas->height) {
+        new.height   == canvas->height &&
+        !canvas->xclip &&
+        !canvas->yclip) {
         // Super fast memcpy when possible, hopefully.
         memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
 

@@ -94,11 +94,13 @@
      * recommended to use this yourself.
      */
     #define SR_CanvasCalcPosition(canvas, x, y) \
-    ((((unsigned int)((canvas)->width)) * (y)) + (x))
+    ((((unsigned int)((canvas)->width)) *       \
+    (((canvas)->yclip) + (y))) + (((canvas)->xclip) + (x)))
 
     // Check if a pixel is out of bounds
-    #define SR_CanvasCheckOutOfBounds(canvas, x, y) \
-    (((x) >= (canvas)->width || (y) >= (canvas)->height) ? true : false)
+    #define SR_CanvasCheckOutOfBounds(canvas, x, y)   \
+    (((((canvas)->xclip) + (x)) >= (canvas)->width || \
+    (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
     // Set the value of a pixel in the canvas
     __inline__ void SR_CanvasSetPixel(
