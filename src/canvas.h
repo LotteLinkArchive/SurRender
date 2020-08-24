@@ -3,14 +3,32 @@
     #include "glbl.h"
     #include "colours.h"
 
+    // Force little endian, hopefully
+    #pragma scalar_storage_order little-endian
+
     /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
      */
     typedef struct SR_Canvas {
+        // General public properties
         unsigned short width;
         unsigned short height;
         float ratio;
+
+        // Pointer to an array of pixels
         SR_RGBAPixel *pixels;
+        
+        // Coordinates to clip off, starting from 0, 0 (allow full canvas)
+        unsigned short xclip;
+        unsigned short yclip;
+
+        /* Internal canvas properties - FORMAT:
+         * 0 b 0 0 0 0 0 0 0 0
+         *     X X X X X | | \- Canvas is a reference to another canvas' pixels
+         *               | \--- Canvas is indestructible
+         *               \----- Canvas is important             [UNIMPLEMENTED]
+         */
+        uint8_t hflags;
     } SR_Canvas;
 
     /* This is a texture atlas, essentially an array of 2D canvases. 
