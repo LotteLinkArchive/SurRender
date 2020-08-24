@@ -516,10 +516,10 @@ SR_Atlas SR_CanvToAltas(
 
     for (x = 0; x < temp.columns; x++)
         for (y = 0; y < temp.rows; y++) {
-            temp_c = SR_CopyCanvas(src,
+            temp_c = SR_RefCanv(src,
                 (unsigned short)x * tile_w,
                 (unsigned short)y * tile_h,
-                tile_w, tile_h);
+                tile_w, tile_h, false);
             temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
         }
 
@@ -527,25 +527,32 @@ sratc_exit:
     return temp;
 }
 
-SR_Canvas SR_GetAtlasCanv(
+SR_Canvas * SR_GetAtlasCanv(
     SR_Atlas *atlas,
     unsigned char col,
     unsigned char row)
 {
     if (!atlas->canvies)
     {
-        SR_Canvas temp = {};
+        static SR_Canvas temp = {};
+
+        // Initialize to zero each time just in case
+        temp.hflags = 0;
+        temp.xclip = 0;
+        temp.yclip = 0;
+
+        // Null settings
         temp.width = atlas->tile_width;
         temp.height = atlas->tile_height;
         temp.ratio = (float)temp.width / temp.height;
         temp.pixels = NULL;
-        return temp;
+        return &temp;
     }
 
-    return atlas->canvies[(
+    return &(atlas->canvies[(
             (unsigned short)atlas->columns *
             (row % atlas->rows)
-        ) + (col % atlas->columns)];
+        ) + (col % atlas->columns)]);
 }
 
 void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_contents)

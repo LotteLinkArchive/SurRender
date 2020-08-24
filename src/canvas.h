@@ -267,7 +267,7 @@
      * Col/row is modulo'd by column count and row count, so that's why you can
      * never end up with an out of bounds texture.
      */
-    SR_Canvas SR_GetAtlasCanv(
+    SR_Canvas * SR_GetAtlasCanv(
         SR_Atlas *atlas,
         unsigned char col,
         unsigned char row);
