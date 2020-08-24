@@ -61,13 +61,6 @@ SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
     return temp;
 }
 
-// Just some abstraction functions - may be macro'd later.
-unsigned short SR_CanvasGetWidth(SR_Canvas *canvas)
-    { return canvas->width; }
-
-unsigned short SR_CanvasGetHeight(SR_Canvas *canvas)
-    { return canvas->height; }
-
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {

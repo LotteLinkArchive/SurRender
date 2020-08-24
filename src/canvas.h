@@ -77,11 +77,9 @@
     // Create a new canvas of the given size
     SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height);
 
-    // Get the width of a canvas
-    unsigned short SR_CanvasGetWidth(SR_Canvas *canvas);
-
-    // Get the height of a canvas
-    unsigned short SR_CanvasGetHeight(SR_Canvas *canvas);
+    // Get the height and width of a canvas
+    #define SR_CanvasGetWidth(canvas) ((canvas)->width)
+    #define SR_CanvasGetHeight(canvas) ((canvas)->height)
 
     /* Calculate the "real" size (in memory) of a canvas - not really
      * recommended to use this yourself.
