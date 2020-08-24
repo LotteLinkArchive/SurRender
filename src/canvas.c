@@ -518,4 +518,5 @@ void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_contents)
             SR_DestroyCanvas(&atlas->canvies[i]);
 
     free(atlas->canvies);
+    atlas->canvies = NULL;
 }
