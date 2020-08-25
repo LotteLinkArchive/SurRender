@@ -110,7 +110,7 @@ int main(void)
 #endif
 
     if (!(win = SDL_CreateWindow(
-        "SurRender your secrets to zoidberg",
+        "SurRender your mysteries to zoidberg",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         canvy.width,
