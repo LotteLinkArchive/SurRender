@@ -14,7 +14,7 @@ void SR_DrawLine(
     int dx, dy, err, sx, sy, e2;
     dx =  abs (x1 - x0), sx = x0 < x1 ? 1 : -1;
     dy = -abs (y1 - y0), sy = y0 < y1 ? 1 : -1; 
-    err = dx + dy, e2;
+    err = dx + dy;
 
     for (;;) {
         SR_CanvasSetPixel(canvas, x0, y0, colour);
@@ -162,7 +162,7 @@ void SR_DrawCirc(
             xp *= xp;
             yp = yy - y;
             yp *= yp;
-            
+
             if (xp + yp <= r) SR_CanvasSetPixel(canvas, xx, yy, colour);
         }
 }

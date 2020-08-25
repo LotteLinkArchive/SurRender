@@ -393,6 +393,7 @@ SR_OffsetCanvas SR_CanvasRotate(
     for (xC = 0; xC < w; xC++)
         for (yC = 0; yC < h; yC++) {
             pixbuf = SR_CanvasGetPixel(src, xC, yC);
+            nx = 0, ny = 0;
             switch (((unsigned short)degrees) % 360) {
             case 90:
                 nx = (h - 1) - yC;

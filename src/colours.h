@@ -104,7 +104,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     register char mode)
 {
 #if (defined(__x86_64__) || defined(__i386__)) && \
-(defined(__GNUC__) || defined(__clang__))
+(defined(__GNUC__) || defined(__clang__)) && defined(SURCL_ASM_BLEND)
     uint32_t final;
     __asm__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
