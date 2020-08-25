@@ -135,6 +135,23 @@
 
             break;
         case SR_BLEND_ADDITIVE:
+            #if defined(__x86_64__) && \
+            (defined(__GNUC__) || defined(__clang__))
+            __asm__ __volatile__ (
+                "movl $0xFF000000, %%edx;" // Prepare to get MSBs of base
+                "andw %%bx, %%dx;"         // Drop MSBs of base into final
+                "movb %%al, %%dl;"         // Move 8 LSBs of top to rC LSBs
+                "addb %%bl, %%dl;"         // Add red into final
+                "movb %%ah, %%dh;"
+                "addb %%bh, %%dh;"         // Add greens into final
+                "andl $0x00FF0000, %%eax;"
+                "andl $0x00FF0000, %%ebx;" // Filter for only blue
+                "addl %%eax, %%ebx;"       // Add blue together
+                "orl  %%ebx, %%edx;"       // OR blue into final
+                : "=d" (final)
+                : "a" (pixel_top_whole), "b" (pixel_base_whole)
+                : "%ecx");
+            #else
             final = (
                 (MIN(((pixel_base_whole & 0x000000FF)      ) +
                 ((pixel_top_whole & 0x000000FF)      ), 255)      ) |
@@ -142,8 +159,8 @@
                 ((pixel_top_whole & 0x0000FF00) >> 8 ), 255) << 8 ) |
                 (MIN(((pixel_base_whole & 0x00FF0000) >> 16) +
                 ((pixel_top_whole & 0x00FF0000) >> 16), 255) << 16) |
-                (pixel_base_whole & 0xFF000000)
-            );
+                (pixel_base_whole & 0xFF000000));
+            #endif
 
             break;
         case SR_BLEND_OVERLAY:
