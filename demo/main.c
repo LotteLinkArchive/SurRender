@@ -51,6 +51,11 @@ int main(void)
         &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
         canvy.width, canvy.height);
 
+    if (!SR_CanvasIsValid(&canvy)) {
+        status = 3;
+        goto sdl_destroywin;
+    }
+
 #ifdef FLAG_PIX_TIX
     unsigned int times = 65535;
     unsigned long long i = rdtsc();
@@ -61,9 +66,9 @@ int main(void)
 
     /* Define variables for test here */
 #ifdef FLAG_DOKI
-    SR_Canvas ball = SR_ImageFileToCanvas("./images/TILEROTTEX.BMP");
-    SR_Canvas logo = SR_ImageFileToCanvas("./images/DDLC.BMP");
-    SR_Canvas monkas = SR_ImageFileToCanvas("./images/MENU_HELL.BMP");
+    SR_Canvas ball = SR_ImageFileToCanvas("./demo/images/TILEROTTEX.BMP");
+    SR_Canvas logo = SR_ImageFileToCanvas("./demo/images/DDLC.BMP");
+    SR_Canvas monkas = SR_ImageFileToCanvas("./demo/images/MENU_HELL.BMP");
 #endif
 
 #if defined(FLAG_PUCK) || defined(FLAG_SQUISH)
@@ -103,11 +108,6 @@ int main(void)
     SR_Canvas pokesquish = SR_ImageFileToCanvas("./images/GOODRA.BMP");
     SR_OffsetCanvas squish;
 #endif
-
-    if (!SR_CanvasIsValid(&canvy)) {
-        status = 3;
-        goto sdl_destroywin;
-    }
 
     if (!(win = SDL_CreateWindow(
         "SurRender your secrets to zoidberg",
