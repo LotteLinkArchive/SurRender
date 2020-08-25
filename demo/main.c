@@ -83,7 +83,7 @@ int main(void)
 #ifdef FLAG_ROT
     //look i'm not sure the 90 deg rots are hecking properly
     //yes i could theoretically just rotate the same tempbox
-    //canvas three times but testing so SKDJKALDFJB Goa hgasoiugha
+    //canvas three times but testing so HUIWNHRVYIh opsaiejhgr eas0ry
     SR_Canvas boxes = SR_NewCanvas(128, 128);
     SR_ZeroFill(&boxes);
     char filename[] = "TEST_SM.BMP";
@@ -107,6 +107,11 @@ int main(void)
 #ifdef FLAG_SQUISH
     SR_Canvas pokesquish = SR_ImageFileToCanvas("./images/GOODRA.BMP");
     SR_OffsetCanvas squish;
+#endif
+
+#ifdef FLAG_ATLAS
+    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./images/BRICKS.BMP");
+    SR_Atlas brick_atlas = SR_CanvToAltas(&brick_tileset, 16, 16);
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -285,6 +290,9 @@ event_loop:
     SR_MergeCanvasIntoCanvas(&canvy, &boxes, 0, 0, 255, SR_BLEND_ADDITIVE);
 #endif
 
+#ifdef FLAG_ATLAS
+    
+#endif
     /* update the canvas here, the rest is
        actually blitting it to the window */
     
