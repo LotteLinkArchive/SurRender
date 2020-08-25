@@ -109,7 +109,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     __asm__ __volatile__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
     "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
-    "cmpb  %%dil, %%dil;"  // Check if zero (is mul required?)
+    "testb %%dil, %%dil;"  // Check if zero (is mul required?)
     "jnz   1f;"            // Mul is not required, jump to table
 
     // Generate alpha_mul and alpha_mul_neg
