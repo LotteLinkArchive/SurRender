@@ -5,7 +5,16 @@ LDFLAGS := ${CFLAGS} -shared
 SRC = ${wildcard src/*.c}
 OBJ = ${SRC:.c=.o}
 
-all: libsurrender.so a.out
+all: libs/radix/libradix.a libsurrender.so  demo/a.out
+
+update:
+	git submodule update --init --recursive
+
+libs/radix/libradix.a: update
+	${MAKE} libradix.a -C libs/radix
+
+libs/radix/libradix.so: update
+	${MAKE} libradix.so -C libs/radix
 
 libsurrender.so: ${OBJ}
 	${CC} -o $@ $^ ${LDFLAGS}
@@ -13,10 +22,12 @@ libsurrender.so: ${OBJ}
 libsurrender.a: ${OBJ}
 	ar rcs $@ $^
 
-a.out: main.c libsurrender.a radix/libradix.a
-	${CC} $^ -lSDL2 ${CFLAGS}
+demo/a.out: libsurrender.a libs/radix/libradix.a
+	${MAKE} -C demo
 
 clean:
-	rm -f a.out libsurrender.* ${OBJ}
+	rm -f libsurrender.* ${OBJ}
+	${MAKE} clean -C libs/radix
+	${MAKE} clean -C demo
 
-.PHONY: all clean
+.PHONY: update all clean

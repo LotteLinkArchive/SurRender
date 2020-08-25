@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-#include "src/surrender.h"
+#include "../src/surrender.h"
 #include <complex.h>
 
 /* This is the code we use to test if things are working. It may look kinda
@@ -51,21 +51,31 @@ int main(void)
         &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
         canvy.width, canvy.height);
 
-    SR_Canvas ball = SR_ImageFileToCanvas("./images/TILEROTTEX.BMP");
-    SR_Canvas logo = SR_ImageFileToCanvas("./images/DDLC.BMP");
-    SR_Canvas monkas = SR_ImageFileToCanvas("./images/MENU_HELL.BMP");
-
-    /*
+#ifdef FLAG_PIX_TIX
     unsigned int times = 65535;
     unsigned long long i = rdtsc();
     while (--times)
         SR_CanvasSetPixel(&canvy, times, times, SR_CreateRGBA(0, 0, 0, 255));
     printf("Set Pixel Ticks: %llu\n", rdtsc() - i);
+#endif
 
-    SR_Canvas imagetest = SR_ImageFileToCanvas("./PUCK.BMP");
+    /* Define variables for test here */
+#ifdef FLAG_DOKI
+    SR_Canvas ball = SR_ImageFileToCanvas("./images/TILEROTTEX.BMP");
+    SR_Canvas logo = SR_ImageFileToCanvas("./images/DDLC.BMP");
+    SR_Canvas monkas = SR_ImageFileToCanvas("./images/MENU_HELL.BMP");
+#endif
+
+#if defined(FLAG_PUCK) || defined(FLAG_SQUISH)
+	float speeen = 0.0;
+#endif
+
+#ifdef FLAG_PUCK
+    SR_Canvas imagetest = SR_ImageFileToCanvas("./images/PUCK.BMP");
     SR_OffsetCanvas rotcanvas;
-    float speeen = 0.0;
+#endif
     
+#ifdef FLAG_ROT
     //look i'm not sure the 90 deg rots are hecking properly
     //yes i could theoretically just rotate the same tempbox
     //canvas three times but testing so SKDJKALDFJB Goa hgasoiugha
@@ -87,12 +97,12 @@ int main(void)
     SR_DestroyCanvas(&tempbox1);
     SR_DestroyCanvas(&tempbox2);
     SR_DestroyCanvas(&tempbox3);
-    
-    SR_Canvas pokesquish = SR_ImageFileToCanvas("./GOODRA.BMP");
+#endif
+
+#ifdef FLAG_SQUISH
+    SR_Canvas pokesquish = SR_ImageFileToCanvas("./images/GOODRA.BMP");
     SR_OffsetCanvas squish;
-    
-    // free(imagetest.pixels); imagetest.pixels = NULL;
-    */
+#endif
 
     if (!SR_CanvasIsValid(&canvy)) {
         status = 3;
@@ -161,6 +171,8 @@ event_loop:
         }
     }
 
+    /* Event loop test code here */
+#ifdef FLAG_DOKI
     static int mod = 0;
     SR_Canvas temp = SR_CopyCanvas(&ball, mod, mod, canvy.width, canvy.height);
     SR_MergeCanvasIntoCanvas(
@@ -179,8 +191,9 @@ event_loop:
         &canvy, &monkas,
         canvy.width - monkas.width, canvy.height - monkas.height,
         255, SR_BLEND_ADDITIVE);
+#endif
 
-    /*
+#ifdef FLAG_FRACTAL
     static float minX = -2.0;
     static float maxX = 1.0;
     static float pos = 0;
@@ -214,8 +227,11 @@ event_loop:
                 255));
         }
     }
+
     pos += 1;
-    /*
+#endif
+
+#ifdef FLAG_RAND_LINES
     SR_DrawLine(
         &canvy,
         SR_RGBABlender(
@@ -229,12 +245,9 @@ event_loop:
         rand() % (canvy.width),
         rand() % (canvy.height)
     );
+#endif
 
-    SR_MergeCanvasIntoCanvas(
-        &canvy, &imagetest,
-        rand() % (canvy.width), rand() % (canvy.height),
-        255, SR_BLEND_ADDITIVE);
-
+#ifdef FLAG_RAND_TRIS
     SR_DrawTri(
         &canvy,
         SR_CreateRGBA(rand(), rand(), rand(), 255),
@@ -245,10 +258,9 @@ event_loop:
         rand() % (canvy.width),
         rand() % (canvy.height)
     );
-    
-    // temp
-    //SR_DrawRect(&canvy, SR_CreateRGBA(0, 0, 0, 255), 0, 0, 1366, 768);
+#endif
 
+#ifdef FLAG_PUCK
     speeen += 1;
     rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1);
     SR_MergeCanvasIntoCanvas(
@@ -257,7 +269,9 @@ event_loop:
         //0, 0,
         255, SR_BLEND_ADDITIVE);
     SR_DestroyCanvas(&(rotcanvas.canvas));
+#endif
     
+#ifdef FLAG_SQUISH
     squish = SR_CanvasShear(
         &pokesquish,
         sin(speeen * 0.017453292519943295 * 5) * 16,
@@ -265,9 +279,11 @@ event_loop:
     SR_MergeCanvasIntoCanvas(&canvy, &(squish.canvas),
         420 + squish.offset_x, 420, 255, SR_BLEND_ADDITIVE);
     SR_DestroyCanvas(&(squish.canvas));
-    
+#endif
+
+#ifdef FLAG_ROT
     SR_MergeCanvasIntoCanvas(&canvy, &boxes, 0, 0, 255, SR_BLEND_ADDITIVE);
-    */
+#endif
 
     /* update the canvas here, the rest is
        actually blitting it to the window */
