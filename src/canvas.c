@@ -40,7 +40,7 @@ void SR_ZeroFill(SR_Canvas *canvas)
         register unsigned short x, y;
         for (x = 0; x < canvas->width; x++)
             for (y = 0; y < canvas->height; y++)
-                SR_CanvasSetPixel(&canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
+                SR_CanvasSetPixel(canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
 
         return;
     }
