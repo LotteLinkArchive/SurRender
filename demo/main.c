@@ -51,21 +51,25 @@ int main(void)
         &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
         canvy.width, canvy.height);
 
+#ifdef FLAG_DOKI
     SR_Canvas ball = SR_ImageFileToCanvas("./images/TILEROTTEX.BMP");
     SR_Canvas logo = SR_ImageFileToCanvas("./images/DDLC.BMP");
     SR_Canvas monkas = SR_ImageFileToCanvas("./images/MENU_HELL.BMP");
+#endif
 
-    /*
-    unsigned int times = 65535;
-    unsigned long long i = rdtsc();
-    while (--times)
-        SR_CanvasSetPixel(&canvy, times, times, SR_CreateRGBA(0, 0, 0, 255));
-    printf("Set Pixel Ticks: %llu\n", rdtsc() - i);
+    /* unsigned int times = 65535; */
+    /* unsigned long long i = rdtsc(); */
+    /* while (--times) */
+    /*     SR_CanvasSetPixel(&canvy, times, times, SR_CreateRGBA(0, 0, 0, 255)); */
+    /* printf("Set Pixel Ticks: %llu\n", rdtsc() - i); */
 
-    SR_Canvas imagetest = SR_ImageFileToCanvas("./PUCK.BMP");
+#ifdef FLAG_PUCK
+    SR_Canvas imagetest = SR_ImageFileToCanvas("./images/PUCK.BMP");
     SR_OffsetCanvas rotcanvas;
     float speeen = 0.0;
+#endif
     
+#ifdef FLAG_ROT
     //look i'm not sure the 90 deg rots are hecking properly
     //yes i could theoretically just rotate the same tempbox
     //canvas three times but testing so SKDJKALDFJB Goa hgasoiugha
@@ -90,9 +94,7 @@ int main(void)
     
     SR_Canvas pokesquish = SR_ImageFileToCanvas("./GOODRA.BMP");
     SR_OffsetCanvas squish;
-    
-    // free(imagetest.pixels); imagetest.pixels = NULL;
-    */
+#endif
 
     if (!SR_CanvasIsValid(&canvy)) {
         status = 3;
@@ -161,6 +163,7 @@ event_loop:
         }
     }
 
+#ifdef FLAG_DOKI
     static int mod = 0;
     SR_Canvas temp = SR_CopyCanvas(&ball, mod, mod, canvy.width, canvy.height);
     SR_MergeCanvasIntoCanvas(
@@ -179,6 +182,7 @@ event_loop:
         &canvy, &monkas,
         canvy.width - monkas.width, canvy.height - monkas.height,
         255, SR_BLEND_ADDITIVE);
+#endif
 
     /*
     static float minX = -2.0;
@@ -215,7 +219,6 @@ event_loop:
         }
     }
     pos += 1;
-    /*
     SR_DrawLine(
         &canvy,
         SR_RGBABlender(
@@ -248,7 +251,9 @@ event_loop:
     
     // temp
     //SR_DrawRect(&canvy, SR_CreateRGBA(0, 0, 0, 255), 0, 0, 1366, 768);
+    */
 
+#ifdef FLAG_PUCK
     speeen += 1;
     rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1);
     SR_MergeCanvasIntoCanvas(
@@ -257,7 +262,9 @@ event_loop:
         //0, 0,
         255, SR_BLEND_ADDITIVE);
     SR_DestroyCanvas(&(rotcanvas.canvas));
+#endif
     
+    /*
     squish = SR_CanvasShear(
         &pokesquish,
         sin(speeen * 0.017453292519943295 * 5) * 16,
