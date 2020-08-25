@@ -17,7 +17,7 @@ SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
     temp.pixels = image;
 
     if (!temp.pixels) goto ldstbicanv_missing;
-ldstbicanv_safe:
+
     temp.width = *x;
     temp.height = *y;
     temp.ratio = (float)temp.width / temp.height;
