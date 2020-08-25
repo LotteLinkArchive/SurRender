@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-#include "src/surrender.h"
+#include "../src/surrender.h"
 #include <complex.h>
 
 /* This is the code we use to test if things are working. It may look kinda
