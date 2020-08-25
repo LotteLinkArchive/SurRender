@@ -7,7 +7,7 @@ LDFLAGS := ${CFLAGS} -shared
 SRC = ${wildcard src/*.c}
 OBJ = ${SRC:.c=.o}
 
-all: flags.mk a.out
+all: flags.mk clean a.out
 
 a.out: main.c ../libsurrender.a ../libs/radix/libradix.a
 	${CC} $^ -lSDL2 ${CFLAGS} ${DFLAGS}
