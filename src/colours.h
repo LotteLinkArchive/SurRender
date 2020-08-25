@@ -106,7 +106,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 #if (defined(__x86_64__) || defined(__i386__)) && \
 (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
-    __asm__ __volatile__ (
+    __asm__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
     "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
     "testb %%dil, %%dil;"  // Check if zero (is mul required?)
@@ -221,7 +221,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
         "c" (SR_RGBAtoWhole(pixel_base)),
         "d" (mode),
         "S" (alpha_modifier)
-    : "%edi");
+    : "%edi", "cc" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
