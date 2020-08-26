@@ -11,7 +11,7 @@ bool SR_ResizeCanvas(
     if (!width  ||
         !height ||
         canvas->pixels ||
-        canvas->hflags && 0b00001011) return false;
+        canvas->hflags & 0b00001011) return false;
 
     // @direct
     canvas->width = width;
