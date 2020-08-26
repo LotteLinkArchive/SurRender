@@ -76,7 +76,7 @@ int main(void)
 #endif
 
 #ifdef FLAG_PUCK
-    SR_Canvas imagetest = SR_ImageFileToCanvas("./images/PUCK.BMP");
+    SR_Canvas imagetest = SR_ImageFileToCanvas("./demo/images/PUCK.BMP");
     SR_OffsetCanvas rotcanvas;
 #endif
     
@@ -105,12 +105,12 @@ int main(void)
 #endif
 
 #ifdef FLAG_SQUISH
-    SR_Canvas pokesquish = SR_ImageFileToCanvas("./images/GOODRA.BMP");
+    SR_Canvas pokesquish = SR_ImageFileToCanvas("./demo/images/GOODRA.BMP");
     SR_OffsetCanvas squish;
 #endif
 
 #ifdef FLAG_ATLAS
-    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./images/BRICKS.BMP");
+    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
     SR_Atlas brick_atlas = SR_CanvToAltas(&brick_tileset, 16, 16);
 #endif
 
