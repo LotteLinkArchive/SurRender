@@ -293,24 +293,27 @@ event_loop:
 #ifdef FLAG_ATLAS
     static uint16_t cheese_timer = 0;
     cheese_timer++;
-    //get a texture from the atlas and tile it over the whole window
+
+    // get a texture from the atlas and tile it over the whole window
     SR_Canvas * the = SR_GetAtlasCanv(&brick_atlas,
         (cheese_timer >> 3) & 3,
         (cheese_timer >> 5) % 6);
-    for (unsigned short x = 0; x < 1366; x += 16) {
-        for (unsigned short y = 0; y < 768; y += 16) {
-            SR_MergeCanvasIntoCanvas(
-                &canvy, the,
-                x, y,
-                255, SR_BLEND_ADDITIVE);
-        }
+    unsigned short x, y;
+    for (x = 0; x < 1366; x += 16)
+    for (y = 0; y < 768; y += 16) {
+        SR_MergeCanvasIntoCanvas(
+            &canvy, the,
+            x, y,
+            255, SR_BLEND_ADDITIVE);
     }
-    //draw the atlas itself in the top left corner
+
+    // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(
          &canvy, &brick_tileset,
          24, 24,
          255, SR_BLEND_ADDITIVE);
-    //draw a box around the current texture
+    
+    // draw a box around the current texture
     SR_DrawRectOutline(
         &canvy, SR_CreateRGBA(255, 167, 15, 255),
         (((cheese_timer >> 3) & 3) << 4) + 23,
