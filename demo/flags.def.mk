@@ -7,5 +7,5 @@
 # -DFLAG_SQUISH: gooba (i think broken too)
 # -DFLAG_PUCK: pucku (broken)
 # -DFLAG_ROT: Rotation test (broken)
-# -DFLAG_ATLAS: texture atlas test
+# -DFLAG_ATLAS: texture atlas test (broken)
 DFLAGS=-DFLAG_ATLAS
