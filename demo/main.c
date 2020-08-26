@@ -297,14 +297,11 @@ event_loop:
     SR_Canvas * the = SR_GetAtlasCanv(&brick_atlas,
         (cheese_timer >> 3) & 3,
         (cheese_timer >> 5) % 6);
-    unsigned short x, y;
-    for (x = 0; x < 1366; x += 16)
-    for (y = 0; y < 768; y += 16) {
-        SR_MergeCanvasIntoCanvas(
-            &canvy, the,
-            x, y,
-            255, SR_BLEND_ADDITIVE);
-    }
+    SR_TileTo(the, canvy.width, canvy.height);
+    SR_MergeCanvasIntoCanvas(
+        &canvy, the,
+        0, 0,
+        255, SR_BLEND_ADDITIVE);
 
     // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(
@@ -347,7 +344,7 @@ sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
 sr_testcleanup:
     #ifdef FLAG_ATLAS
-        SR_DestroyAtlas(&brick_tileset, false);
+        SR_DestroyAtlas(&brick_atlas, false);
     #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);

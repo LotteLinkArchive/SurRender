@@ -30,6 +30,14 @@
          *             \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
          */
         uint8_t hflags;
+
+        // The "Real data" width and height, used for preventing segfaults
+        unsigned short rwidth;
+        unsigned short rheight;
+
+        // The clipping width and height, used for ignoring segments
+        unsigned short cwidth;
+        unsigned short cheight;
     } SR_Canvas;
 
     /* This is a texture atlas, essentially an array of 2D canvases. 
@@ -69,6 +77,15 @@
         unsigned short width,
         unsigned short height);
 
+    /* Change the visual width/height of a canvas without modifying the real
+     * width and height, allowing you to tile a texture or something without
+     * consuming any memory or doing any difficult operations.
+     */
+    void SR_TileTo(
+        SR_Canvas *canvas,
+        unsigned short width,
+        unsigned short height);
+
     /* A canvas may contain garbage data when initially created. This will
      * zero fill it for you, if needed.
      */
@@ -93,9 +110,10 @@
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-    #define SR_CanvasCalcPosition(canvas, x, y) \
-    ((((unsigned int)((canvas)->width)) *       \
-    (((canvas)->yclip) + (y))) + (((canvas)->xclip) + (x)))
+    #define SR_CanvasCalcPosition(canvas, x, y)        \
+    ((((unsigned int)((canvas)->rwidth)) *             \
+    (((canvas)->yclip) + ((y) % (canvas)->rheight))) + \
+    (((canvas)->xclip) + ((x) % (canvas)->rwidth)))
 
     // Check if a pixel is out of bounds
     #define SR_CanvasCheckOutOfBounds(canvas, x, y)   \
@@ -112,7 +130,7 @@
         if (!canvas->pixels) return;
 
         canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->width, y % canvas->height)] = pixel;
+            canvas, x % canvas->cwidth, y % canvas->cheight)] = pixel;
     }
 
     // Get a pixel in the canvas
@@ -124,7 +142,7 @@
         if (!canvas->pixels) { return SR_CreateRGBA(255, 0, 0, 255); }
 
         return canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->width, y % canvas->height)];
+            canvas, x % canvas->cwidth, y % canvas->cheight)];
     }
 
     // Check if a pixel is non-zero, hopefully

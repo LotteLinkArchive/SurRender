@@ -12,6 +12,12 @@ bool SR_ResizeCanvas(
 
     canvas->width = width;
     canvas->height = height;
+
+    canvas->rwidth = width;
+    canvas->rheight = height;
+
+    canvas->cwidth = width;
+    canvas->cheight = height;
     
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -30,6 +36,15 @@ bool SR_ResizeCanvas(
 
     // Return the allocation state.
     return BOOLIFY(canvas->pixels);
+}
+
+void SR_TileTo(
+    SR_Canvas *canvas,
+    unsigned short width,
+    unsigned short height)
+{
+    canvas->width = width;
+    canvas->height = height;
 }
 
 void SR_ZeroFill(SR_Canvas *canvas)
@@ -115,15 +130,19 @@ SR_Canvas SR_RefCanv(
     bool allow_destroy_host)
 {
     SR_Canvas temp = {
-        .xclip  = xclip % src->width,
-        .yclip  = yclip % src->height,
-        .hflags = 0b00000001,
-        .width  = width,
-        .height = height,
-        .ratio  = (float)width / height,
-        .pixels = src->pixels
+        .xclip   = xclip % src->width,
+        .yclip   = yclip % src->height,
+        .hflags  = 0b00000001,
+        .width   = width,
+        .height  = height,
+        .ratio   = (float)width / height,
+        .pixels  = src->pixels,
+        .rwidth  = src->rwidth,
+        .rheight = src->rheight,
+        .cwidth  = MIN(src->cwidth, width),
+        .cheight = MIN(src->cheight, height)
     };
-    
+
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
 
     return temp;
@@ -533,10 +552,16 @@ SR_Canvas * SR_GetAtlasCanv(
         temp.yclip = 0;
 
         // Null settings
-        temp.width = atlas->tile_width;
-        temp.height = atlas->tile_height;
-        temp.ratio = (float)temp.width / temp.height;
+        temp.width = 16;
+        temp.height = 16;
+        temp.ratio = 1.0;
         temp.pixels = NULL;
+
+        temp.rwidth = 16;
+        temp.rheight = 16;
+
+        temp.cwidth = 16;
+        temp.cheight = 16;
         return &temp;
     }
 

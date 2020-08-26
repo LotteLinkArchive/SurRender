@@ -20,6 +20,10 @@ SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
 
     temp.width = *x;
     temp.height = *y;
+    temp.rwidth = *x;
+    temp.rheight = *y;
+    temp.cwidth = *x;
+    temp.cheight = *y;
     temp.ratio = (float)temp.width / temp.height;
 
     goto ldstbicanv_fin;
