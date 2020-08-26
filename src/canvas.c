@@ -130,8 +130,8 @@ SR_Canvas SR_RefCanv(
     bool allow_destroy_host)
 {
     SR_Canvas temp = {
-        .xclip   = xclip % src->width,
-        .yclip   = yclip % src->height,
+        .xclip   = xclip % src->rwidth,
+        .yclip   = yclip % src->rheight,
         .hflags  = 0b00000001,
         .width   = width,
         .height  = height,
@@ -158,21 +158,21 @@ void SR_MergeCanvasIntoCanvas(
 {
     register unsigned short x, y;
     for (x = 0; x < src_canvas->width; x++)
-        for (y = 0; y < src_canvas->height; y++) {
-            // Uses the function for blending individual RGBA values.
-            SR_CanvasSetPixel(
-                dest_canvas,
-                x + paste_start_x,
-                y + paste_start_y,
-                SR_RGBABlender(
-                    SR_CanvasGetPixel(
-                        dest_canvas,
-                        x + paste_start_x,
-                        y + paste_start_y),
-                    SR_CanvasGetPixel(src_canvas, x, y),
-                    alpha_modifier,
-                    mode));
-        }
+    for (y = 0; y < src_canvas->height; y++) {
+        // Uses the function for blending individual RGBA values.
+        SR_CanvasSetPixel(
+            dest_canvas,
+            x + paste_start_x,
+            y + paste_start_y,
+            SR_RGBABlender(
+                SR_CanvasGetPixel(
+                    dest_canvas,
+                    x + paste_start_x,
+                    y + paste_start_y),
+                SR_CanvasGetPixel(src_canvas, x, y),
+                alpha_modifier,
+                mode));
+    }
 }
 
 // Private
@@ -192,8 +192,8 @@ SR_Canvas SR_BilinearCanvasScale(
     if (!dest.pixels) { return dest; }
 
     register unsigned int x, y;
-    for(x = 0, y = 0; y < newHeight; x++) {
-        if(x > newWidth) { x = 0; y++; }
+    for (x = 0, y = 0; y < newHeight; x++) {
+        if (x > newWidth) { x = 0; y++; }
 
         float gx = x / (float)(newWidth ) * (SR_CanvasGetWidth (src) - 1);
         float gy = y / (float)(newHeight) * (SR_CanvasGetHeight(src) - 1);

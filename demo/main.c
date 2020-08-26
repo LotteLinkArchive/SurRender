@@ -183,12 +183,12 @@ event_loop:
     /* Event loop test code here */
 #ifdef FLAG_DOKI
     static int mod = 0;
-    SR_Canvas temp = SR_CopyCanvas(&ball, mod, mod, canvy.width, canvy.height);
+    SR_Canvas temp = SR_RefCanv(
+        &ball, mod, mod, canvy.width, canvy.height, false);
     SR_MergeCanvasIntoCanvas(
         &canvy, &temp,
         0, 0,
-        255, SR_BLEND_ADDITIVE);
-    SR_DestroyCanvas(&temp);
+        255, SR_BLEND_REPLACE);
     mod++;
 
     SR_MergeCanvasIntoCanvas(
@@ -305,13 +305,13 @@ event_loop:
     SR_MergeCanvasIntoCanvas(
         &canvy, the,
         0, 0,
-        255, SR_BLEND_ADDITIVE);
+        255, SR_BLEND_REPLACE);
 
     // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(
          &canvy, &brick_tileset,
          24, 24,
-         255, SR_BLEND_ADDITIVE);
+         255, SR_BLEND_REPLACE);
     
     // draw a box around the current texture
     SR_DrawRectOutline(
