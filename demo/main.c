@@ -204,28 +204,27 @@ event_loop:
         0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210,
         225, 240, 255};
 
-    for (unsigned short x = 0; x < canvy.width; x++) {
-        for (unsigned short y = 0; y < canvy.height; y++) {
-            float complex c = (
-                ((float)minX + x * (float)(maxX - minX) / (float)canvy.width) +
-                (y * yScale / canvy.height - yScale / 2.0) * I);
+    for (unsigned short x = 0; x < canvy.width; x++)
+    for (unsigned short y = 0; y < canvy.height; y++) {
+        float complex c = (
+            ((float)minX + x * (float)(maxX - minX) / (float)canvy.width) +
+            (y * yScale / canvy.height - yScale / 2.0) * I);
 
-            c -= pos * 2; c /= (pos + 1);
-            float complex z = c;
+        c -= pos * 2; c /= (pos + 1);
+        float complex z = c;
 
-            size_t zC;
-            for (zC = 0; zC < sizeof(shades); zC++) {
-                if (abs(z) > 2) break;
+        size_t zC;
+        for (zC = 0; zC < sizeof(shades); zC++) {
+            if (abs(z) > 2) break;
 
-                z = z * z + c;
-            }
-
-            SR_CanvasSetPixel(&canvy, x, y, SR_CreateRGBA(
-                shades[zC],
-                shades[zC],
-                shades[zC],
-                255));
+            z = z * z + c;
         }
+
+        SR_CanvasSetPixel(&canvy, x, y, SR_CreateRGBA(
+            shades[zC],
+            shades[zC],
+            shades[zC],
+            255));
     }
 
     pos += 1;
