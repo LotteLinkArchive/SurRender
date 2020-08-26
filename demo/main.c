@@ -301,13 +301,13 @@ event_loop:
     SR_MergeCanvasIntoCanvas(
         &canvy, the,
         0, 0,
-        255, SR_BLEND_ADDITIVE);
+        255, SR_BLEND_REPLACE);
 
     // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(
          &canvy, &brick_tileset,
          24, 24,
-         255, SR_BLEND_ADDITIVE);
+         255, SR_BLEND_REPLACE);
     
     // draw a box around the current texture
     SR_DrawRectOutline(
