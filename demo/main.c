@@ -83,7 +83,7 @@ int main(void)
 #ifdef FLAG_ROT
     //look i'm not sure the 90 deg rots are hecking properly
     //yes i could theoretically just rotate the same tempbox
-    //canvas three times but testing so SKDJKALDFJB Goa hgasoiugha
+    //canvas three times but testing so HUIWNHRVYIh opsaiejhgr eas0ry
     SR_Canvas boxes = SR_NewCanvas(128, 128);
     SR_ZeroFill(&boxes);
     char filename[] = "TEST_SM.BMP";
@@ -109,8 +109,13 @@ int main(void)
     SR_OffsetCanvas squish;
 #endif
 
+#ifdef FLAG_ATLAS
+    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./images/BRICKS.BMP");
+    SR_Atlas brick_atlas = SR_CanvToAltas(&brick_tileset, 16, 16);
+#endif
+
     if (!(win = SDL_CreateWindow(
-        "SurRender your secrets to zoidberg",
+        "SurRender your mysteries to zoidberg!",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         canvy.width,
@@ -284,6 +289,36 @@ event_loop:
     SR_MergeCanvasIntoCanvas(&canvy, &boxes, 0, 0, 255, SR_BLEND_ADDITIVE);
 #endif
 
+#ifdef FLAG_ATLAS
+    static uint16_t cheese_timer = 0;
+    cheese_timer++;
+
+    // get a texture from the atlas and tile it over the whole window
+    SR_Canvas * the = SR_GetAtlasCanv(&brick_atlas,
+        (cheese_timer >> 3) & 3,
+        (cheese_timer >> 5) % 6);
+    unsigned short x, y;
+    for (x = 0; x < 1366; x += 16)
+    for (y = 0; y < 768; y += 16) {
+        SR_MergeCanvasIntoCanvas(
+            &canvy, the,
+            x, y,
+            255, SR_BLEND_ADDITIVE);
+    }
+
+    // draw the atlas itself in the top left corner
+    SR_MergeCanvasIntoCanvas(
+         &canvy, &brick_tileset,
+         24, 24,
+         255, SR_BLEND_ADDITIVE);
+    
+    // draw a box around the current texture
+    SR_DrawRectOutline(
+        &canvy, SR_CreateRGBA(255, 167, 15, 255),
+        (((cheese_timer >> 3) & 3) << 4) + 23,
+        (((cheese_timer >> 5) % 6) << 4) + 23,
+        18, 18);
+#endif
     /* update the canvas here, the rest is
        actually blitting it to the window */
     
@@ -310,6 +345,10 @@ sdl_freesurf:
     SDL_FreeSurface(canvysurf);
 sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
+sr_testcleanup:
+    #ifdef FLAG_ATLAS
+        SR_DestroyAtlas(&brick_tileset, false);
+    #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);
 sdl_quit:
