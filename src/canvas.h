@@ -116,10 +116,10 @@
         register unsigned short x,
         register unsigned short y)
     {
-        register unsigned int r0, r1;
-        r0 = ((unsigned int)canvas->yclip + y) % canvas->rheight;
-        r1 = ((unsigned int)canvas->xclip + x) % canvas->rwidth ;
-        return ((unsigned int)canvas->rwidth * r0) + r1;
+        return (
+            (unsigned int)canvas->rwidth *
+            (((unsigned int)canvas->yclip + y) % canvas->rheight)
+        ) + (((unsigned int)canvas->xclip + x) % canvas->rwidth );
     }
 
     // Check if a pixel is out of bounds
