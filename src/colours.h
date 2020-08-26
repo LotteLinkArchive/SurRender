@@ -68,7 +68,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBtoRGBA(
     return temp;
 }
 
-#ifdef SURCL_ALLOW_TYPE_PUNNING
+#ifndef SURCL_PREVENT_TYPE_PUNNING
     inline __attribute__((always_inline)) uint32_t SR_RGBAtoWhole(
         SR_RGBAPixel pix) { return *(uint32_t *) &pix; }
 

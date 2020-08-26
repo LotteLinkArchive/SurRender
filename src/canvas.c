@@ -39,8 +39,8 @@ void SR_ZeroFill(SR_Canvas *canvas)
     if (canvas->xclip || canvas->yclip) {
         register unsigned short x, y;
         for (x = 0; x < canvas->width; x++)
-            for (y = 0; y < canvas->height; y++)
-                SR_CanvasSetPixel(canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
+        for (y = 0; y < canvas->height; y++)
+            SR_CanvasSetPixel(canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
 
         return;
     }
@@ -98,9 +98,9 @@ SR_Canvas SR_CopyCanvas(
     // Slower copying, but not much slower - used for cropping/panning
     register unsigned short x, y;
     for (x = 0; x < new.width; x++)
-        for (y = 0; y < new.height; y++)
-            SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(
-                canvas, x + copy_start_x, y + copy_start_y));
+    for (y = 0; y < new.height; y++)
+        SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(
+            canvas, x + copy_start_x, y + copy_start_y));
 
 srcc_finish:
     return new;
@@ -241,34 +241,34 @@ unsigned short * SR_NZBoundingBox(SR_Canvas *src)
     register unsigned short xC, yC, firstX, firstY, lastX, lastY, x, y;
 
     for (y = 0; y < src->height; y++)
-        for (x = 0; x < src->width; x++)
-            if (SR_CanvasPixelCNZ(src, x, y))
-                { firstX = x, firstY = y; goto srnzbbx_first_pixel_done; }
+    for (x = 0; x < src->width; x++)
+        if (SR_CanvasPixelCNZ(src, x, y))
+            { firstX = x, firstY = y; goto srnzbbx_first_pixel_done; }
     
     goto srnzbbx_empty; // No data found in image - commit die
 srnzbbx_first_pixel_done: // Exit loop
     for (y = src->height - 1; y > 0; y--)
-        for (x = src->width - 1; x > 0; x--)
-            if (SR_CanvasPixelCNZ(src, x, y))
-                { lastX = x, lastY = y; goto srnzbbx_last_pixel_done; }
+    for (x = src->width - 1; x > 0; x--)
+        if (SR_CanvasPixelCNZ(src, x, y))
+            { lastX = x, lastY = y; goto srnzbbx_last_pixel_done; }
 
     goto srnzbbx_empty;
 srnzbbx_last_pixel_done:
     for (xC = 0; xC <= firstX; xC++)
-        for (yC = firstY; yC <= lastY; yC++)
-            if (SR_CanvasPixelCNZ(src, xC, yC)) {
-                bbox[0] = xC; bbox[1] = firstY;
-                goto srnzbbx_found_first;
-            }
+    for (yC = firstY; yC <= lastY; yC++)
+        if (SR_CanvasPixelCNZ(src, xC, yC)) {
+            bbox[0] = xC; bbox[1] = firstY;
+            goto srnzbbx_found_first;
+        }
 
     goto srnzbbx_empty;
 srnzbbx_found_first:
     for (xC = src->width - 1; xC > lastX; xC--)
-        for (yC = lastY; yC >= firstY; yC--)
-            if (SR_CanvasPixelCNZ(src, xC, yC)) {
-                bbox[2] = xC; bbox[3] = lastY;
-                goto srnzbbx_bounded;
-            }
+    for (yC = lastY; yC >= firstY; yC--)
+        if (SR_CanvasPixelCNZ(src, xC, yC)) {
+            bbox[2] = xC; bbox[3] = lastY;
+            goto srnzbbx_bounded;
+        }
 
     goto srnzbbx_no_end_in_sight; // No last point found - is this possible?
 srnzbbx_no_end_in_sight:
@@ -391,30 +391,30 @@ SR_OffsetCanvas SR_CanvasRotate(
     // This is the accurate rotation system, but it only works on degrees
     // where x % 90 == 0
     for (xC = 0; xC < w; xC++)
-        for (yC = 0; yC < h; yC++) {
-            pixbuf = SR_CanvasGetPixel(src, xC, yC);
-            nx = 0, ny = 0;
-            switch (((unsigned short)degrees) % 360) {
-            case 90:
-                nx = (h - 1) - yC;
-                ny = xC;
-                break;
-            case 180:
-                nx = (w - 1) - xC;
-                ny = (h - 1) - yC;
-                break;
-            case 270:
-                nx = yC;
-                ny = (w - 1) - xC;
-                break;
-            }
-
-            SR_CanvasSetPixel(
-                &final.canvas,
-                nx - final.offset_x, // Correct for offset
-                ny - final.offset_y,
-                pixbuf);
+    for (yC = 0; yC < h; yC++) {
+        pixbuf = SR_CanvasGetPixel(src, xC, yC);
+        nx = 0, ny = 0;
+        switch (((unsigned short)degrees) % 360) {
+        case 90:
+            nx = (h - 1) - yC;
+            ny = xC;
+            break;
+        case 180:
+            nx = (w - 1) - xC;
+            ny = (h - 1) - yC;
+            break;
+        case 270:
+            nx = yC;
+            ny = (w - 1) - xC;
+            break;
         }
+
+        SR_CanvasSetPixel(
+            &final.canvas,
+            nx - final.offset_x, // Correct for offset
+            ny - final.offset_y,
+            pixbuf);
+    }
 
     goto srcvrot_finished;
 
@@ -428,15 +428,15 @@ srcvrot_mismatch:
     half_h = h >> 1;
 
     for (x = -half_w; x < half_w; x++)
-        for (y = -half_h; y < half_h; y++) {
-            nxM = (x * the_cos + y * the_sin + half_w) - final.offset_x;
-            nyM = (y * the_cos - x * the_sin + half_h) - final.offset_y;
-            pixel = SR_CanvasGetPixel(src, x + half_w, y + half_h);
+    for (y = -half_h; y < half_h; y++) {
+        nxM = (x * the_cos + y * the_sin + half_w) - final.offset_x;
+        nyM = (y * the_cos - x * the_sin + half_h) - final.offset_y;
+        pixel = SR_CanvasGetPixel(src, x + half_w, y + half_h);
 
-            // Set target AND a single nearby pixel to de-alias
-            SR_CanvasSetPixel(&final.canvas, nxM    , nyM    , pixel);
-            SR_CanvasSetPixel(&final.canvas, nxM - 1, nyM    , pixel);
-        }
+        // Set target AND a single nearby pixel to de-alias
+        SR_CanvasSetPixel(&final.canvas, nxM    , nyM    , pixel);
+        SR_CanvasSetPixel(&final.canvas, nxM - 1, nyM    , pixel);
+    }
 
 srcvrot_finished:
     if (safety_padding && autocrop) {
@@ -474,15 +474,15 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
     hmax = vertical ? src->height >> 1 : src->height;
 
     for (x = 0; x < wmax; x++)
-        for (y = 0; y < hmax; y++) {
-            xdest = vertical ? x : (src->width  - 1) - x;
-            ydest = vertical ? (src->height - 1) - y : y;
+    for (y = 0; y < hmax; y++) {
+        xdest = vertical ? x : (src->width  - 1) - x;
+        ydest = vertical ? (src->height - 1) - y : y;
 
-            temp  = SR_CanvasGetPixel(src, xdest, ydest);
-            pixel = SR_CanvasGetPixel(src, x, y);
-            SR_CanvasSetPixel(src, xdest, ydest, pixel);
-            SR_CanvasSetPixel(src, x, y, temp);
-        }
+        temp  = SR_CanvasGetPixel(src, xdest, ydest);
+        pixel = SR_CanvasGetPixel(src, x, y);
+        SR_CanvasSetPixel(src, xdest, ydest, pixel);
+        SR_CanvasSetPixel(src, x, y, temp);
+    }
 }
 
 SR_Atlas SR_CanvToAltas(
@@ -506,13 +506,13 @@ SR_Atlas SR_CanvToAltas(
     if (!temp.canvies) goto sratc_exit;
 
     for (x = 0; x < temp.columns; x++)
-        for (y = 0; y < temp.rows; y++) {
-            temp_c = SR_RefCanv(src,
-                (unsigned short)x * tile_w,
-                (unsigned short)y * tile_h,
-                tile_w, tile_h, false);
-            temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
-        }
+    for (y = 0; y < temp.rows; y++) {
+        temp_c = SR_RefCanv(src,
+            (unsigned short)x * tile_w,
+            (unsigned short)y * tile_h,
+            tile_w, tile_h, false);
+        temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
+    }
 
 sratc_exit:
     return temp;
