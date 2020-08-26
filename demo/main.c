@@ -346,6 +346,10 @@ sdl_freesurf:
     SDL_FreeSurface(canvysurf);
 sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
+sr_testcleanup:
+    #ifdef FLAG_ATLAS
+        SR_DestroyAtlas(&brick_tileset, false);
+    #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);
 sdl_quit:
