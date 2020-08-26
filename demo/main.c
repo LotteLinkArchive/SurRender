@@ -114,10 +114,6 @@ int main(void)
     SR_Atlas brick_atlas = SR_CanvToAltas(&brick_tileset, 16, 16);
 #endif
 
-#ifdef FLAG_FLUID
-    
-#endif
-
     if (!(win = SDL_CreateWindow(
         "SurRender your mysteries to zoidberg!",
         SDL_WINDOWPOS_CENTERED,
@@ -319,10 +315,6 @@ event_loop:
         (((cheese_timer >> 3) & 3) << 4) + 23,
         (((cheese_timer >> 5) % 6) << 4) + 23,
         17, 17);
-#endif
-
-#ifdef FLAG_FLUID
-    
 #endif
 
     /* update the canvas here, the rest is

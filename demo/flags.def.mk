@@ -8,5 +8,4 @@
 # -DFLAG_PUCK: pucku (broken)
 # -DFLAG_ROT: Rotation test (broken)
 # -DFLAG_ATLAS: texture atlas test (broken)
-# -DFLAG_FLUID: heheheh
-DFLAGS=-DFLAG_FLUID
+DFLAGS=-DFLAG_ATLAS
