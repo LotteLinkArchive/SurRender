@@ -179,12 +179,12 @@ event_loop:
     /* Event loop test code here */
 #ifdef FLAG_DOKI
     static int mod = 0;
-    SR_Canvas temp = SR_CopyCanvas(&ball, mod, mod, canvy.width, canvy.height);
+    SR_Canvas temp = SR_RefCanv(
+        &ball, mod, mod, canvy.width, canvy.height, false);
     SR_MergeCanvasIntoCanvas(
         &canvy, &temp,
         0, 0,
-        255, SR_BLEND_ADDITIVE);
-    SR_DestroyCanvas(&temp);
+        255, SR_BLEND_REPLACE);
     mod++;
 
     SR_MergeCanvasIntoCanvas(
