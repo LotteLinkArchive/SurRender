@@ -19,10 +19,10 @@ bool SR_ResizeCanvas(
 
     canvas->rwidth = width;
     canvas->rheight = height;
-    canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
 
     canvas->cwidth = width;
     canvas->cheight = height;
+    canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
     
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;

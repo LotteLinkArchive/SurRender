@@ -73,7 +73,7 @@
 
     // Returns an appropriate HFLAG if tex is power of 2
     #define SR_CPow2FDtc(w, h, flag) \
-    ((((w) & ((w) - 1)) && ((h) & ((h) - 1))) ? (flag) : 0)
+    ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -108,24 +108,40 @@
      * recommended to use this yourself.
      */
     #define SR_CanvasCalcSize(canvas) ((unsigned int)( \
-        (unsigned int)((canvas)->width)  *             \
-        (unsigned int)((canvas)->height) *             \
+        (unsigned int)((canvas)->rwidth)  *            \
+        (unsigned int)((canvas)->rheight) *            \
         sizeof(SR_RGBAPixel)                           \
     ))
 
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-    
+
     inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
-        register unsigned short x,
-        register unsigned short y)
+        register unsigned int x,
+        register unsigned int y)
     {
-        return (
-            (unsigned int)canvas->rwidth *
-            (((unsigned int)canvas->yclip + y) % canvas->rheight)
-        ) + (((unsigned int)canvas->xclip + x) % canvas->rwidth );
+        if (canvas->hflags & 0b00100000) {
+            x &= (canvas->cwidth - 1);
+            y &= (canvas->cheight - 1);
+        } else {
+            x %= (canvas->cwidth);
+            y %= (canvas->cheight);
+        }
+
+        x += canvas->xclip;
+        y += canvas->yclip;
+
+        if (canvas->hflags & 0b00010000) {
+            x &= (canvas->rwidth - 1);
+            y &= (canvas->rheight - 1);
+        } else {
+            x %= (canvas->rwidth);
+            y %= (canvas->rheight);
+        }
+
+        return (canvas->rwidth * y) + x;
     }
 
     // Check if a pixel is out of bounds
@@ -142,8 +158,7 @@
     {
         if (!canvas->pixels) return;
 
-        canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->cwidth, y % canvas->cheight)] = pixel;
+        canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
     }
 
     // Get a pixel in the canvas
@@ -154,8 +169,7 @@
     {
         if (!canvas->pixels) { return SR_CreateRGBA(255, 0, 0, 255); }
 
-        return canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->cwidth, y % canvas->cheight)];
+        return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
     }
 
     // Check if a pixel is non-zero, hopefully
