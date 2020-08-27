@@ -236,16 +236,42 @@ SR_Canvas SR_BilinearCanvasScale(
     return dest;
 }
 
+// Private
+SR_Canvas SR_NearestNeighborCanvasScale(
+    register SR_Canvas *src,
+    register unsigned short newWidth,
+    register unsigned short newHeight)
+{
+    SR_Canvas dest = SR_NewCanvas(newWidth, newHeight);
+
+    if (!dest.pixels) { return dest; }
+
+    float x_factor = src->width / newWidth;
+    float y_factor = src->height / newHeight;
+    
+    unsigned short x, y;
+    for (x = 0; x < newWidth; x++)
+    for (y = 0; y < newHeight; y++) {
+        SR_RGBAPixel sample = SR_CanvasGetPixel(
+            src, x * x_factor, y * y_factor);
+        SR_CanvasSetPixel(&dest, x, y, sample);
+    }
+    
+    return dest;
+}
+
 SR_Canvas SR_CanvasScale(
     SR_Canvas *src,
     unsigned short newWidth,
     unsigned short newHeight,
     char mode)
 {
-    // TODO: Add nearest neighbour scaling - this is super, super important
-
     SR_Canvas final;
     switch (mode) {
+    case SR_SCALE_NEARESTN:
+        final = SR_NearestNeighborCanvasScale(src, newWidth, newHeight);
+        
+        break;
     case SR_SCALE_BILINEAR:
         final = SR_BilinearCanvasScale(src, newWidth, newHeight);
 
