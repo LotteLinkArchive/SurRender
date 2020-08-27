@@ -148,7 +148,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "andl  $0x00FFFFFF, %%eax;"
     "jmp   2b;"            // Prevent next loop and do the last iteration.
 "1:;"
-    "andl  $0   , %%eax;"  // Clear EAX
+    "xorl  %%eax, %%eax;"  // Clear EAX
     "leaq  14f(%%rip), %%rdi;"
     "movslq (%%rdi,%%rdx,4), %%r9;"
     "addq  %%rdi, %%r9;"
