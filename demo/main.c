@@ -319,6 +319,17 @@ event_loop:
     /* update the canvas here, the rest is
        actually blitting it to the window */
     
+    static unsigned short frames = 0;
+    static time_t laf = 0;
+    static time_t cur = 0;
+    frames++;
+    cur = time(NULL);
+    if (((cur & 1) == 0) && (laf != cur)) {
+        printf("FPS: %u AT %u\n", frames >> 1, cur);
+        laf = cur;
+        frames = 0;
+    }
+
     /* refresh the window */
     if (SDL_FillRect(wsurf, NULL, SDL_MapRGB(wsurf->format, 0, 0, 0)) < 0) {
         status = 6;
@@ -335,7 +346,7 @@ event_loop:
         goto sdl_freesurf;
     }
 
-    //SDL_Delay(0);
+    //SDL_Delay(17);
     goto event_loop;
 
 sdl_freesurf:
