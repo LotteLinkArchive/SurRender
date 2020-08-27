@@ -533,84 +533,19 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
     }
 }
 
-SR_Atlas SR_CanvToAltas(
-    SR_Canvas *src,
+SR_Canvas SR_RefCanvTile(
+    SR_Canvas *atlas,
     unsigned short tile_w,
-    unsigned short tile_h)
+    unsigned short tile_h,
+    unsigned short col,
+    unsigned short row)
 {
-    register unsigned char x, y;
-    SR_Atlas temp;
-    SR_Canvas temp_c;
+    unsigned short columns, rows;
+    columns = ceilf((float)atlas->width / tile_w);
+    rows = ceilf((float)atlas->height / tile_h);
 
-    temp.tile_width = tile_w;
-    temp.tile_height = tile_h;
-
-    temp.columns = (unsigned char)ceilf((float)src->width / tile_w);
-    temp.rows = (unsigned char)ceilf((float)src->height / tile_h);
-
-    temp.src = src;
-    temp.canvies = malloc(temp.columns * temp.rows * sizeof(SR_Canvas));
-
-    if (!temp.canvies) goto sratc_exit;
-
-    for (x = 0; x < temp.columns; x++)
-    for (y = 0; y < temp.rows; y++) {
-        temp_c = SR_RefCanv(src,
-            (unsigned short)x * tile_w,
-            (unsigned short)y * tile_h,
-            tile_w, tile_h, false);
-        temp.canvies[((unsigned short)temp.columns * y) + x] = temp_c;
-    }
-
-sratc_exit:
-    return temp;
-}
-
-SR_Canvas * SR_GetAtlasCanv(
-    SR_Atlas *atlas,
-    unsigned char col,
-    unsigned char row)
-{
-    if (!atlas->canvies)
-    {
-        // @direct
-        static SR_Canvas temp = {};
-
-        // Initialize to zero each time just in case
-        temp.hflags = 0b00110000;
-        temp.xclip = 0;
-        temp.yclip = 0;
-
-        // Null settings
-        temp.width = 16;
-        temp.height = 16;
-        temp.ratio = 1.0;
-        temp.pixels = NULL;
-
-        temp.rwidth = 16;
-        temp.rheight = 16;
-
-        temp.cwidth = 16;
-        temp.cheight = 16;
-        return &temp;
-    }
-
-    return &(atlas->canvies[(
-            (unsigned short)atlas->columns *
-            (row % atlas->rows)
-        ) + (col % atlas->columns)]);
-}
-
-void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_source)
-{
-    if (!atlas->canvies) return;
-
-    if (!keep_source && atlas->src->pixels)
-        SR_DestroyCanvas(atlas->src);
-
-    for (unsigned short i = 0; i < (atlas->columns * atlas->rows); i++)
-        SR_DestroyCanvas(&atlas->canvies[i]);
-
-    free(atlas->canvies);
-    atlas->canvies = NULL;
+    return SR_RefCanv(atlas,
+        (col % columns) * tile_w,
+        (row % rows   ) * tile_h,
+        tile_w, tile_h, false);
 }

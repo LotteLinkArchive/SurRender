@@ -111,7 +111,6 @@ int main(void)
 
 #ifdef FLAG_ATLAS
     SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
-    SR_Atlas brick_atlas = SR_CanvToAltas(&brick_tileset, 16, 16);
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -294,12 +293,12 @@ event_loop:
     cheese_timer++;
 
     // get a texture from the atlas and tile it over the whole window
-    SR_Canvas * the = SR_GetAtlasCanv(&brick_atlas,
+    SR_Canvas the = SR_RefCanvTile(&brick_tileset, 16, 16,
         (cheese_timer >> 3) & 3,
         (cheese_timer >> 5) % 6);
-    SR_TileTo(the, canvy.width, canvy.height);
+    SR_TileTo(&the, canvy.width, canvy.height);
     SR_MergeCanvasIntoCanvas(
-        &canvy, the,
+        &canvy, &the,
         0, 0,
         255, SR_BLEND_REPLACE);
 
@@ -320,6 +319,17 @@ event_loop:
     /* update the canvas here, the rest is
        actually blitting it to the window */
     
+    static unsigned short frames = 0;
+    static time_t laf = 0;
+    static time_t cur = 0;
+    frames++;
+    cur = time(NULL);
+    if (((cur & 1) == 0) && (laf != cur)) {
+        printf("FPS: %u AT %u\n", frames >> 1, cur);
+        laf = cur;
+        frames = 0;
+    }
+
     /* refresh the window */
     if (SDL_FillRect(wsurf, NULL, SDL_MapRGB(wsurf->format, 0, 0, 0)) < 0) {
         status = 6;
@@ -336,7 +346,7 @@ event_loop:
         goto sdl_freesurf;
     }
 
-    //SDL_Delay(0);
+    //SDL_Delay(17);
     goto event_loop;
 
 sdl_freesurf:
@@ -345,7 +355,7 @@ sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
 sr_testcleanup:
     #ifdef FLAG_ATLAS
-        SR_DestroyAtlas(&brick_atlas, false);
+        SR_DestroyCanvas(&brick_tileset);
     #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);

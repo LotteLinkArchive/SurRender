@@ -42,18 +42,6 @@
         unsigned short cheight;
     } SR_Canvas;
 
-    /* This is a texture atlas, essentially an array of 2D canvases. 
-     * See the functions below to learn how to create one for yourself.
-     */
-    typedef struct SR_Atlas {
-        SR_Canvas *src;
-        unsigned char columns;
-        unsigned char rows;
-        unsigned short tile_width;
-        unsigned short tile_height;
-        SR_Canvas *canvies;
-    } SR_Atlas;
-
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
      * data which you will probably need in order to "place" the canvas
      * correctly using merge functions. Essentially, take the coordinates you
@@ -123,7 +111,8 @@
         register unsigned int x,
         register unsigned int y)
     {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))\
+&& defined(SURCL_ASM)
         unsigned int r;
         __asm__ (
             "movq    14(%[C]), %%r8 ;" // 0x HF YC XC --
@@ -376,32 +365,22 @@
      */
     void SR_InplaceFlip(SR_Canvas *src, bool vertical);
 
-    /* Convert a source canvas (e.g an image loaded from disk) to a texture
-     * atlas of a given tile width/height.
+    /* Creates a reference canvas based on a given tile inside another canvas.
+     * The col/row argument is modulo'd by the amount of columns and rows in
+     * the host canvas, so it's impossible to go out of bounds.
      * 
-     * Mallocs a new atlas, but **absorbs** the source canvas. In other words,
-     * DO NOT DESTROY THE SOURCE CANVAS. Call SR_DestroyAtlas on the ATLAS
-     * intead, which will destroy the source canvas for you in a controlled
-     * environment. Ya feel me?
+     * Note that destroying a reference canvas' host canvas will cause the
+     * reference canvas to contain a dangling pointer, causing a segfault if
+     * you attempt to access it. Only destroy the host canvas when you are done
+     * using all of the references and you are absolutely sure that the
+     * reference canvas will never be accessed.
      */
-    SR_Atlas SR_CanvToAltas(
-        SR_Canvas *src,
+    SR_Canvas SR_RefCanvTile(
+        SR_Canvas *atlas,
         unsigned short tile_w,
-        unsigned short tile_h);
-
-    /* Return a canvas stored at the given column and row in the texture atlas.
-     * Col/row is modulo'd by column count and row count, so that's why you can
-     * never end up with an out of bounds texture.
-     */
-    SR_Canvas * SR_GetAtlasCanv(
-        SR_Atlas *atlas,
-        unsigned char col,
-        unsigned char row);
-
-    /* Destroy the texture atlas, including all of the textures stored within
-     * it (because it destroys the source canvas unless told to do otherwise)
-     */
-    void SR_DestroyAtlas(SR_Atlas *atlas, bool keep_source);
+        unsigned short tile_h,
+        unsigned short col,
+        unsigned short row);
 
     // Abstraction macros, if you really want to use them
     #define SR_GetAtlasRows(atlas) (atlas->rows)
