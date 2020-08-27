@@ -313,8 +313,9 @@ event_loop:
         &canvy, SR_CreateRGBA(255, 167, 15, 255),
         (((cheese_timer >> 3) & 3) << 4) + 23,
         (((cheese_timer >> 5) % 6) << 4) + 23,
-        18, 18);
+        17, 17);
 #endif
+
     /* update the canvas here, the rest is
        actually blitting it to the window */
     
