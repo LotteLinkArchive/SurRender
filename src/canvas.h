@@ -380,8 +380,4 @@
         unsigned short tile_h,
         unsigned short col,
         unsigned short row);
-
-    // Abstraction macros, if you really want to use them
-    #define SR_GetAtlasRows(atlas) (atlas->rows)
-    #define SR_GetAtlasColumns(atlas) (atlas->columns)
 #endif
