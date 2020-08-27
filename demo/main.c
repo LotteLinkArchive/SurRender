@@ -324,7 +324,7 @@ event_loop:
     frames++;
     cur = time(NULL);
     if (((cur & 1) == 0) && (laf != cur)) {
-        printf("FPS: %u AT %u\n", frames >> 1, cur);
+        printf("FPS: %u AT %ld\n", frames >> 1, cur);
         laf = cur;
         frames = 0;
     }

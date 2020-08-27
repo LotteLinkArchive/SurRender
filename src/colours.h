@@ -106,6 +106,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))\
 && defined(SURCL_ASM)
     uint32_t final;
+    uint32_t pbt = SR_RGBAtoWhole(pixel_top );
+    uint32_t pbb = SR_RGBAtoWhole(pixel_base);
     __asm__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
     "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
@@ -129,13 +131,16 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 "2:;"
     "movb  %%bl , %%al;"
     "mulb  %%sil;"
+    "addw  $0xFF, %%ax;"
     "movb  %%ah , %%bl;"   // Run pixel_top.rgb.red through the alpha_mul
     "movb  %%bh , %%al;"
     "mulb  %%sil;"
+    "addw  $0xFF, %%ax;"
     "movb  %%ah , %%bh;"   // Run pixel_top.rgb.green through the alpha_mul
     "rorl  $8   , %%ebx;"  // Rotate right to shift blue into green (BH)
     "movb  %%bh , %%al;"
     "mulb  %%sil;"
+    "addw  $0xFF, %%ax;"
     "movb  %%ah , %%bh;"   // Run pixel_top.rgb.blue through the alpha_mul
     "roll  $8   , %%ebx;"  // Rotate left to shift green back into blue
 
@@ -210,12 +215,12 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ecx, %%eax;"
     "jmp   5f;"
 "5:;"
-    : "=a" (final)
-    : "b" (SR_RGBAtoWhole(pixel_top )),
-      "c" (SR_RGBAtoWhole(pixel_base)),
-      "d" (mode),
-      "S" (alpha_modifier)
-    : "%edi", "cc", "%r8" );
+    : "+a" (final),
+      "+b" (pbt),
+      "+c" (pbb),
+      "+d" (mode),
+      "+S" (alpha_modifier)
+    :: "%edi", "cc", "%r8" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
