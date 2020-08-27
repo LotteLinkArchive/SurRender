@@ -211,9 +211,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 "5:;"
     : "=a" (final)
     : "b" (SR_RGBAtoWhole(pixel_top )),
-        "c" (SR_RGBAtoWhole(pixel_base)),
-        "d" (mode),
-        "S" (alpha_modifier)
+      "c" (SR_RGBAtoWhole(pixel_base)),
+      "d" (mode),
+      "S" (alpha_modifier)
     : "%edi", "cc", "%r8" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
