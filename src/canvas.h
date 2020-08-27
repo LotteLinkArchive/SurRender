@@ -125,71 +125,78 @@
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
         unsigned int r;
         __asm__ (
-            "andl    $0     , %%esi;"
-            "andl    $0     , %%edx;"
-            "movw    20(%3 ), %%di ;" // hflags
-            "testb   $0x20  , %%dil;"
-            "jz      1f     ;"
+            "movq    14(%[C]), %%r8 ;" // 0x HF YC XC --
+            "movq    22(%[C]), %%r9 ;" // 0x CH CW RH RW
 
-            "movw    26(%3 ), %%si ;" // cwidth
-            "decw    %%si   ;"
-            "andl    %%esi  , %1   ;"
+            "movzwl  %%r9w   , %%ecx;" // Store RW for later (very useful val!)
 
-            "movw    28(%3 ), %%si ;" // cheight
-            "decw    %%si   ;"
-            "andl    %%esi  , %2   ;"
-            "jmp     2f     ;"
+            "rolq    $16     , %%r9 ;" // 0x CW RH RW CH
+            "movw    %%r9w   , %%di ;" // cheight in DI
+            "rolq    $16     , %%r9 ;" // 0x RH RW CH CW
+            "movw    %%r9w   , %%si ;" // cwidth in SI
+
+            "rolq    $16     , %%r8 ;" // 0x YC XC -- HF
+            "movb    %%r8b   , %%bl ;" // Store this for next time too
+
+            "testb   $0x20   , %%bl ;"
+            "jz      1f      ;"
+
+            "decw    %%si    ;"
+            "andw    %%si    , %w[X];"
+
+            "decw    %%di    ;"
+            "andw    %%di    , %w[Y];"
+
+            "jmp     2f      ;"
         "1:;"
-            "xorw    %%dx   , %%dx ;" // cwidth %
-            "movl    %1     , %%eax;"
-            "movw    26(%3 ), %%si ;"
-            "divw    %%si   ;"
-            "movl    %%edx  , %1   ;"
+            "xorw    %%dx    , %%dx ;" // cwidth %
+            "movw    %w[X]   , %%ax ;"
+            "divw    %%si    ;"
+            "movw    %%dx    , %w[X];"
 
-            "xorw    %%dx   , %%dx ;" // cheight %
-            "movl    %2     , %%eax;"
-            "movw    28(%3 ), %%si ;"
-            "divw    %%si   ;"
-            "movl    %%edx  , %2   ;"
+            "xorw    %%dx    , %%dx ;" // cheight %
+            "movw    %w[Y]   , %%ax ;"
+            "divw    %%di    ;"
+            "movw    %%dx    , %w[Y];"
         "2:;"
-            "movw    16(%3 ), %%si ;" // x += canvas->xclip;
-            "addl    %%esi  , %1   ;"
-            "movw    18(%3 ), %%si ;" // y += canvas->yclip;
-            "addl    %%esi  , %2   ;"
-            
-            "testb   $0x10  , %%dil;"
-            "jz      3f     ;"
+            "rolq    $16     , %%r8 ;" // 0x XC -- HF YC
+            "addw    %%r8w   , %w[Y];"
+            "rolq    $16     , %%r8 ;" // 0x -- HF YC XC
+            "addw    %%r8w   , %w[X];"
 
-            "movw    24(%3 ), %%si ;" // rheight
-            "decw    %%si   ;"
-            "andl    %%esi  , %2   ;"
+            "rolq    $16     , %%r9 ;" // 0x RW CH CW RH
+            "movw    %%r9w   , %%di ;" // rheight in DI
 
-            "movw    22(%3 ), %%si ;" // rwidth
-            "decw    %%si   ;"
-            "andl    %%esi  , %1   ;"
+            "testb   $0x10   , %%bl ;"
+            "jz      3f      ;"
 
-            "incw    %%si   ;"
-            "jmp     4f     ;"
+            "decw    %%di    ;"
+            "andw    %%di    , %w[Y];"
+
+            "decw    %%cx    ;"
+            "andw    %%cx    , %w[X];"
+
+            "incw    %%cx    ;"
+            "jmp     4f      ;"
         "3:;"
-            "xorw    %%dx   , %%dx ;" // rheight %
-            "movl    %2     , %%eax;"
-            "movw    24(%3 ), %%si ;"
-            "divw    %%si   ;"
-            "movl    %%edx  , %2   ;"
+            "xorw    %%dx    , %%dx ;" // rheight %
+            "movw    %w[Y]   , %%ax ;"
+            "divw    %%di    ;"
+            "movw    %%dx    , %w[Y];"
 
-            "xorw    %%dx   , %%dx ;" // rwidth % (Done last for final mul)
-            "movl    %1     , %%eax;"
-            "movw    22(%3 ), %%si ;"
-            "divw    %%si   ;"
-            "movl    %%edx  , %1   ;"
+            "xorw    %%dx    , %%dx ;" // rwidth % (Done last for final mul)
+            "movw    %w[X]   , %%ax ;"
+            "divw    %%cx    ;"
+            "movw    %%dx    , %w[X];"
         "4:;"
-            "movl    %2     , %%eax;"
-            "mull    %%esi  ;"
-            "addl    %1     , %%eax;"
-            "movl    %%eax  , %0   ;"
-            : "+r" (r), "+r" (x), "+r" (y), "+r" (canvas)
-            :
-            : "cc", "%edx", "%eax", "%edi", "%esi");
+            "movl    %[Y]    , %%eax;"
+            "mull    %%ecx   ;"
+            "addl    %[X]    , %%eax;"
+            : "=a" (r),
+              [X] "+r" (x),    // Both input and output, technically (RW)
+              [Y] "+r" (y)
+            : [C] "r" (canvas) // Read only
+            : "cc", "%r8", "%r9", "%bl", "%ecx", "%dx", "%di", "%si");
         return r;
 #else
         if (canvas->hflags & 0b00100000) {
