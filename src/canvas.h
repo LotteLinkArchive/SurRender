@@ -122,6 +122,77 @@
         register unsigned int x,
         register unsigned int y)
     {
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+        unsigned int r;
+        __asm__ (
+            "andl    $0     , %%esi;"
+            "andl    $0     , %%edx;"
+            "movw    20(%3 ), %%di ;" // hflags
+            "testb   $0x20  , %%dil;"
+            "jz      1f     ;"
+
+            "movw    26(%3 ), %%si ;" // cwidth
+            "decw    %%si   ;"
+            "andl    %%esi  , %1   ;"
+
+            "movw    28(%3 ), %%si ;" // cheight
+            "decw    %%si   ;"
+            "andl    %%esi  , %2   ;"
+            "jmp     2f     ;"
+        "1:;"
+            "xorw    %%dx   , %%dx ;" // cwidth %
+            "movl    %1     , %%eax;"
+            "movw    26(%3 ), %%si ;"
+            "divw    %%si   ;"
+            "movl    %%edx  , %1   ;"
+
+            "xorw    %%dx   , %%dx ;" // cheight %
+            "movl    %2     , %%eax;"
+            "movw    28(%3 ), %%si ;"
+            "divw    %%si   ;"
+            "movl    %%edx  , %2   ;"
+        "2:;"
+            // Move XCLIP/YCLIP to end
+            "movw    16(%3 ), %%si ;" // x += canvas->xclip;
+            "addl    %%esi  , %1   ;"
+            "movw    18(%3 ), %%si ;" // y += canvas->yclip;
+            "addl    %%esi  , %2   ;"
+            
+            "testb   $0x10  , %%dil;"
+            "jz      3f     ;"
+
+            "movw    24(%3 ), %%si ;" // rheight
+            "decw    %%si   ;"
+            "andl    %%esi  , %2   ;"
+
+            "movw    22(%3 ), %%si ;" // rwidth
+            "decw    %%si   ;"
+            "andl    %%esi  , %1   ;"
+
+            "incw    %%si   ;"
+            "jmp     4f     ;"
+        "3:;"
+            "xorw    %%dx   , %%dx ;" // rheight %
+            "movl    %2     , %%eax;"
+            "movw    24(%3 ), %%si ;"
+            "divw    %%si   ;"
+            "movl    %%edx  , %2   ;"
+
+            "xorw    %%dx   , %%dx ;" // rwidth % (Done last for final mul)
+            "movl    %1     , %%eax;"
+            "movw    22(%3 ), %%si ;"
+            "divw    %%si   ;"
+            "movl    %%edx  , %1   ;"
+        "4:;"
+            "movl    %2     , %%eax;"
+            "mull    %%esi  ;"
+            "addl    %1     , %%eax;"
+            "movl    %%eax  , %0   ;"
+            : "+r" (r), "+r" (x), "+r" (y), "+r" (canvas)
+            :
+            : "cc", "%edx", "%eax", "%edi", "%esi");
+        return r;
+#else
         if (canvas->hflags & 0b00100000) {
             x &= (canvas->cwidth - 1);
             y &= (canvas->cheight - 1);
@@ -129,9 +200,6 @@
             x %= (canvas->cwidth);
             y %= (canvas->cheight);
         }
-
-        x += canvas->xclip;
-        y += canvas->yclip;
 
         if (canvas->hflags & 0b00010000) {
             x &= (canvas->rwidth - 1);
@@ -141,7 +209,11 @@
             y %= (canvas->rheight);
         }
 
+        x += canvas->xclip;
+        y += canvas->yclip;
+
         return (canvas->rwidth * y) + x;
+#endif
     }
 
     // Check if a pixel is out of bounds
