@@ -152,7 +152,6 @@
             "divw    %%si   ;"
             "movl    %%edx  , %2   ;"
         "2:;"
-            // Move XCLIP/YCLIP to end
             "movw    16(%3 ), %%si ;" // x += canvas->xclip;
             "addl    %%esi  , %1   ;"
             "movw    18(%3 ), %%si ;" // y += canvas->yclip;
@@ -201,6 +200,9 @@
             y %= (canvas->cheight);
         }
 
+        x += canvas->xclip;
+        y += canvas->yclip;
+
         if (canvas->hflags & 0b00010000) {
             x &= (canvas->rwidth - 1);
             y &= (canvas->rheight - 1);
@@ -208,9 +210,6 @@
             x %= (canvas->rwidth);
             y %= (canvas->rheight);
         }
-
-        x += canvas->xclip;
-        y += canvas->yclip;
 
         return (canvas->rwidth * y) + x;
 #endif
