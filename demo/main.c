@@ -265,7 +265,7 @@ event_loop:
 
 #ifdef FLAG_PUCK
     speeen += 1;
-    rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1);
+    rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 0);
     SR_MergeCanvasIntoCanvas(
         &canvy, &(rotcanvas.canvas),
         128 + rotcanvas.offset_x, 128 + rotcanvas.offset_y,

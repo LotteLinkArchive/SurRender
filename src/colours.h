@@ -225,13 +225,13 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     alpha_mul     = (pixel_top.alpha * alpha_modifier) >> 8;
     alpha_mul_neg = 255 - alpha_mul;
 
-    pixel_top.rgb.red   = (pixel_top.rgb.red   * alpha_mul) >> 8;
-    pixel_top.rgb.green = (pixel_top.rgb.green * alpha_mul) >> 8;
-    pixel_top.rgb.blue  = (pixel_top.rgb.blue  * alpha_mul) >> 8;
+    pixel_top.rgb.red   = ((pixel_top.rgb.red   * alpha_mul) + 255) >> 8;
+    pixel_top.rgb.green = ((pixel_top.rgb.green * alpha_mul) + 255) >> 8;
+    pixel_top.rgb.blue  = ((pixel_top.rgb.blue  * alpha_mul) + 255) >> 8;
 
-    pixel_base.rgb.red   = (pixel_base.rgb.red   * alpha_mul_neg) >> 8;
-    pixel_base.rgb.green = (pixel_base.rgb.green * alpha_mul_neg) >> 8;
-    pixel_base.rgb.blue  = (pixel_base.rgb.blue  * alpha_mul_neg) >> 8;
+    pixel_base.rgb.red   = ((pixel_base.rgb.red   * alpha_mul_neg) + 255) >> 8;
+    pixel_base.rgb.green = ((pixel_base.rgb.green * alpha_mul_neg) + 255) >> 8;
+    pixel_base.rgb.blue  = ((pixel_base.rgb.blue  * alpha_mul_neg) + 255) >> 8;
 
 srbl_nomul:
     pixel_base_whole = SR_RGBAtoWhole(pixel_base);
