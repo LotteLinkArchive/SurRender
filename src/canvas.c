@@ -247,8 +247,8 @@ SR_Canvas SR_NearestNeighborCanvasScale(
 
     if (!dest.pixels) { return dest; }
 
-    float x_factor = src->width / newWidth;
-    float y_factor = src->height / newHeight;
+    float x_factor = (float)src->width / (float)newWidth;
+    float y_factor = (float)src->height / (float)newHeight;
     
     unsigned short x, y;
     for (x = 0; x < newWidth; x++)
