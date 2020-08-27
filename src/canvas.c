@@ -246,10 +246,16 @@ SR_Canvas SR_NearestNeighborCanvasScale(
 
     if (!dest.pixels) { return dest; }
 
-    float x_factor = newWidth / src->width;
-    float y_factor = newHeight / src->height;
+    float x_factor = src->width / newWidth;
+    float y_factor = src->height / newHeight;
     
-    
+    unsigned short x, y;
+    for (x = 0; x < newWidth; x++)
+    for (y = 0; y < newHeight; y++) {
+        SR_RGBAPixel sample = SR_CanvasGetPixel(
+            src, x * x_factor, y * y_factor);
+        SR_CanvasSetPixel(&dest, x, y, sample);
+    }
     
     return dest;
 }
