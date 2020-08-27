@@ -103,8 +103,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     register uint8_t alpha_modifier,
     register char mode)
 {
-#if (defined(__x86_64__) || defined(__i386__)) && \
-(defined(__GNUC__) || defined(__clang__)) && defined(SURCL_ASM_BLEND)
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
     __asm__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
@@ -144,31 +143,25 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
     "xchg  %%ebx, %%ecx;"
     "je    3f;"            // Go back and do pixel_base now
-    "jmp   4f;"            // Or, if it's done, finish up and start blending
+    "jmp   1f;"            // Or, if it's done, finish up and start blending
 "3:;"
     "andl  $0x00FFFFFF, %%eax;"
     "jmp   2b;"            // Prevent next loop and do the last iteration.
-"4:;"
-    "andl  $0   , %%eax;"  // Clear EAX
 "1:;"
-    // TODO: Replace excessive branching here with a jump table of some kind
-    "cmpl  $0   , %%edx;"  // SR_BLEND_XOR
-    "je    6f;"
-    "cmpl  $1   , %%edx;"  // SR_BLEND_ADDITIVE
-    "je    7f;"
-    "cmpl  $2   , %%edx;"  // SR_BLEND_OVERLAY
-    "je    8f;"
-    "cmpl  $3   , %%edx;"  // SR_BLEND_INVERT_DROP
-    "je    10f;"
-    "cmpl  $4   , %%edx;"  // SR_BLEND_DROP
-    "je    11f;"
-    "cmpl  $5   , %%edx;"  // SR_BLEND_REPLACE
-    "je    12f;"
-    "cmpl  $6   , %%edx;"  // SR_BLEND_DIRECT_XOR
-    "je    6f;"
-    "cmpl  $7   , %%edx;"  // SR_BLEND_DIRECT_XOR_ALL
-    "je    13f;"
-    "jmp   5f;"
+    "andl  $0   , %%eax;"  // Clear EAX
+    "leaq  14f(%%rip), %%rdi;"
+    "movslq (%%rdi,%%rdx,4), %%r9;"
+    "addq  %%rdi, %%r9;"
+    "jmp   *%%r9;"
+"14:;"
+    ".long 6f   - 14b;"    // SR_BLEND_XOR
+    ".long 7f   - 14b;"    // SR_BLEND_ADDITIVE
+    ".long 8f   - 14b;"    // SR_BLEND_OVERLAY
+    ".long 10f  - 14b;"    // SR_BLEND_INVERT_DROP
+    ".long 11f  - 14b;"    // SR_BLEND_DROP
+    ".long 12f  - 14b;"    // SR_BLEND_REPLACE
+    ".long 6f   - 14b;"    // SR_BLEND_DIRECT_XOR
+    ".long 13f  - 14b;"    // SR_BLEND_DIRECT_XOR_ALL
 "6:;"
     "andl  $0x00FFFFFF, %%ebx;"
     "xorl  %%ecx, %%ebx;"
@@ -221,7 +214,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
         "c" (SR_RGBAtoWhole(pixel_base)),
         "d" (mode),
         "S" (alpha_modifier)
-    : "%edi", "cc" );
+    : "%edi", "cc", "%r8" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
