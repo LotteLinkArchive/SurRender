@@ -68,7 +68,8 @@
 
     // All supported scaling modes for canvases
     enum SR_ScaleModes {
-        SR_SCALE_BILINEAR
+        SR_SCALE_BILINEAR,
+        SR_SCALE_NEARESTN
     };
 
     // Returns an appropriate HFLAG if tex is power of 2
