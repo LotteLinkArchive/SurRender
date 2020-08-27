@@ -111,6 +111,8 @@ int main(void)
 
 #ifdef FLAG_ATLAS
     SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
+    brick_tileset = SR_CanvasScale(
+        &brick_tileset, 128, 192, SR_SCALE_NEARESTN);
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -293,7 +295,7 @@ event_loop:
     cheese_timer++;
 
     // get a texture from the atlas and tile it over the whole window
-    SR_Canvas the = SR_RefCanvTile(&brick_tileset, 16, 16,
+    SR_Canvas the = SR_RefCanvTile(&brick_tileset, 32, 32,
         (cheese_timer >> 3) & 3,
         (cheese_timer >> 5) % 6);
     SR_TileTo(&the, canvy.width, canvy.height);
@@ -311,9 +313,9 @@ event_loop:
     // draw a box around the current texture
     SR_DrawRectOutline(
         &canvy, SR_CreateRGBA(255, 167, 15, 255),
-        (((cheese_timer >> 3) & 3) << 4) + 23,
-        (((cheese_timer >> 5) % 6) << 4) + 23,
-        17, 17);
+        (((cheese_timer >> 3) & 3) << 5) + 23,
+        (((cheese_timer >> 5) % 6) << 5) + 23,
+        33, 33);
 #endif
 
     /* update the canvas here, the rest is
