@@ -24,12 +24,13 @@
 
         /* Internal canvas properties - FORMAT:
          * 0 b 0 0 0 0 0 0 0 0
-         *     X X | | | | | \- Canvas is a reference to another canvas' pixels
-         *         | | | | \--- Canvas is indestructible
-         *         | | | \----- Canvas is important             [UNIMPLEMENTED]
-         *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
-         *         | \--------- Canvas Rsize is a power of two  [UNIMPLEMENTED]
-         *         \----------- Canvas Csize is a power of two  [UNIMPLEMENTED]
+         *     X | | | | | | \- Canvas is a reference to another canvas' pixels
+         *       | | | | | \--- Canvas is indestructible
+         *       | | | | \----- Canvas is important             [UNIMPLEMENTED]
+         *       | | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+         *       | | \--------- Canvas Rsize is a power of two
+         *       | \----------- Canvas Csize is a power of two
+         *       \------------- Canvas Csize lrgr or eq to Rsize and no clip
          */
         uint8_t hflags;
 
@@ -63,6 +64,10 @@
     // Returns an appropriate HFLAG if tex is power of 2
     #define SR_CPow2FDtc(w, h, flag) \
     ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
+    // Returns an appropriate HFLAG if Rsize and Csize are equal
+    #define SR_CcsrsEqC(cw, ch, rw, rh, xc, yc) \
+    (((ch) >= (rw)) && ((ch) >= (rh) && ((xc) == 0) && ((yc) == 0)) \
+    ? 0b01000000 : 0)
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -105,7 +110,6 @@
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-
     inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
         register unsigned int x,
@@ -127,6 +131,9 @@
 
             "rolq    $16     , %%r8 ;" // 0x YC XC -- HF
             "movb    %%r8b   , %%bl ;" // Store this for next time too
+
+            "testb   $0x40   , %%bl ;"
+            "jnz     5f      ;"
 
             "testb   $0x20   , %%bl ;"
             "jz      1f      ;"
@@ -153,7 +160,7 @@
             "addw    %%r8w   , %w[Y];"
             "rolq    $16     , %%r8 ;" // 0x -- HF YC XC
             "addw    %%r8w   , %w[X];"
-
+        "5:;" // WARN: r8 not rolled here
             "rolq    $16     , %%r9 ;" // 0x RW CH CW RH
             "movw    %%r9w   , %%di ;" // rheight in DI
 
@@ -189,6 +196,8 @@
             : "cc", "%r8", "%r9", "%bl", "%ecx", "%dx", "%di", "%si");
         return r;
 #else
+        if (canvas->hflags & 0b01000000) goto canv_pos_leg_lab;
+
         if (canvas->hflags & 0b00100000) {
             x &= (canvas->cwidth - 1);
             y &= (canvas->cheight - 1);
@@ -200,6 +209,7 @@
         x += canvas->xclip;
         y += canvas->yclip;
 
+    canv_pos_leg_lab:
         if (canvas->hflags & 0b00010000) {
             x &= (canvas->rwidth - 1);
             y &= (canvas->rheight - 1);

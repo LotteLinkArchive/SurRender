@@ -25,6 +25,13 @@ SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
     temp.cwidth = *x;
     temp.cheight = *y;
     temp.hflags |= SR_CPow2FDtc(*x, *y, 0b00110000);
+    temp.hflags |= SR_CcsrsEqC(
+        temp.cwidth,
+        temp.cheight,
+        temp.rwidth,
+        temp.rheight,
+        temp.xclip,
+        temp.yclip);
     temp.ratio = (float)temp.width / temp.height;
 
     goto ldstbicanv_fin;

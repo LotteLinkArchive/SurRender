@@ -23,6 +23,13 @@ bool SR_ResizeCanvas(
     canvas->cwidth = width;
     canvas->cheight = height;
     canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
+    canvas->hflags |= SR_CcsrsEqC(
+        canvas->cwidth,
+        canvas->cheight,
+        canvas->rwidth,
+        canvas->rheight,
+        canvas->xclip,
+        canvas->yclip);
     
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -153,6 +160,13 @@ SR_Canvas SR_RefCanv(
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
     temp.hflags |= SR_CPow2FDtc(temp.rwidth, temp.rheight, 0b00010000);
     temp.hflags |= SR_CPow2FDtc(temp.cwidth, temp.cheight, 0b00100000);
+    temp.hflags |= SR_CcsrsEqC(
+        temp.cwidth,
+        temp.cheight,
+        temp.rwidth,
+        temp.rheight,
+        temp.xclip,
+        temp.yclip);
 
     return temp;
 }
