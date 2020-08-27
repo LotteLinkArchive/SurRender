@@ -223,11 +223,12 @@ SR_Canvas SR_BilinearCanvasScale(
         uint32_t result = 0;
         for (uint8_t i = 0; i < 4; i++)
             result |= (uint8_t)blerp(
-                getByte(c00, i),
-                getByte(c10, i),
-                getByte(c01, i),
-                getByte(c11, i),
-                gx - gxi, gy - gyi
+                (float)getByte(c00, i),
+                (float)getByte(c10, i),
+                (float)getByte(c01, i),
+                (float)getByte(c11, i),
+                (float)gx - gxi,
+                (float)gy - gyi
             ) << (8 * i);
 
         SR_CanvasSetPixel(&dest, x, y, SR_WholetoRGBA(result));
