@@ -122,7 +122,8 @@
         register unsigned int x,
         register unsigned int y)
     {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))\
+&& defined(SURCL_ASM)
         unsigned int r;
         __asm__ (
             "movq    14(%[C]), %%r8 ;" // 0x HF YC XC --
