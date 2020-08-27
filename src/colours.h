@@ -103,6 +103,126 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     register uint8_t alpha_modifier,
     register char mode)
 {
+#if (defined(__x86_64__) || defined(__i386__)) && \
+(defined(__GNUC__) || defined(__clang__)) && defined(SURCL_ASM_BLEND)
+    uint32_t final;
+    __asm__ (
+    "movb  %%dl , %%dil;"  // Move mode to spare register D
+    "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
+    "testb %%dil, %%dil;"  // Check if zero (is mul required?)
+    "jnz   1f;"            // Mul is not required, jump to table
+
+    // Generate alpha_mul and alpha_mul_neg
+    "roll  $8   , %%ebx;"  // Replace top red with top alpha
+    "movb  %%bl , %%al;"   // Move it to the accumulator
+    "rorl  $8   , %%ebx;"  // Rollback the top pixel state
+    "mulb  %%sil;"         // alpha modifier * top alpha -> AH and AL
+    "shrw  $8   , %%ax;"   // Shift AH and AL to the right by 8 bits
+    "movb  %%al , %%sil;"  // Move alpha_mul to alpha_modifier, not needed
+    "movb  $0xFF, %%ah;"
+    "subb  %%al , %%ah;"   // Turn accumulator into alpha_mul_neg
+    "shrw  $8   , %%ax;"
+    "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
+
+    // Actual multiplication
+    "orl   $0xFF000000, %%eax;"
+"2:;"
+    "movb  %%bl , %%al;"
+    "mulb  %%sil;"
+    "movb  %%ah , %%bl;"   // Run pixel_top.rgb.red through the alpha_mul
+    "movb  %%bh , %%al;"
+    "mulb  %%sil;"
+    "movb  %%ah , %%bh;"   // Run pixel_top.rgb.green through the alpha_mul
+    "rorl  $8   , %%ebx;"  // Rotate right to shift blue into green (BH)
+    "movb  %%bh , %%al;"
+    "mulb  %%sil;"
+    "movb  %%ah , %%bh;"   // Run pixel_top.rgb.blue through the alpha_mul
+    "roll  $8   , %%ebx;"  // Rotate left to shift green back into blue
+
+    "andl  $0xFF000000, %%eax;"
+    "cmpl  $0xFF000000, %%eax;"
+    "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
+    "xchg  %%ebx, %%ecx;"
+    "je    3f;"            // Go back and do pixel_base now
+    "jmp   4f;"            // Or, if it's done, finish up and start blending
+"3:;"
+    "andl  $0x00FFFFFF, %%eax;"
+    "jmp   2b;"            // Prevent next loop and do the last iteration.
+"4:;"
+    "andl  $0   , %%eax;"  // Clear EAX
+"1:;"
+    // TODO: Replace excessive branching here with a jump table of some kind
+    "cmpl  $0   , %%edx;"  // SR_BLEND_XOR
+    "je    6f;"
+    "cmpl  $1   , %%edx;"  // SR_BLEND_ADDITIVE
+    "je    7f;"
+    "cmpl  $2   , %%edx;"  // SR_BLEND_OVERLAY
+    "je    8f;"
+    "cmpl  $3   , %%edx;"  // SR_BLEND_INVERT_DROP
+    "je    10f;"
+    "cmpl  $4   , %%edx;"  // SR_BLEND_DROP
+    "je    11f;"
+    "cmpl  $5   , %%edx;"  // SR_BLEND_REPLACE
+    "je    12f;"
+    "cmpl  $6   , %%edx;"  // SR_BLEND_DIRECT_XOR
+    "je    6f;"
+    "cmpl  $7   , %%edx;"  // SR_BLEND_DIRECT_XOR_ALL
+    "je    13f;"
+    "jmp   5f;"
+"6:;"
+    "andl  $0x00FFFFFF, %%ebx;"
+    "xorl  %%ecx, %%ebx;"
+    "movl  %%ebx, %%eax;"
+    "jmp   5f;"
+"7:;"
+    "roll  $8   , %%ecx;"
+    "movb  %%cl , %%al;"
+    "shll  $24  , %%eax;"
+    "rorl  $8   , %%ecx;"
+    "andl  $0x00FFFFFF, %%ebx;"
+    "andl  $0x00FFFFFF, %%ecx;"
+    "addl  %%ebx, %%ecx;"
+    "orl   %%ecx, %%eax;"
+    "jmp   5f;"
+"8:;"
+    "cmpb  $0   , %%sil;"
+    "je    9f;"
+    "andl  $0x00FFFFFF, %%ebx;"
+    "andl  $0xFF000000, %%ecx;"
+    "orl   %%ebx, %%eax;"
+    "orl   %%ecx, %%eax;"
+    "jmp   5f;"
+"9:;"
+    "movl  %%ecx, %%eax;"
+    "jmp   5f;"
+"10:;"
+    "movl  %%ecx, %%eax;"
+    "andl  $0x00FFFFFF, %%eax;"
+    "notl  %%ebx;"
+    "andl  $0xFF000000, %%ebx;"
+    "orl   %%ebx, %%eax;"
+    "jmp   5f;"
+"11:;"
+    "movl  %%ecx, %%eax;"
+    "andl  $0x00FFFFFF, %%eax;"
+    "andl  $0xFF000000, %%ebx;"
+    "orl   %%ebx, %%eax;"
+    "jmp   5f;"
+"12:;"
+    "movl  %%ebx, %%eax;"
+    "jmp   5f;"
+"13:;"
+    "xorl  %%ebx, %%ecx;"
+    "movl  %%ecx, %%eax;"
+    "jmp   5f;"
+"5:;"
+    : "=a" (final)
+    : "b" (SR_RGBAtoWhole(pixel_top )),
+        "c" (SR_RGBAtoWhole(pixel_base)),
+        "d" (mode),
+        "S" (alpha_modifier)
+    : "%edi", "cc" );
+#else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
 
@@ -166,6 +286,8 @@ srbl_nomul:
 
         break;
     }
+
+#endif
     return SR_WholetoRGBA(final);
 }
 #endif
