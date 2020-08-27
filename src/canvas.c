@@ -8,8 +8,12 @@ bool SR_ResizeCanvas(
     unsigned short height)
 {
     // It is impossible to create a 0-width/0-height canvas.
-    if (!width || !height) return false;
+    if (!width  ||
+        !height ||
+        canvas->pixels ||
+        canvas->hflags & 0b00001011) return false;
 
+    // @direct
     canvas->width = width;
     canvas->height = height;
 
@@ -18,6 +22,7 @@ bool SR_ResizeCanvas(
 
     canvas->cwidth = width;
     canvas->cheight = height;
+    canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
     
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -43,6 +48,7 @@ void SR_TileTo(
     unsigned short width,
     unsigned short height)
 {
+    // @direct
     canvas->width = width;
     canvas->height = height;
 }
@@ -129,6 +135,7 @@ SR_Canvas SR_RefCanv(
     unsigned short height,
     bool allow_destroy_host)
 {
+    // @direct
     SR_Canvas temp = {
         .xclip   = xclip % src->rwidth,
         .yclip   = yclip % src->rheight,
@@ -144,6 +151,8 @@ SR_Canvas SR_RefCanv(
     };
 
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
+    temp.hflags |= SR_CPow2FDtc(temp.rwidth, temp.rheight, 0b00010000);
+    temp.hflags |= SR_CPow2FDtc(temp.cwidth, temp.cheight, 0b00100000);
 
     return temp;
 }
@@ -544,10 +553,11 @@ SR_Canvas * SR_GetAtlasCanv(
 {
     if (!atlas->canvies)
     {
+        // @direct
         static SR_Canvas temp = {};
 
         // Initialize to zero each time just in case
-        temp.hflags = 0;
+        temp.hflags = 0b00110000;
         temp.xclip = 0;
         temp.yclip = 0;
 

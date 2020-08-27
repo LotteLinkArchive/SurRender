@@ -24,10 +24,12 @@
 
         /* Internal canvas properties - FORMAT:
          * 0 b 0 0 0 0 0 0 0 0
-         *     X X X X | | | \- Canvas is a reference to another canvas' pixels
-         *             | | \--- Canvas is indestructible
-         *             | \----- Canvas is important             [UNIMPLEMENTED]
-         *             \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+         *     X X | | | | | \- Canvas is a reference to another canvas' pixels
+         *         | | | | \--- Canvas is indestructible
+         *         | | | \----- Canvas is important             [UNIMPLEMENTED]
+         *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+         *         | \--------- Canvas Rsize is a power of two  [UNIMPLEMENTED]
+         *         \----------- Canvas Csize is a power of two  [UNIMPLEMENTED]
          */
         uint8_t hflags;
 
@@ -69,6 +71,10 @@
         SR_SCALE_BILINEAR
     };
 
+    // Returns an appropriate HFLAG if tex is power of 2
+    #define SR_CPow2FDtc(w, h, flag) \
+    ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
+
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
      */
@@ -102,8 +108,8 @@
      * recommended to use this yourself.
      */
     #define SR_CanvasCalcSize(canvas) ((unsigned int)( \
-        (unsigned int)((canvas)->width)  *             \
-        (unsigned int)((canvas)->height) *             \
+        (unsigned int)((canvas)->rwidth)  *            \
+        (unsigned int)((canvas)->rheight) *            \
         sizeof(SR_RGBAPixel)                           \
     ))
 
@@ -113,13 +119,107 @@
 
     inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
-        register unsigned short x,
-        register unsigned short y)
+        register unsigned int x,
+        register unsigned int y)
     {
-        return (
-            (unsigned int)canvas->rwidth *
-            (((unsigned int)canvas->yclip + y) % canvas->rheight)
-        ) + (((unsigned int)canvas->xclip + x) % canvas->rwidth );
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
+        unsigned int r;
+        __asm__ (
+            "movq    14(%[C]), %%r8 ;" // 0x HF YC XC --
+            "movq    22(%[C]), %%r9 ;" // 0x CH CW RH RW
+
+            "movzwl  %%r9w   , %%ecx;" // Store RW for later (very useful val!)
+
+            "rolq    $16     , %%r9 ;" // 0x CW RH RW CH
+            "movw    %%r9w   , %%di ;" // cheight in DI
+            "rolq    $16     , %%r9 ;" // 0x RH RW CH CW
+            "movw    %%r9w   , %%si ;" // cwidth in SI
+
+            "rolq    $16     , %%r8 ;" // 0x YC XC -- HF
+            "movb    %%r8b   , %%bl ;" // Store this for next time too
+
+            "testb   $0x20   , %%bl ;"
+            "jz      1f      ;"
+
+            "decw    %%si    ;"
+            "andw    %%si    , %w[X];"
+
+            "decw    %%di    ;"
+            "andw    %%di    , %w[Y];"
+
+            "jmp     2f      ;"
+        "1:;"
+            "xorw    %%dx    , %%dx ;" // cwidth %
+            "movw    %w[X]   , %%ax ;"
+            "divw    %%si    ;"
+            "movw    %%dx    , %w[X];"
+
+            "xorw    %%dx    , %%dx ;" // cheight %
+            "movw    %w[Y]   , %%ax ;"
+            "divw    %%di    ;"
+            "movw    %%dx    , %w[Y];"
+        "2:;"
+            "rolq    $16     , %%r8 ;" // 0x XC -- HF YC
+            "addw    %%r8w   , %w[Y];"
+            "rolq    $16     , %%r8 ;" // 0x -- HF YC XC
+            "addw    %%r8w   , %w[X];"
+
+            "rolq    $16     , %%r9 ;" // 0x RW CH CW RH
+            "movw    %%r9w   , %%di ;" // rheight in DI
+
+            "testb   $0x10   , %%bl ;"
+            "jz      3f      ;"
+
+            "decw    %%di    ;"
+            "andw    %%di    , %w[Y];"
+
+            "decw    %%cx    ;"
+            "andw    %%cx    , %w[X];"
+
+            "incw    %%cx    ;"
+            "jmp     4f      ;"
+        "3:;"
+            "xorw    %%dx    , %%dx ;" // rheight %
+            "movw    %w[Y]   , %%ax ;"
+            "divw    %%di    ;"
+            "movw    %%dx    , %w[Y];"
+
+            "xorw    %%dx    , %%dx ;" // rwidth % (Done last for final mul)
+            "movw    %w[X]   , %%ax ;"
+            "divw    %%cx    ;"
+            "movw    %%dx    , %w[X];"
+        "4:;"
+            "movl    %[Y]    , %%eax;"
+            "mull    %%ecx   ;"
+            "addl    %[X]    , %%eax;"
+            : "=a" (r),
+              [X] "+r" (x),    // Both input and output, technically (RW)
+              [Y] "+r" (y)
+            : [C] "r" (canvas) // Read only
+            : "cc", "%r8", "%r9", "%bl", "%ecx", "%dx", "%di", "%si");
+        return r;
+#else
+        if (canvas->hflags & 0b00100000) {
+            x &= (canvas->cwidth - 1);
+            y &= (canvas->cheight - 1);
+        } else {
+            x %= (canvas->cwidth);
+            y %= (canvas->cheight);
+        }
+
+        x += canvas->xclip;
+        y += canvas->yclip;
+
+        if (canvas->hflags & 0b00010000) {
+            x &= (canvas->rwidth - 1);
+            y &= (canvas->rheight - 1);
+        } else {
+            x %= (canvas->rwidth);
+            y %= (canvas->rheight);
+        }
+
+        return (canvas->rwidth * y) + x;
+#endif
     }
 
     // Check if a pixel is out of bounds
@@ -136,8 +236,7 @@
     {
         if (!canvas->pixels) return;
 
-        canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->cwidth, y % canvas->cheight)] = pixel;
+        canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
     }
 
     // Get a pixel in the canvas
@@ -148,8 +247,7 @@
     {
         if (!canvas->pixels) { return SR_CreateRGBA(255, 0, 0, 255); }
 
-        return canvas->pixels[SR_CanvasCalcPosition(
-            canvas, x % canvas->cwidth, y % canvas->cheight)];
+        return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
     }
 
     // Check if a pixel is non-zero, hopefully

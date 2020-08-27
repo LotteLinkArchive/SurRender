@@ -46,7 +46,7 @@ int main(void)
 
     /* edit: this is the current way of testing whether
        canvas allocation has failed or not for now */
-    canvy = SR_NewCanvas(1366, 768);
+    canvy = SR_NewCanvas(1024, 512);
     SR_DrawRect(
         &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
         canvy.width, canvy.height);
