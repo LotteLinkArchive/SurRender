@@ -112,15 +112,13 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "jnz   1f;"            // Mul is not required, jump to table
 
     // Generate alpha_mul and alpha_mul_neg
-    "roll  $8   , %%ebx;"  // Replace top red with top alpha
-    "movb  %%bl , %%al;"   // Move it to the accumulator
-    "rorl  $8   , %%ebx;"  // Rollback the top pixel state
+    "movl  %%ebx, %%eax;"
+    "roll  $8   , %%eax;"
     "mulb  %%sil;"         // alpha modifier * top alpha -> AH and AL
-    "shrw  $8   , %%ax;"   // Shift AH and AL to the right by 8 bits
+    "xchg  %%ah , %%al;"
     "movb  %%al , %%sil;"  // Move alpha_mul to alpha_modifier, not needed
-    "movb  $0xFF, %%ah;"
-    "subb  %%al , %%ah;"   // Turn accumulator into alpha_mul_neg
-    "shrw  $8   , %%ax;"
+    "movb  $0xFF, %%al;"
+    "subb  %%sil, %%al;"   // Turn accumulator into alpha_mul_neg
     "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
 "2:;"
     ".rept 2;"
