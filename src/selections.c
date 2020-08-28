@@ -6,9 +6,9 @@
 SR_Select SR_NewSelect(unsigned short width, unsigned short height)
 {
     SR_Select temp = {
-        .width = width;
-        .height = height;
-        .bitfield = calloc((width * height) >> 3, sizeof(uint8_t));
+        .width = width,
+        .height = height,
+        .bitfield = calloc((width * height) >> 3, sizeof(uint8_t))
     };
     
     return temp;
