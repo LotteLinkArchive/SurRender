@@ -111,45 +111,50 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "testb %%dil, %%dil;"  // Check if zero (is mul required?)
     "jnz   1f;"            // Mul is not required, jump to table
 
-    // Generate alpha_mul and alpha_mul_neg
-    "movl  %%ebx, %%eax;"
-    "shrl  $24  , %%eax;"
-    "mulb  %%sil;"         // alpha modifier * top alpha -> AH and AL
-    "movb  %%ah , %%al;"
-    "movb  %%al , %%sil;"  // Move alpha_mul to alpha_modifier, not needed
-    "movb  $0xFF, %%al;"
-    "subb  %%sil, %%al;"   // Turn accumulator into alpha_mul_neg
-    "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
-
-    ".rept 2;"
-    
     /* 0xFF   * 0x0100010001000100 = 0xFF00FF00FF00FF00
      * 0xFF   * 0x0101010101010101 = 0xFFFFFFFFFFFFFFFF
      * 0xFF   * 0x0001000100010001 = 0x00FF00FF00FF00FF
      * 0xFFFF * 0x0001000100010001 = 0xFFFFFFFFFFFFFFFF
      */
 
-    "movzbq    %%sil, %%rax;"
-    "movq      $0x0001000100010001, %%rdx;"
-    "mulq      %%rdx;"
-    "movq      %%rax, %%mm2;"
-    "movd      %%ebx, %%mm0;"
+    // MMX setup
+    "movq      $0x0000000100010001, %%r8;"
+    "movq      $0x000000FF00FF00FF, %%r9;"
     "pxor      %%mm1, %%mm1;"
+
+    // Generate alpha_mul and alpha_mul_neg
+    "movl  %%ebx, %%eax;"
+    "shrl  $24  , %%eax;"
+    "mulb  %%sil;"
+    "shrw  $8   , %%ax ;"
+    "mulq  %%r8;"
+    "movq  %%rax, %%rsi;"
+    "movq  %%r9 , %%rax;"
+    "subq  %%rsi, %%rax;"
+    "movq  %%rax, %%mm3;"
+    "movq  %%rsi, %%mm2;"
+
+    "movd      %%ebx, %%mm0;"
+    "movd      %%ecx, %%mm4;"
     "punpcklbw %%mm1, %%mm0;"
+    "punpcklbw %%mm1, %%mm4;"
     "pmullw    %%mm2, %%mm0;"
-    "movq      $0x00FF00FF00FF00FF, %%rdx;"
-    "movq      %%rdx, %%mm2;"
+    "pmullw    %%mm3, %%mm4;"
+    "movq      %%r9 , %%mm2;"
     "paddw     %%mm2, %%mm0;"
+    "paddw     %%mm2, %%mm4;"
     "psrlw     $8   , %%mm0;"
+    "psrlw     $8   , %%mm4;"
     "packuswb  %%mm1, %%mm0;"
+    "packuswb  %%mm1, %%mm4;"
     "movd      %%mm0, %%eax;"
     "andl      $0x00FFFFFF, %%eax;"
     "andl      $0xFF000000, %%ebx;"
     "orl       %%eax, %%ebx;"
-
-    "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
-    "xchg  %%ebx, %%ecx;"
-    ".endr;"
+    "movd      %%mm4, %%eax;"
+    "andl      $0x00FFFFFF, %%eax;"
+    "andl      $0xFF000000, %%ecx;"
+    "orl       %%eax, %%ecx;"
 "1:;"
     "leaq   14f(%%rip), %%rdi;"
     "movslq (%%rdi,%q[M],4), %%rax;"
@@ -175,7 +180,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "addl  %%ebx, %%eax;"
     "jmp   5f;"
 "8:;"
-    "testb %%sil, %%sil;"
+    "movl  %%ebx, %%eax;"
+    "andl  $0xFF000000, %%eax;"
+    "testl %%eax, %%eax;"
     "je    9f;"
     "andl  $0x00FFFFFF, %%ebx;"
     "andl  $0xFF000000, %%ecx;"
@@ -204,7 +211,6 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 "13:;"
     "xorl  %%ebx, %%ecx;"
     "movl  %%ecx, %%eax;"
-    "jmp   5f;"
 "5:;"
     "emms;"
     : "+a" (final),
@@ -212,15 +218,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     : "b" (SR_RGBAtoWhole(pixel_top )),
       "c" (SR_RGBAtoWhole(pixel_base)),
       [M] "r" ((uint64_t)mode)
-    : "%rdi", "%rdx", "%mm0", "%mm1", "%mm2", "cc" );
-    /* Interesting note: Inserting %r8 into the clobber list, even if you don't
-     * use or touch the register at all (not even reading it), seems to cause a
-     * dramatic increase in performance that I can't even begin to explain.
-     * 
-     * I haven't added it here since we aren't *actually* using the register,
-     * and I'd like to think that it's a bug with GCC that they'll eventually
-     * fix or something.
-     */
+    : "%rdi", "%rdx", "%mm0", "%mm1",
+      "%mm2", "%mm3", "%mm4", "%r8" ,
+      "%r9" , "cc" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
