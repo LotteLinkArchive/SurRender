@@ -4,6 +4,8 @@
     #include "canvas.h"
     #include "colours.h"
     
+    #define SR_SelectIsValid(selection) BOOLIFY(selection->bitfield);
+    
     typedef struct SR_Select {
         // Width and height, in bits
         unsigned short width;
