@@ -100,8 +100,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBtoRGBA(
 inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     SR_RGBAPixel pixel_base,
     SR_RGBAPixel pixel_top,
-    register uint8_t alpha_modifier,
-    register char mode)
+    uint8_t alpha_modifier,
+    char mode)
 {
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
@@ -113,9 +113,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 
     // Generate alpha_mul and alpha_mul_neg
     "movl  %%ebx, %%eax;"
-    "roll  $8   , %%eax;"
+    "shrl  $24  , %%eax;"
     "mulb  %%sil;"         // alpha modifier * top alpha -> AH and AL
-    "xchg  %%ah , %%al;"
+    "shrw  $8   , %%ax;"
     "movb  %%al , %%sil;"  // Move alpha_mul to alpha_modifier, not needed
     "movb  $0xFF, %%al;"
     "subb  %%sil, %%al;"   // Turn accumulator into alpha_mul_neg
@@ -144,9 +144,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "jmp   1f;"            // Or, if it's done, finish up and start blending
 "1:;"
     "leaq   14f(%%rip), %%rdi;"
-    "movslq (%%rdi,%%rdx,4), %%r8;"
-    "addq   %%rdi, %%r8;"
-    "jmp    *%%r8;"
+    "movslq (%%rdi,%%rdx,4), %%rax;"
+    "addq   %%rdi, %%rax;"
+    "jmp    *%%rax;"
 "14:;"
     ".long 6f   - 14b;"    // SR_BLEND_XOR
     ".long 7f   - 14b;"    // SR_BLEND_ADDITIVE
@@ -208,7 +208,15 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
       "c" (SR_RGBAtoWhole(pixel_base)),
       "d" (mode),
       "S" (alpha_modifier)
-    : "%edi", "cc", "%r8" );
+    : "%rdi", "cc" );
+    /* Interesting note: Inserting %r8 into the clobber list, even if you don't
+     * use or touch the register at all (not even reading it), seems to cause a
+     * dramatic increase in performance that I can't even begin to explain.
+     * 
+     * I haven't added it here since we aren't *actually* using the register,
+     * and I'd like to think that it's a bug with GCC that they'll eventually
+     * fix or something.
+     */
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
