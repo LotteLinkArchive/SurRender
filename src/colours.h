@@ -103,11 +103,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     register uint8_t alpha_modifier,
     register char mode)
 {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))\
-&& defined(SURCL_ASM)
+#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
-    uint32_t pbt = SR_RGBAtoWhole(pixel_top );
-    uint32_t pbb = SR_RGBAtoWhole(pixel_base);
     __asm__ (
     "movb  %%dl , %%dil;"  // Move mode to spare register D
     "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
@@ -145,7 +142,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "roll  $8   , %%ebx;"  // Rotate left to shift green back into blue
 
     "andl  $0xFF000000, %%eax;"
-    "cmpl  $0xFF000000, %%eax;"
+    "testl $0xFF000000, %%eax;"
     "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
     "xchg  %%ebx, %%ecx;"
     "je    3f;"            // Go back and do pixel_base now
@@ -154,11 +151,10 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "andl  $0x00FFFFFF, %%eax;"
     "jmp   2b;"            // Prevent next loop and do the last iteration.
 "1:;"
-    "xorl  %%eax, %%eax;"  // Clear EAX
-    "leaq  14f(%%rip), %%rdi;"
-    "movslq (%%rdi,%%rdx,4), %%r9;"
-    "addq  %%rdi, %%r9;"
-    "jmp   *%%r9;"
+    "leaq   14f(%%rip), %%rdi;"
+    "movslq (%%rdi,%%rdx,4), %%r8;"
+    "addq   %%rdi, %%r8;"
+    "jmp    *%%r8;"
 "14:;"
     ".long 6f   - 14b;"    // SR_BLEND_XOR
     ".long 7f   - 14b;"    // SR_BLEND_ADDITIVE
@@ -174,21 +170,21 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ebx, %%eax;"
     "jmp   5f;"
 "7:;"
-    "roll  $8   , %%ecx;"
-    "movb  %%cl , %%al;"
-    "shll  $24  , %%eax;"
-    "rorl  $8   , %%ecx;"
-    "andl  $0x00FFFFFF, %%ebx;"
-    "andl  $0x00FFFFFF, %%ecx;"
-    "addl  %%ebx, %%ecx;"
-    "orl   %%ecx, %%eax;"
-    "jmp   5f;"
+    "roll   $8   , %%ecx;"
+    "movzbl %%cl , %%eax;"
+    "shll   $24  , %%eax;"
+    "rorl   $8   , %%ecx;"
+    "andl   $0x00FFFFFF, %%ebx;"
+    "andl   $0x00FFFFFF, %%ecx;"
+    "addl   %%ebx, %%ecx;"
+    "orl    %%ecx, %%eax;"
+    "jmp    5f;"
 "8:;"
     "cmpb  $0   , %%sil;"
     "je    9f;"
     "andl  $0x00FFFFFF, %%ebx;"
     "andl  $0xFF000000, %%ecx;"
-    "orl   %%ebx, %%eax;"
+    "movl  %%ebx, %%eax;"
     "orl   %%ecx, %%eax;"
     "jmp   5f;"
 "9:;"
@@ -215,12 +211,12 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ecx, %%eax;"
     "jmp   5f;"
 "5:;"
-    : "+a" (final),
-      "+b" (pbt),
-      "+c" (pbb),
-      "+d" (mode),
-      "+S" (alpha_modifier)
-    :: "%edi", "cc", "%r8" );
+    : "+a" (final)
+    : "b" (SR_RGBAtoWhole(pixel_top )),
+      "c" (SR_RGBAtoWhole(pixel_base)),
+      "d" (mode),
+      "S" (alpha_modifier)
+    : "%edi", "cc", "%r8" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
