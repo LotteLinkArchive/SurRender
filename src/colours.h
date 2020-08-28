@@ -198,11 +198,11 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ecx, %%eax;"
     "jmp   5f;"
 "5:;"
-    : "+a" (final)
+    : "+a" (final),
+      "+S" (alpha_modifier)
     : "b" (SR_RGBAtoWhole(pixel_top )),
       "c" (SR_RGBAtoWhole(pixel_base)),
-      "d" (mode),
-      "S" (alpha_modifier)
+      "d" (mode)
     : "%rdi", "cc" );
     /* Interesting note: Inserting %r8 into the clobber list, even if you don't
      * use or touch the register at all (not even reading it), seems to cause a
