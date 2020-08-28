@@ -122,10 +122,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "subb  %%al , %%ah;"   // Turn accumulator into alpha_mul_neg
     "shrw  $8   , %%ax;"
     "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
-
-    // Actual multiplication
-    "orl   $0xFF000000, %%eax;"
 "2:;"
+    ".rept 2;"
     "movb  %%bl , %%al;"
     "mulb  %%sil;"
     "addw  $0xFF, %%ax;"
@@ -141,15 +139,11 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movb  %%ah , %%bh;"   // Run pixel_top.rgb.blue through the alpha_mul
     "roll  $8   , %%ebx;"  // Rotate left to shift green back into blue
 
-    "andl  $0xFF000000, %%eax;"
-    "testl $0xFF000000, %%eax;"
     "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
     "xchg  %%ebx, %%ecx;"
-    "je    3f;"            // Go back and do pixel_base now
+    ".endr;"
+
     "jmp   1f;"            // Or, if it's done, finish up and start blending
-"3:;"
-    "andl  $0x00FFFFFF, %%eax;"
-    "jmp   2b;"            // Prevent next loop and do the last iteration.
 "1:;"
     "leaq   14f(%%rip), %%rdi;"
     "movslq (%%rdi,%%rdx,4), %%r8;"
