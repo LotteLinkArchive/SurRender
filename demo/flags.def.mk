@@ -4,7 +4,7 @@
 # -DFLAG_FRACTAL: Fractal :)
 # -DFLAG_RAND_LINES: random lines
 # -DFLAG_RAND_TRIS: random triangles
-# -DFLAG_SQUISH: gooba (i think broken too)
+# -DFLAG_SQUISH: gooba
 # -DFLAG_PUCK: pucku (broken)
 # -DFLAG_ROT: Rotation test (broken)
 # -DFLAG_ATLAS: texture atlas test (broken)
