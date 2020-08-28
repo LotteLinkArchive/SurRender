@@ -106,7 +106,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
     __asm__ (
-    "movb  %%dl , %%dil;"  // Move mode to spare register D
+    "movb  %b[M], %%dil;"  // Move mode to spare register D
     "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
     "testb %%dil, %%dil;"  // Check if zero (is mul required?)
     "jnz   1f;"            // Mul is not required, jump to table
@@ -122,27 +122,37 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
 
     ".rept 2;"
-    "movb  %%bl , %%al;"
-    "mulb  %%sil;"
-    "addw  $0xFF, %%ax;"
-    "movb  %%ah , %%bl;"   // Run pixel_top.rgb.red through the alpha_mul
-    "movb  %%bh , %%al;"
-    "mulb  %%sil;"
-    "addw  $0xFF, %%ax;"
-    "movb  %%ah , %%bh;"   // Run pixel_top.rgb.green through the alpha_mul
-    "rorl  $8   , %%ebx;"  // Rotate right to shift blue into green (BH)
-    "movb  %%bh , %%al;"
-    "mulb  %%sil;"
-    "addw  $0xFF, %%ax;"
-    "movb  %%ah , %%bh;"   // Run pixel_top.rgb.blue through the alpha_mul
-    "roll  $8   , %%ebx;"  // Rotate left to shift green back into blue
+    
+    /* 0xFF   * 0x0100010001000100 = 0xFF00FF00FF00FF00
+     * 0xFF   * 0x0101010101010101 = 0xFFFFFFFFFFFFFFFF
+     * 0xFF   * 0x0001000100010001 = 0x00FF00FF00FF00FF
+     * 0xFFFF * 0x0001000100010001 = 0xFFFFFFFFFFFFFFFF
+     */
+
+    "movzbq    %%sil, %%rax;"
+    "movq      $0x0001000100010001, %%rdx;"
+    "mulq      %%rdx;"
+    "movq      %%rax, %%mm2;"
+    "movd      %%ebx, %%mm0;"
+    "pxor      %%mm1, %%mm1;"
+    "punpcklbw %%mm1, %%mm0;"
+    "pmullw    %%mm2, %%mm0;"
+    "movq      $0x00FF00FF00FF00FF, %%rdx;"
+    "movq      %%rdx, %%mm2;"
+    "paddw     %%mm2, %%mm0;"
+    "psrlw     $8   , %%mm0;"
+    "packuswb  %%mm1, %%mm0;"
+    "movd      %%mm0, %%eax;"
+    "andl      $0x00FFFFFF, %%eax;"
+    "andl      $0xFF000000, %%ebx;"
+    "orl       %%eax, %%ebx;"
 
     "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
     "xchg  %%ebx, %%ecx;"
     ".endr;"
 "1:;"
     "leaq   14f(%%rip), %%rdi;"
-    "movslq (%%rdi,%%rdx,4), %%rax;"
+    "movslq (%%rdi,%q[M],4), %%rax;"
     "addq   %%rdi, %%rax;"
     "jmp    *%%rax;"
 "14:;"
@@ -196,12 +206,13 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ecx, %%eax;"
     "jmp   5f;"
 "5:;"
+    "emms;"
     : "+a" (final),
       "+S" (alpha_modifier)
     : "b" (SR_RGBAtoWhole(pixel_top )),
       "c" (SR_RGBAtoWhole(pixel_base)),
-      "d" (mode)
-    : "%rdi", "cc" );
+      [M] "r" ((uint64_t)mode)
+    : "%rdi", "%rdx", "%mm0", "%mm1", "%mm2", "cc" );
     /* Interesting note: Inserting %r8 into the clobber list, even if you don't
      * use or touch the register at all (not even reading it), seems to cause a
      * dramatic increase in performance that I can't even begin to explain.
