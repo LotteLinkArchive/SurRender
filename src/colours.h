@@ -120,7 +120,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movb  $0xFF, %%al;"
     "subb  %%sil, %%al;"   // Turn accumulator into alpha_mul_neg
     "movb  %%al , %%dil;"  // Move alpha_mul_neg into register D
-"2:;"
+
     ".rept 2;"
     "movb  %%bl , %%al;"
     "mulb  %%sil;"
@@ -140,8 +140,6 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "xchg  %%sil, %%dil;"  // Swap SIL/DIL and EBX/ECX to handle pixel_base
     "xchg  %%ebx, %%ecx;"
     ".endr;"
-
-    "jmp   1f;"            // Or, if it's done, finish up and start blending
 "1:;"
     "leaq   14f(%%rip), %%rdi;"
     "movslq (%%rdi,%%rdx,4), %%rax;"
