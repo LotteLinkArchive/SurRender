@@ -277,12 +277,15 @@ event_loop:
 #endif
     
 #ifdef FLAG_SQUISH
+    static float the_squish = 0;
+    the_squish += .03f;
     squish = SR_CanvasShear(
         &pokesquish,
-        sin(speeen * 0.017453292519943295 * 5) * 16,
+        sin(the_squish) * 16,
         0);
-    SR_MergeCanvasIntoCanvas(&canvy, &(squish.canvas),
-        420 + squish.offset_x, 420, 255, SR_BLEND_ADDITIVE);
+    SR_MergeCanvasIntoCanvas(
+        &canvy, &(squish.canvas),
+        128 + squish.offset_x, 128 + squish.offset_y, 255, SR_BLEND_ADDITIVE);
     SR_DestroyCanvas(&(squish.canvas));
 #endif
 
