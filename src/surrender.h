@@ -7,4 +7,5 @@
     #include "image.h"
     #include "rays.h"
     #include "2dscene.h"
+    #include "selections.h"
 #endif
