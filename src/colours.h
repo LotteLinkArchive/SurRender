@@ -115,7 +115,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ebx, %%eax;"
     "shrl  $24  , %%eax;"
     "mulb  %%sil;"         // alpha modifier * top alpha -> AH and AL
-    "shrw  $8   , %%ax;"
+    "movb  %%ah , %%al;"
     "movb  %%al , %%sil;"  // Move alpha_mul to alpha_modifier, not needed
     "movb  $0xFF, %%al;"
     "subb  %%sil, %%al;"   // Turn accumulator into alpha_mul_neg
