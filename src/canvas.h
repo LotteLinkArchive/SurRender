@@ -41,6 +41,13 @@
         // The clipping width and height, used for ignoring segments
         unsigned short cwidth;
         unsigned short cheight;
+
+        // Clipping width and height subtracted by one - stored here so that
+        // the CWIDTH/CHEIGHT don't need to be subtracted by one every time a
+        // pixel is set/get.
+
+        unsigned short hwidth;
+        unsigned short hheight;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -119,18 +126,14 @@
         y += canvas->yclip;
 
         if (canvas->hflags & 0b00100000) {
-            x &= (canvas->cwidth - 1);
-            y &= (canvas->cheight - 1);
+            x &= canvas->hwidth;
+            y &= canvas->hheight;
         } else {
-            x %= (canvas->cwidth);
-            y %= (canvas->cheight);
+            x %= canvas->cwidth;
+            y %= canvas->cheight;
         }
 
         return (canvas->rwidth * y) + x;
-        /*return (
-            canvas->rwidth * 
-            ((canvas->yclip + y) % canvas->cheight)
-        ) + ((canvas->xclip + x) % canvas->cwidth );*/
     }
 
     // Check if a pixel is out of bounds

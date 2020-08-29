@@ -33,6 +33,8 @@ SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
         temp.xclip,
         temp.yclip);
     temp.ratio = (float)temp.width / temp.height;
+    temp.hwidth  = temp.cwidth  - 1;
+    temp.hheight = temp.cheight - 1;
 
     goto ldstbicanv_fin;
 ldstbicanv_missing:

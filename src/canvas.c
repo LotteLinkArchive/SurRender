@@ -30,7 +30,9 @@ bool SR_ResizeCanvas(
         canvas->rheight,
         canvas->xclip,
         canvas->yclip);
-    
+    canvas->hwidth  = canvas->cwidth  - 1;
+    canvas->hheight = canvas->cheight - 1;
+
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
 
@@ -170,6 +172,8 @@ SR_Canvas SR_RefCanv(
         temp.rheight,
         temp.xclip,
         temp.yclip);
+    temp.hwidth  = temp.cwidth  - 1;
+    temp.hheight = temp.cheight - 1;
 
     return temp;
 }
