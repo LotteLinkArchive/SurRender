@@ -22,7 +22,7 @@ static __inline__ unsigned long long rdtsc(void)
 static __inline__ unsigned long long rdtsc(void)
 {
     unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__ ("rdtscp" : "=a"(lo), "=d"(hi) :: "%ecx");
     return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
@@ -37,7 +37,7 @@ int main(void)
 
     float aspect_ratio;
 
-    /* needed for blitting */   
+    /* needed for blitting */
     SDL_Surface *wsurf, *canvysurf;
     SDL_Rect destrect;
 
@@ -61,7 +61,7 @@ int main(void)
     unsigned long long i = rdtsc();
     while (--times)
         SR_CanvasSetPixel(&canvy, times, times, SR_CreateRGBA(0, 0, 0, 255));
-    printf("Set Pixel Ticks: %llu\n", rdtsc() - i);
+    printf("Set Pixel Ticks: %llu\n", (rdtsc() - i) >> 16);
 #endif
 
     /* Define variables for test here */
@@ -111,8 +111,11 @@ int main(void)
 
 #ifdef FLAG_ATLAS
     SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
-    brick_tileset = SR_CanvasScale(
-        &brick_tileset, 192, 192, SR_SCALE_NEARESTN);
+    SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192);
+    SR_CanvasScale(
+        &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
+    SR_DestroyCanvas(&brick_tileset);
+    brick_tileset = brick_tileset_res;
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -311,7 +314,7 @@ event_loop:
     SR_MergeCanvasIntoCanvas(
          &canvy, &brick_tileset,
          24, 24,
-         255, SR_BLEND_REPLACE);
+         255, SR_BLEND_OVERLAY);
     
     // draw a box around the current texture
     SR_DrawRectOutline(

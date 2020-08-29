@@ -314,14 +314,14 @@
         register uint8_t alpha_modifier,
         register char mode);
 
-    /* Return a scaled up version of a canvas using SR_ScaleModes for the mode.
-     * Will malloc a new canvas! You will need to destroy the old one if
-     * needed.
+    /* Scales the source canvas into the destination canvas. Bad things will
+     * happen if the source and destination point to the same canvas.
+     * The new width and height is the width and height of the destination
+     * canvas.
      */
-    SR_Canvas SR_CanvasScale(
+    void SR_CanvasScale(
         SR_Canvas *src,
-        unsigned short newWidth,
-        unsigned short newHeight,
+        SR_Canvas *dest,
         char mode);
     
     /* Returns a pointer to a static array containing 4 unsigned shorts.

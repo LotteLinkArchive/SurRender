@@ -208,21 +208,18 @@ void SR_MergeCanvasIntoCanvas(
 (lerp(lerp((c00), (c10), (tx)), lerp((c01), (c11), (tx)), (ty)))
 
 // Private
-SR_Canvas SR_BilinearCanvasScale(
+void SR_BilinearCanvasScale(
     register SR_Canvas *src,
-    register unsigned short newWidth,
-    register unsigned short newHeight)
+    register SR_Canvas *dest)
 {
-    SR_Canvas dest = SR_NewCanvas(newWidth, newHeight);
-
-    if (!dest.pixels) { return dest; }
+    if (!dest->pixels) return;
 
     register unsigned int x, y;
-    for (x = 0, y = 0; y < newHeight; x++) {
-        if (x > newWidth) { x = 0; y++; }
+    for (x = 0, y = 0; y < dest->height; x++) {
+        if (x > dest->width) { x = 0; y++; }
 
-        float gx = x / (float)(newWidth ) * (SR_CanvasGetWidth (src) - 1);
-        float gy = y / (float)(newHeight) * (SR_CanvasGetHeight(src) - 1);
+        float gx = x / (float)(dest->width ) * (SR_CanvasGetWidth (src) - 1);
+        float gy = y / (float)(dest->height) * (SR_CanvasGetHeight(src) - 1);
         int gxi = (int)gx;
         int gyi = (int)gy;
 
@@ -248,50 +245,41 @@ SR_Canvas SR_BilinearCanvasScale(
                 (float)gy - gyi
             ) << (8 * i);
 
-        SR_CanvasSetPixel(&dest, x, y, SR_WholetoRGBA(result));
+        SR_CanvasSetPixel(dest, x, y, SR_WholetoRGBA(result));
     }
-
-    return dest;
 }
 
 // Private
-SR_Canvas SR_NearestNeighborCanvasScale(
+void SR_NearestNeighborCanvasScale(
     register SR_Canvas *src,
-    register unsigned short newWidth,
-    register unsigned short newHeight)
+    register SR_Canvas *dest)
 {
-    SR_Canvas dest = SR_NewCanvas(newWidth, newHeight);
+    if (!dest->pixels) return;
 
-    if (!dest.pixels) { return dest; }
-
-    float x_factor = (float)src->width / (float)newWidth;
-    float y_factor = (float)src->height / (float)newHeight;
+    float x_factor = (float)src->width  / (float)dest->width;
+    float y_factor = (float)src->height / (float)dest->height;
     
     unsigned short x, y;
-    for (x = 0; x < newWidth; x++)
-    for (y = 0; y < newHeight; y++) {
+    for (x = 0; x < dest->width; x++)
+    for (y = 0; y < dest->height; y++) {
         SR_RGBAPixel sample = SR_CanvasGetPixel(
             src, x * x_factor, y * y_factor);
-        SR_CanvasSetPixel(&dest, x, y, sample);
+        SR_CanvasSetPixel(dest, x, y, sample);
     }
-    
-    return dest;
 }
 
-SR_Canvas SR_CanvasScale(
+void SR_CanvasScale(
     SR_Canvas *src,
-    unsigned short newWidth,
-    unsigned short newHeight,
+    SR_Canvas *dest,
     char mode)
 {
-    SR_Canvas final;
     switch (mode) {
     case SR_SCALE_NEARESTN:
-        final = SR_NearestNeighborCanvasScale(src, newWidth, newHeight);
+        SR_NearestNeighborCanvasScale(src, dest);
         
         break;
     case SR_SCALE_BILINEAR:
-        final = SR_BilinearCanvasScale(src, newWidth, newHeight);
+        SR_BilinearCanvasScale(src, dest);
 
         break;
     default:
@@ -300,7 +288,6 @@ SR_Canvas SR_CanvasScale(
 
         break;
     }
-    return final;
 }
 
 unsigned short * SR_NZBoundingBox(SR_Canvas *src)
