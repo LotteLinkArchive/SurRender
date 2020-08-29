@@ -122,9 +122,6 @@
         register unsigned int x,
         register unsigned int y)
     {
-        x += canvas->xclip;
-        y += canvas->yclip;
-
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
@@ -133,7 +130,7 @@
             y %= canvas->cheight;
         }
 
-        return (canvas->rwidth * y) + x;
+        return (canvas->rwidth * (y + canvas->yclip)) + (x + canvas->xclip);
     }
 
     // Check if a pixel is out of bounds
