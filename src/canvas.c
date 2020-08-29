@@ -23,13 +23,6 @@ bool SR_ResizeCanvas(
     canvas->cwidth = width;
     canvas->cheight = height;
     canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
-    canvas->hflags |= SR_CcsrsEqC(
-        canvas->cwidth,
-        canvas->cheight,
-        canvas->rwidth,
-        canvas->rheight,
-        canvas->xclip,
-        canvas->yclip);
     canvas->hwidth  = canvas->cwidth  - 1;
     canvas->hheight = canvas->cheight - 1;
 
@@ -66,8 +59,8 @@ void SR_ZeroFill(SR_Canvas *canvas)
 {
     if (!canvas->pixels) return;
 
-    if (canvas->xclip   != 0 ||
-        canvas->yclip   != 0 ||
+    if (canvas->bxclip  != 0 || canvas->axclip != 0 ||
+        canvas->byclip  != 0 || canvas->ayclip != 0 ||
         canvas->cwidth  != canvas->rwidth  ||
         canvas->cheight != canvas->rheight ) {
         register unsigned short x, y;
@@ -118,10 +111,10 @@ SR_Canvas SR_CopyCanvas(
 
     if (copy_start_x == 0 &&
         copy_start_y == 0 &&
-        new.width    == canvas->width &&
+        new.width    == canvas->width  &&
         new.height   == canvas->height &&
-        !canvas->xclip &&
-        !canvas->yclip) {
+        !canvas->bxclip && !canvas->axclip &&
+        !canvas->byclip && !canvas->ayclip) {
         // Super fast memcpy when possible, hopefully.
         memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
 
@@ -149,8 +142,6 @@ SR_Canvas SR_RefCanv(
 {
     // @direct
     SR_Canvas temp = {
-        .xclip   = xclip % src->rwidth,
-        .yclip   = yclip % src->rheight,
         .hflags  = 0b00000001,
         .width   = width,
         .height  = height,
@@ -162,16 +153,14 @@ SR_Canvas SR_RefCanv(
         .cheight = MIN(src->cheight, height)
     };
 
+    temp.bxclip = xclip % temp.cwidth ;
+    temp.byclip = yclip % temp.cheight;
+    temp.axclip = (xclip - temp.bxclip) % temp.rwidth ;
+    temp.ayclip = (yclip - temp.byclip) % temp.rheight;
+
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
     temp.hflags |= SR_CPow2FDtc(temp.rwidth, temp.rheight, 0b00010000);
     temp.hflags |= SR_CPow2FDtc(temp.cwidth, temp.cheight, 0b00100000);
-    temp.hflags |= SR_CcsrsEqC(
-        temp.cwidth,
-        temp.cheight,
-        temp.rwidth,
-        temp.rheight,
-        temp.xclip,
-        temp.yclip);
     temp.hwidth  = temp.cwidth  - 1;
     temp.hheight = temp.cheight - 1;
 

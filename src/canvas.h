@@ -19,18 +19,19 @@
         SR_RGBAPixel *pixels;
         
         // Coordinates to clip off, starting from 0, 0 (allow full canvas)
-        unsigned short xclip;
-        unsigned short yclip;
+        unsigned short bxclip;
+        unsigned short byclip;
+        unsigned short axclip;
+        unsigned short ayclip;
 
         /* Internal canvas properties - FORMAT:
          * 0 b 0 0 0 0 0 0 0 0
-         *     X | | | | | | \- Canvas is a reference to another canvas' pixels
-         *       | | | | | \--- Canvas is indestructible
-         *       | | | | \----- Canvas is important             [UNIMPLEMENTED]
-         *       | | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
-         *       | | \--------- Canvas Rsize is a power of two
-         *       | \----------- Canvas Csize is a power of two
-         *       \------------- Canvas Csize lrgr or eq to Rsize and no clip
+         *     X X | | | | | \- Canvas is a reference to another canvas' pixels
+         *         | | | | \--- Canvas is indestructible
+         *         | | | \----- Canvas is important             [UNIMPLEMENTED]
+         *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+         *         | \--------- Canvas Rsize is a power of two
+         *         \----------- Canvas Csize is a power of two
          */
         uint8_t hflags;
 
@@ -71,10 +72,6 @@
     // Returns an appropriate HFLAG if tex is power of 2
     #define SR_CPow2FDtc(w, h, flag) \
     ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
-    // Returns an appropriate HFLAG if Rsize and Csize are equal
-    #define SR_CcsrsEqC(cw, ch, rw, rh, xc, yc) \
-    (((ch) >= (rw)) && ((ch) >= (rh) && ((xc) == 0) && ((yc) == 0)) \
-    ? 0b01000000 : 0)
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -122,6 +119,8 @@
         register unsigned int x,
         register unsigned int y)
     {
+        x += canvas->bxclip;
+        y += canvas->byclip;
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
@@ -130,7 +129,7 @@
             y %= canvas->cheight;
         }
 
-        return (canvas->rwidth * (y + canvas->yclip)) + (x + canvas->xclip);
+        return (canvas->rwidth * (y + canvas->ayclip)) + (x + canvas->axclip);
     }
 
     // Check if a pixel is out of bounds
