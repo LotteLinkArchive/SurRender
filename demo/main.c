@@ -61,7 +61,7 @@ int main(void)
     unsigned long long i = rdtsc();
     while (--times)
         SR_CanvasSetPixel(&canvy, times, times, SR_CreateRGBA(0, 0, 0, 255));
-    printf("Set Pixel Ticks: %llu\n", rdtsc() - i);
+    printf("Set Pixel Ticks: %llu\n", (rdtsc() - i) >> 16);
 #endif
 
     /* Define variables for test here */
