@@ -14,17 +14,19 @@ uint8_t * LD_Blob_STBI(RadixMemoryBlob image, int *x, int *y, int *n)
 SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
 {
     SR_Canvas temp = {
-        .pixels  = image,
-        .width   = *x,
-        .height  = *y,
-        .rwidth  = *x,
-        .rheight = *y,
-        .cwidth  = *x,
-        .cheight = *y,
-        .hflags  = SR_CPow2FDtc(*x, *y, 0b00110000),
-        .ratio   = (float)*x / *y,
-        .hwidth  = *x - 1,
-        .hheight = *y - 1
+        .pixels   = image,
+        .width    = *x,
+        .height   = *y,
+        .rwidth   = *x,
+        .rheight  = *y,
+        .cwidth   = *x,
+        .cheight  = *y,
+        .hflags   = SR_CPow2FDtc(*x, *y, 0b00110000),
+        .ratio    = (float)*x / *y,
+        .hwidth   = *x - 1,
+        .hheight  = *y - 1,
+        .h2width  = *x - 1,
+        .h2height = *y - 1
     };
 
     if (!temp.pixels) goto ldstbicanv_missing;

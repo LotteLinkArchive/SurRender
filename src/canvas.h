@@ -19,10 +19,8 @@
         SR_RGBAPixel *pixels;
         
         // Coordinates to clip off, starting from 0, 0 (allow full canvas)
-        unsigned short bxclip;
-        unsigned short byclip;
-        unsigned short axclip;
-        unsigned short ayclip;
+        unsigned short xclip;
+        unsigned short yclip;
 
         /* Internal canvas properties - FORMAT:
          * 0 b 0 0 0 0 0 0 0 0
@@ -46,9 +44,10 @@
         // Clipping width and height subtracted by one - stored here so that
         // the CWIDTH/CHEIGHT don't need to be subtracted by one every time a
         // pixel is set/get.
-
         unsigned short hwidth;
         unsigned short hheight;
+        unsigned short h2width;
+        unsigned short h2height;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -119,8 +118,6 @@
         register unsigned int x,
         register unsigned int y)
     {
-        x += canvas->bxclip;
-        y += canvas->byclip;
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
@@ -129,7 +126,18 @@
             y %= canvas->cheight;
         }
 
-        return (canvas->rwidth * (y + canvas->ayclip)) + (x + canvas->axclip);
+        x += canvas->xclip;
+        y += canvas->yclip;
+
+        if (canvas->hflags & 0b00010000) {
+            x &= canvas->h2width ;
+            y &= canvas->h2height;
+        } else {
+            x %= canvas->rwidth;
+            y %= canvas->rheight;
+        }
+
+        return (canvas->rwidth * y) + x;
     }
 
     // Check if a pixel is out of bounds
