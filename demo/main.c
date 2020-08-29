@@ -111,8 +111,11 @@ int main(void)
 
 #ifdef FLAG_ATLAS
     SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
-    brick_tileset = SR_CanvasScale(
-        &brick_tileset, 192, 192, SR_SCALE_NEARESTN);
+    SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192);
+    SR_CanvasScale(
+        &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
+    SR_DestroyCanvas(&brick_tileset);
+    brick_tileset = brick_tileset_res;
 #endif
 
     if (!(win = SDL_CreateWindow(
