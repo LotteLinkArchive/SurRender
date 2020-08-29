@@ -35,4 +35,19 @@
         
         selection->bitfield[byte] |= bit;
     }
+    
+    // checque if a bit is sett
+    inline __attribute__((always_inline)) bool SR_SelectGetPoint(
+        SR_Select *selection,
+        unsigned short x,
+        unsigned short y)
+    {
+        if (!selection->bitfield) return;
+        
+        unsigned short position = x + selection->width * y;
+        unsigned short byte = position >> 3;
+        uint8_t bit = 0b10000000 >> (position & 0b00000111);
+        
+        return (selection->bitfield[byte] & bit);
+    }
 #endif
