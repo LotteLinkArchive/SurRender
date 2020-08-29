@@ -115,88 +115,8 @@
         register unsigned int x,
         register unsigned int y)
     {
-#if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))\
-&& defined(SURCL_EXPERIMENTAL_ASM)
-        unsigned int r;
-        __asm__ (
-            "movq    14(%[C]), %%r8 ;" // 0x HF YC XC --
-            "movq    22(%[C]), %%r9 ;" // 0x CH CW RH RW
-
-            "movzwl  %%r9w   , %%ecx;" // Store RW for later (very useful val!)
-
-            "rolq    $16     , %%r9 ;" // 0x CW RH RW CH
-            "movw    %%r9w   , %%di ;" // cheight in DI
-            "rolq    $16     , %%r9 ;" // 0x RH RW CH CW
-            "movw    %%r9w   , %%si ;" // cwidth in SI
-
-            "rolq    $16     , %%r8 ;" // 0x YC XC -- HF
-            "movb    %%r8b   , %%bl ;" // Store this for next time too
-
-            "testb   $0x40   , %%bl ;"
-            "jnz     5f      ;"
-
-            "testb   $0x20   , %%bl ;"
-            "jz      1f      ;"
-
-            "decw    %%si    ;"
-            "andw    %%si    , %w[X];"
-
-            "decw    %%di    ;"
-            "andw    %%di    , %w[Y];"
-
-            "jmp     2f      ;"
-        "1:;"
-            "xorw    %%dx    , %%dx ;" // cwidth %
-            "movw    %w[X]   , %%ax ;"
-            "divw    %%si    ;"
-            "movw    %%dx    , %w[X];"
-
-            "xorw    %%dx    , %%dx ;" // cheight %
-            "movw    %w[Y]   , %%ax ;"
-            "divw    %%di    ;"
-            "movw    %%dx    , %w[Y];"
-        "2:;"
-            "rolq    $16     , %%r8 ;" // 0x XC -- HF YC
-            "addw    %%r8w   , %w[Y];"
-            "rolq    $16     , %%r8 ;" // 0x -- HF YC XC
-            "addw    %%r8w   , %w[X];"
-        "5:;" // WARN: r8 not rolled here
-            "rolq    $16     , %%r9 ;" // 0x RW CH CW RH
-            "movw    %%r9w   , %%di ;" // rheight in DI
-
-            "testb   $0x10   , %%bl ;"
-            "jz      3f      ;"
-
-            "decw    %%di    ;"
-            "andw    %%di    , %w[Y];"
-
-            "decw    %%cx    ;"
-            "andw    %%cx    , %w[X];"
-
-            "incw    %%cx    ;"
-            "jmp     4f      ;"
-        "3:;"
-            "xorw    %%dx    , %%dx ;" // rheight %
-            "movw    %w[Y]   , %%ax ;"
-            "divw    %%di    ;"
-            "movw    %%dx    , %w[Y];"
-
-            "xorw    %%dx    , %%dx ;" // rwidth % (Done last for final mul)
-            "movw    %w[X]   , %%ax ;"
-            "divw    %%cx    ;"
-            "movw    %%dx    , %w[X];"
-        "4:;"
-            "movl    %[Y]    , %%eax;"
-            "mull    %%ecx   ;"
-            "addl    %[X]    , %%eax;"
-            : "=a" (r),
-              [X] "+r" (x),    // Both input and output, technically (RW)
-              [Y] "+r" (y)
-            : [C] "r" (canvas) // Read only
-            : "cc", "%r8", "%r9", "%bl", "%ecx", "%dx", "%di", "%si");
-        return r;
-#else
-        if (canvas->hflags & 0b01000000) goto canv_pos_leg_lab;
+        x += canvas->xclip;
+        y += canvas->yclip;
 
         if (canvas->hflags & 0b00100000) {
             x &= (canvas->cwidth - 1);
@@ -206,20 +126,11 @@
             y %= (canvas->cheight);
         }
 
-        x += canvas->xclip;
-        y += canvas->yclip;
-
-    canv_pos_leg_lab:
-        if (canvas->hflags & 0b00010000) {
-            x &= (canvas->rwidth - 1);
-            y &= (canvas->rheight - 1);
-        } else {
-            x %= (canvas->rwidth);
-            y %= (canvas->rheight);
-        }
-
         return (canvas->rwidth * y) + x;
-#endif
+        /*return (
+            canvas->rwidth * 
+            ((canvas->yclip + y) % canvas->cheight)
+        ) + ((canvas->xclip + x) % canvas->cwidth );*/
     }
 
     // Check if a pixel is out of bounds
