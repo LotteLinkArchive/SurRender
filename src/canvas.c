@@ -212,7 +212,7 @@ void SR_BilinearCanvasScale(
     register SR_Canvas *src,
     register SR_Canvas *dest)
 {
-    if (!dest->pixels) { return; }
+    if (!dest->pixels) return;
 
     register unsigned int x, y;
     for (x = 0, y = 0; y < dest->height; x++) {
