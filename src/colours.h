@@ -106,9 +106,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
     uint32_t final;
     __asm__ (
-    "movb  %b[M], %%dil;"  // Move mode to spare register D
-    "andb  $0xFE, %%dil;"  // AND with 0xFE to check non-mul methods
-    "testb %%dil, %%dil;"  // Check if zero (is mul required?)
+    "movb  %%sil, %%al ;"  // Move mode to spare register D
+    "andb  $0xFE, %%al ;"  // AND with 0xFE to check non-mul methods
+    "testb %%al , %%al ;"  // Check if zero (is mul required?)
     "jnz   1f;"            // Mul is not required, jump to table
 
     /* 0xFF   * 0x0100010001000100 = 0xFF00FF00FF00FF00
@@ -125,7 +125,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     // Generate alpha_mul and alpha_mul_neg
     "movl  %%ebx, %%eax;"
     "shrl  $24  , %%eax;"
-    "mulb  %%sil;"
+    "mulb  %%dl ;"
     "shrw  $8   , %%ax ;"
     "mulq  %%r8;"
     "movq  %%rax, %%mm2;"
@@ -153,9 +153,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "shrq      $32  , %%rax;"
     "orl       %%eax, %%ecx;"
 "1:;"
-    "leaq   14f(%%rip), %%rdi;"
-    "movslq (%%rdi,%q[M],4), %%rax;"
-    "addq   %%rdi, %%rax;"
+    "leaq   14f(%%rip), %%rdx;"
+    "movslq (%%rdx,%%rsi,4), %%rax;"
+    "addq   %%rdx, %%rax;"
     "jmp    *%%rax;"
 "14:;"
     ".long 6f   - 14b;"    // SR_BLEND_XOR
@@ -210,14 +210,13 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "movl  %%ecx, %%eax;"
 "5:;"
     "emms;"
-    : "+a" (final),
-      "+S" (alpha_modifier)
+    : "+a" (final)
     : "b" (SR_RGBAtoWhole(pixel_top )),
       "c" (SR_RGBAtoWhole(pixel_base)),
-      [M] "r" ((uint64_t)mode)
-    : "%rdi", "%rdx", "%mm0", "%mm1",
-      "%mm2", "%mm3", "%mm4", "%r8" ,
-      "%r9" , "cc" );
+      "d" (alpha_modifier),
+      "S" (mode)
+    : "cc"  , "%r9" , "%mm0", "%mm1",
+      "%mm2", "%mm3", "%mm4", "%r8" );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
