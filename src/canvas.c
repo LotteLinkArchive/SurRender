@@ -64,7 +64,10 @@ void SR_ZeroFill(SR_Canvas *canvas)
 {
     if (!canvas->pixels) return;
 
-    if (canvas->xclip || canvas->yclip) {
+    if (canvas->xclip   != 0 ||
+        canvas->yclip   != 0 ||
+        canvas->cwidth  != canvas->rwidth  ||
+        canvas->cheight != canvas->rheight ) {
         register unsigned short x, y;
         for (x = 0; x < canvas->width; x++)
         for (y = 0; y < canvas->height; y++)
