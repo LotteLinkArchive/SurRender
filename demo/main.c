@@ -314,7 +314,7 @@ event_loop:
     SR_MergeCanvasIntoCanvas(
          &canvy, &brick_tileset,
          24, 24,
-         255, SR_BLEND_REPLACE);
+         255, SR_BLEND_OVERLAY);
     
     // draw a box around the current texture
     SR_DrawRectOutline(
