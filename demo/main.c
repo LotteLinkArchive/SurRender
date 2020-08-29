@@ -22,7 +22,7 @@ static __inline__ unsigned long long rdtsc(void)
 static __inline__ unsigned long long rdtsc(void)
 {
     unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__ ("rdtscp" : "=a"(lo), "=d"(hi) :: "%ecx");
     return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
 }
 
