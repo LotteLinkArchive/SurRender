@@ -50,4 +50,12 @@
         
         return (selection->bitfield[byte] & bit);
     }
+    
+    // test function, not sure how long it will stay
+    // basically, iterate over a selection and operate on canvas pixels
+    void SR_EatBreakfast(
+        SR_Canvas *canvas,
+        SR_Select *selection,
+        unsigned short offset_x,
+        unsigned short offset_y);
 #endif
