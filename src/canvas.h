@@ -142,8 +142,8 @@
             x &= canvas->hwidth;
             y &= canvas->hheight;
         } else {
-            x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         x += canvas->xclip;
@@ -153,8 +153,8 @@
             x &= canvas->h2width ;
             y &= canvas->h2height;
         } else {
-            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         return (canvas->rwidth * y) + x;
