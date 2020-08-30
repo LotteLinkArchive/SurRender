@@ -6,6 +6,7 @@
     // Must be a power of two. Overhead-per-canvas depends on this value.
     // Overhead calculation: SR_MAX_CANVAS_SIZE * 8 = LUT overhead bytes
     #define SR_MAX_CANVAS_SIZE 2048 // Default overhead: 16 KiB
+    // For unlimited canvases, define SUR_NO_CANVAS_MOD_LUT (speed decrease)
 
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
@@ -13,10 +14,12 @@
     /* This is a modulo LUT table for the width and hegiht of a given canvas.
      * You don't need to worry about this.
      */
+    #ifndef SUR_NO_CANVAS_MOD_LUT
     typedef struct SR_CanvasWHModTable {
         unsigned short wmodlut[SR_MAX_CANVAS_SIZE];
         unsigned short hmodlut[SR_MAX_CANVAS_SIZE];
     } SR_CanvasWHModTable;
+    #endif
 
     /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
@@ -61,9 +64,11 @@
         unsigned short h2width;
         unsigned short h2height;
 
+        #ifndef SUR_NO_CANVAS_MOD_LUT
         // Modulo LUTs for non-power-of-two textures
         SR_CanvasWHModTable *rmodlut;
         SR_CanvasWHModTable cmodlut;
+        #endif
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -142,8 +147,13 @@
             x &= canvas->hwidth;
             y &= canvas->hheight;
         } else {
+            #ifndef SUR_NO_CANVAS_MOD_LUT
             x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
             y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            #else
+            x %= canvas->cwidth ;
+            y %= canvas->cheight;
+            #endif
         }
 
         x += canvas->xclip;
@@ -153,8 +163,13 @@
             x &= canvas->h2width ;
             y &= canvas->h2height;
         } else {
+            #ifndef SUR_NO_CANVAS_MOD_LUT
             x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
             y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            #else
+            x %= canvas->rwidth ;
+            y %= canvas->rheight;
+            #endif
         }
 
         return (canvas->rwidth * y) + x;

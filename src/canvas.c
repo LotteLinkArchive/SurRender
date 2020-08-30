@@ -2,6 +2,7 @@
 #include "canvas.h"
 #include "colours.h"
 
+#ifndef SUR_NO_CANVAS_MOD_LUT
 // Private
 void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
 {
@@ -10,8 +11,8 @@ void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
     for (unsigned short x = 0; x < SR_MAX_CANVAS_SIZE; x++)
         LUT[x] = x % mod;
 }
+#endif
 
-// Private
 void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 {
     canvas->hflags  |= SR_CPow2FDtc(
@@ -23,6 +24,7 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
     canvas->h2width  = canvas->rwidth  - 1;
     canvas->h2height = canvas->rheight - 1;
 
+    #ifndef SUR_NO_CANVAS_MOD_LUT
     if (canvas->hflags & 0b00000001) {
         canvas->rmodlut = optsrc->rmodlut;
     } else {
@@ -34,6 +36,7 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 
     SR_GenModLUT(canvas->cmodlut.wmodlut, canvas->cwidth );
     SR_GenModLUT(canvas->cmodlut.hmodlut, canvas->cheight);
+    #endif
 }
 
 bool SR_ResizeCanvas(
@@ -122,10 +125,12 @@ SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
+    #ifndef SUR_NO_CANVAS_MOD_LUT
     if (canvas->rmodlut && !(canvas->hflags & 0b00000010))
         free(canvas->rmodlut);
 
     canvas->rmodlut = NULL;
+    #endif
 
     if (canvas->pixels && !(canvas->hflags & 0b00000010))
         free(canvas->pixels);
