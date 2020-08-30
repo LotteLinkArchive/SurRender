@@ -271,11 +271,18 @@ event_loop:
 #ifdef FLAG_PUCK
     speeen += 1;
     rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1);
+    unsigned short spx = 128 + rotcanvas.offset_x;
+    unsigned short spy = 128 + rotcanvas.offset_y;
+    SR_DrawRect(
+        &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
+        canvy.width, canvy.height);
     SR_MergeCanvasIntoCanvas(
-        &canvy, &(rotcanvas.canvas),
-        128 + rotcanvas.offset_x, 128 + rotcanvas.offset_y,
+        &canvy, &(rotcanvas.canvas), spx, spy,
         //0, 0,
         255, SR_BLEND_ADDITIVE);
+    SR_DrawRectOutline(
+        &canvy, SR_CreateRGBA(255, 167, 15, 255),
+        spx, spy, rotcanvas.canvas.width, rotcanvas.canvas.height);
     SR_DestroyCanvas(&(rotcanvas.canvas));
 #endif
     

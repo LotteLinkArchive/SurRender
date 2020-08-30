@@ -25,6 +25,8 @@ bool SR_ResizeCanvas(
     canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
     canvas->hwidth  = canvas->cwidth  - 1;
     canvas->hheight = canvas->cheight - 1;
+    canvas->h2width  = canvas->rwidth  - 1;
+    canvas->h2height = canvas->rheight - 1;
 
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -59,8 +61,8 @@ void SR_ZeroFill(SR_Canvas *canvas)
 {
     if (!canvas->pixels) return;
 
-    if (canvas->bxclip  != 0 || canvas->axclip != 0 ||
-        canvas->byclip  != 0 || canvas->ayclip != 0 ||
+    if (canvas->xclip   != 0 ||
+        canvas->yclip   != 0 ||
         canvas->cwidth  != canvas->rwidth  ||
         canvas->cheight != canvas->rheight ) {
         register unsigned short x, y;
@@ -113,8 +115,8 @@ SR_Canvas SR_CopyCanvas(
         copy_start_y == 0 &&
         new.width    == canvas->width  &&
         new.height   == canvas->height &&
-        !canvas->bxclip && !canvas->axclip &&
-        !canvas->byclip && !canvas->ayclip) {
+        !canvas->xclip &&
+        !canvas->yclip ) {
         // Super fast memcpy when possible, hopefully.
         memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
 
@@ -149,20 +151,19 @@ SR_Canvas SR_RefCanv(
         .pixels  = src->pixels,
         .rwidth  = src->rwidth,
         .rheight = src->rheight,
-        .cwidth  = MIN(src->cwidth, width),
+        .xclip   = xclip,
+        .yclip   = yclip,
+        .cwidth  = MIN(src->cwidth , width ),
         .cheight = MIN(src->cheight, height)
     };
-
-    temp.bxclip = xclip % temp.cwidth ;
-    temp.byclip = yclip % temp.cheight;
-    temp.axclip = (xclip - temp.bxclip) % temp.rwidth ;
-    temp.ayclip = (yclip - temp.byclip) % temp.rheight;
 
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
     temp.hflags |= SR_CPow2FDtc(temp.rwidth, temp.rheight, 0b00010000);
     temp.hflags |= SR_CPow2FDtc(temp.cwidth, temp.cheight, 0b00100000);
-    temp.hwidth  = temp.cwidth  - 1;
-    temp.hheight = temp.cheight - 1;
+    temp.hwidth   = temp.cwidth  - 1;
+    temp.hheight  = temp.cheight - 1;
+    temp.h2width  = temp.rwidth  - 1;
+    temp.h2height = temp.rheight - 1;
 
     return temp;
 }
