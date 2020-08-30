@@ -3,6 +3,9 @@
     #include "glbl.h"
     #include "colours.h"
 
+    // Must be a power of two
+    #define SR_MAX_CANVAS_SIZE 2048
+
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
 
@@ -118,6 +121,9 @@
         register unsigned int x,
         register unsigned int y)
     {
+        x &= SR_MAX_CANVAS_SIZE - 1;
+        y &= SR_MAX_CANVAS_SIZE - 1;
+
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
