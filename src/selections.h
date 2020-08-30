@@ -52,7 +52,7 @@
             
             break;
         case SR_SMODE_XOR:
-            selection->bitfield ^= bit;
+            selection->bitfield[byte] ^= bit;
             
             break;
         default:
@@ -69,7 +69,7 @@
         unsigned short x,
         unsigned short y)
     {
-        if (!selection->bitfield) return;
+        if (!selection->bitfield) return false;
         
         unsigned short position = x + selection->width * y;
         unsigned short byte = position >> 3;
