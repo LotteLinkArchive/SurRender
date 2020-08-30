@@ -22,7 +22,7 @@ void SR_DestroySelect(SR_Select *selection)
 }
 
 void SR_SelectLine(
-    SR_Select *selection,
+    SR_Select *selection, char mode,
     int x0, int y0,
     int x1, int y1)
 {
@@ -32,7 +32,7 @@ void SR_SelectLine(
     err = dx + dy;
 
     for (;;) {
-        SR_SelectSetPoint(selection, x0, y0);
+        SR_SelectSetPoint(selection, x0, y0, mode);
 
         if (x0 == x1 && y0 == y1) break;
 

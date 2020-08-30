@@ -80,7 +80,7 @@
     
     // select yonder line
     void SR_SelectLine(
-        SR_Select *selection,
+        SR_Select *selection, char mode,
         int x0, int y0,
         int x1, int y1);
 #endif
