@@ -90,4 +90,10 @@
         int x0, int y0, 
         int x1, int y1,
         int x2, int y2);
+    
+    // select yonder rectangle
+    void SR_SelectRect(
+        SR_Select *selection, char mode,
+        int x, int y,
+        int w, int h);
 #endif

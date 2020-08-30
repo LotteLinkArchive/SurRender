@@ -76,3 +76,18 @@ void SR_SelectTri(
             SR_SelectSetPoint(selection, x, y, mode);
     }
 }
+
+void SR_SelectRect(
+    SR_Select *selection, char mode,
+    int x, int y,
+    int w, int h)
+{
+    int max_x = MIN(x + w, selection->width);
+    int max_y = MIN(y + h, selection->height);
+    
+    unsigned short xi, yi;
+    for (xi = x; xi < max_x; xi++)
+    for (yi = y; yi < max_y; yi++) {
+        SR_SelectSetPoint(selection, x, y, mode);
+    }
+}
