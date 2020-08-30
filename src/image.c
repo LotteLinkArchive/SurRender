@@ -40,6 +40,8 @@ ldstbicanv_missing:
     SR_CanvasSetPixel(&temp, 1, 0, SR_CreateRGBA(0  , 0  , 0  , 255));
     SR_CanvasSetPixel(&temp, 1, 1, SR_CreateRGBA(255, 0  , 255, 255));
 ldstbicanv_fin:
+    SR_GenCanvLUT(&temp);
+
     return temp;
 }
 

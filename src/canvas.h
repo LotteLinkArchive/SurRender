@@ -3,8 +3,9 @@
     #include "glbl.h"
     #include "colours.h"
 
-    // Must be a power of two
-    #define SR_MAX_CANVAS_SIZE 2048
+    // Must be a power of two. Overhead-per-canvas depends on this value.
+    // Overhead calculation: SR_MAX_CANVAS_SIZE * 8 = LUT overhead bytes
+    #define SR_MAX_CANVAS_SIZE 2048 // Default overhead: 16 KiB
 
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
@@ -51,6 +52,12 @@
         unsigned short hheight;
         unsigned short h2width;
         unsigned short h2height;
+
+        // Modulo LUTs for non-power-of-two textures
+        unsigned short rwmodlut[SR_MAX_CANVAS_SIZE];
+        unsigned short rhmodlut[SR_MAX_CANVAS_SIZE];
+        unsigned short cwmodlut[SR_MAX_CANVAS_SIZE];
+        unsigned short chmodlut[SR_MAX_CANVAS_SIZE];
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -74,6 +81,10 @@
     // Returns an appropriate HFLAG if tex is power of 2
     #define SR_CPow2FDtc(w, h, flag) \
     ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
+
+    // Generate the modulo LUT for a canvas. This should not be used by normal
+    // people.
+    void SR_GenCanvLUT(SR_Canvas *canvas);
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -121,15 +132,12 @@
         register unsigned int x,
         register unsigned int y)
     {
-        x &= SR_MAX_CANVAS_SIZE - 1;
-        y &= SR_MAX_CANVAS_SIZE - 1;
-
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
         } else {
-            x %= canvas->cwidth;
-            y %= canvas->cheight;
+            x = canvas->rwmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->rhmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         x += canvas->xclip;
@@ -139,8 +147,8 @@
             x &= canvas->h2width ;
             y &= canvas->h2height;
         } else {
-            x %= canvas->rwidth;
-            y %= canvas->rheight;
+            canvas->cwmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            canvas->chmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         return (canvas->rwidth * y) + x;

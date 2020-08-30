@@ -2,6 +2,22 @@
 #include "canvas.h"
 #include "colours.h"
 
+// Private
+void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
+{
+    for (unsigned short x = 0; x < SR_MAX_CANVAS_SIZE; x++)
+        LUT[x] = x % mod;
+}
+
+// Private
+void SR_GenCanvLUT(SR_Canvas *canvas)
+{
+    SR_GenModLUT(canvas->rwmodlut, canvas->rwidth );
+    SR_GenModLUT(canvas->rhmodlut, canvas->rheight);
+    SR_GenModLUT(canvas->cwmodlut, canvas->cwidth );
+    SR_GenModLUT(canvas->chmodlut, canvas->cheight);
+}
+
 bool SR_ResizeCanvas(
     SR_Canvas *canvas,
     unsigned short width,
@@ -27,6 +43,7 @@ bool SR_ResizeCanvas(
     canvas->hheight = canvas->cheight - 1;
     canvas->h2width  = canvas->rwidth  - 1;
     canvas->h2height = canvas->rheight - 1;
+    SR_GenCanvLUT(canvas);
 
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -164,6 +181,8 @@ SR_Canvas SR_RefCanv(
     temp.hheight  = temp.cheight - 1;
     temp.h2width  = temp.rwidth  - 1;
     temp.h2height = temp.rheight - 1;
+
+    SR_GenCanvLUT(&temp);
 
     return temp;
 }
