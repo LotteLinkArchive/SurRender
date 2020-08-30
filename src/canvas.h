@@ -10,6 +10,14 @@
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
 
+    /* This is a modulo LUT table for the width and hegiht of a given canvas.
+     * You don't need to worry about this.
+     */
+    typedef struct SR_CanvasWHModTable {
+        unsigned short wmodlut[SR_MAX_CANVAS_SIZE];
+        unsigned short hmodlut[SR_MAX_CANVAS_SIZE];
+    } SR_CanvasWHModTable;
+
     /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
      */
@@ -54,10 +62,8 @@
         unsigned short h2height;
 
         // Modulo LUTs for non-power-of-two textures
-        unsigned short rwmodlut[SR_MAX_CANVAS_SIZE];
-        unsigned short rhmodlut[SR_MAX_CANVAS_SIZE];
-        unsigned short cwmodlut[SR_MAX_CANVAS_SIZE];
-        unsigned short chmodlut[SR_MAX_CANVAS_SIZE];
+        SR_CanvasWHModTable *rmodlut;
+        SR_CanvasWHModTable *cmodlut;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -84,7 +90,7 @@
 
     // Generate the modulo LUT for a canvas. This should not be used by normal
     // people.
-    void SR_GenCanvLUT(SR_Canvas *canvas);
+    void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc);
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -136,8 +142,8 @@
             x &= canvas->hwidth;
             y &= canvas->hheight;
         } else {
-            x = canvas->rwmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->rhmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         x += canvas->xclip;
@@ -147,8 +153,8 @@
             x &= canvas->h2width ;
             y &= canvas->h2height;
         } else {
-            canvas->cwmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            canvas->chmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         return (canvas->rwidth * y) + x;

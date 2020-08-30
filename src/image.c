@@ -21,12 +21,7 @@ SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
         .rheight  = *y,
         .cwidth   = *x,
         .cheight  = *y,
-        .hflags   = SR_CPow2FDtc(*x, *y, 0b00110000),
         .ratio    = (float)*x / *y,
-        .hwidth   = *x - 1,
-        .hheight  = *y - 1,
-        .h2width  = *x - 1,
-        .h2height = *y - 1
     };
 
     if (!temp.pixels) goto ldstbicanv_missing;
@@ -40,7 +35,7 @@ ldstbicanv_missing:
     SR_CanvasSetPixel(&temp, 1, 0, SR_CreateRGBA(0  , 0  , 0  , 255));
     SR_CanvasSetPixel(&temp, 1, 1, SR_CreateRGBA(255, 0  , 255, 255));
 ldstbicanv_fin:
-    SR_GenCanvLUT(&temp);
+    SR_GenCanvLUT(&temp, NULL);
 
     return temp;
 }

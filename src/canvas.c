@@ -12,12 +12,29 @@ void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
 }
 
 // Private
-void SR_GenCanvLUT(SR_Canvas *canvas)
+void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 {
-    SR_GenModLUT(canvas->rwmodlut, canvas->rwidth );
-    SR_GenModLUT(canvas->rhmodlut, canvas->rheight);
-    SR_GenModLUT(canvas->cwmodlut, canvas->cwidth );
-    SR_GenModLUT(canvas->chmodlut, canvas->cheight);
+    canvas->hflags  |= SR_CPow2FDtc(
+        canvas->rwidth, canvas->rheight, 0b00010000);
+    canvas->hflags  |= SR_CPow2FDtc(
+        canvas->cwidth, canvas->cheight, 0b00100000);
+    canvas->hwidth   = canvas->cwidth  - 1;
+    canvas->hheight  = canvas->cheight - 1;
+    canvas->h2width  = canvas->rwidth  - 1;
+    canvas->h2height = canvas->rheight - 1;
+
+    if (canvas->hflags & 0b00000001) {
+        canvas->rmodlut = optsrc->rmodlut;
+    } else {
+        canvas->rmodlut = realloc(
+            canvas->rmodlut, sizeof(SR_CanvasWHModTable));
+        SR_GenModLUT(canvas->rmodlut->wmodlut, canvas->rwidth );
+        SR_GenModLUT(canvas->rmodlut->hmodlut, canvas->rheight);
+    }
+
+    canvas->cmodlut = realloc(canvas->cmodlut, sizeof(SR_CanvasWHModTable));
+    SR_GenModLUT(canvas->cmodlut->wmodlut, canvas->cwidth );
+    SR_GenModLUT(canvas->cmodlut->hmodlut, canvas->cheight);
 }
 
 bool SR_ResizeCanvas(
@@ -40,12 +57,7 @@ bool SR_ResizeCanvas(
 
     canvas->cwidth = width;
     canvas->cheight = height;
-    canvas->hflags |= SR_CPow2FDtc(width, height, 0b00110000);
-    canvas->hwidth  = canvas->cwidth  - 1;
-    canvas->hheight = canvas->cheight - 1;
-    canvas->h2width  = canvas->rwidth  - 1;
-    canvas->h2height = canvas->rheight - 1;
-    SR_GenCanvLUT(canvas);
+    SR_GenCanvLUT(canvas, NULL);
 
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (float)width / height;
@@ -111,9 +123,16 @@ SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
+    if (canvas->rmodlut && !(canvas->hflags & 0b00000010))
+        free(canvas->rmodlut);
+
+    canvas->rmodlut = NULL;
+
+    if (canvas->cmodlut) free(canvas->cmodlut);
+
     if (canvas->pixels && !(canvas->hflags & 0b00000010))
         free(canvas->pixels);
-    
+
     canvas->pixels = NULL;
 }
 
@@ -177,14 +196,8 @@ SR_Canvas SR_RefCanv(
     };
 
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
-    temp.hflags |= SR_CPow2FDtc(temp.rwidth, temp.rheight, 0b00010000);
-    temp.hflags |= SR_CPow2FDtc(temp.cwidth, temp.cheight, 0b00100000);
-    temp.hwidth   = temp.cwidth  - 1;
-    temp.hheight  = temp.cheight - 1;
-    temp.h2width  = temp.rwidth  - 1;
-    temp.h2height = temp.rheight - 1;
 
-    SR_GenCanvLUT(&temp);
+    SR_GenCanvLUT(&temp, src);
 
     return temp;
 }
