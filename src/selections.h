@@ -21,11 +21,19 @@
     // Destroy + free a selecty box
     void SR_DestroySelect(SR_Select *selection);
     
-    // Set an individual bit hahaha
+    // Different ways to modify a selection with SR_SelectSetPoint
+    enum SR_SelectModes {
+        SR_SMODE_SET,
+        SR_SMODE_RESET,
+        SR_SMODE_XOR
+    };
+    
+    // Modify a point in a selection
     inline __attribute__((always_inline)) void SR_SelectSetPoint(
         SR_Select *selection,
         unsigned short x,
-        unsigned short y)
+        unsigned short y,
+        char mode)
     {
         if (!selection->bitfield) return;
         
@@ -33,7 +41,26 @@
         unsigned short byte = position >> 3;
         uint8_t bit = 0b10000000 >> (position & 0b00000111);
         
-        selection->bitfield[byte] |= bit;
+        switch (mode) {
+        case SR_SMODE_SET:
+            selection->bitfield[byte] |= bit;
+            
+            break;
+        case SR_SMODE_RESET:
+            bit = ~bit;
+            selection->bitfield[byte] &= bit;
+            
+            break;
+        case SR_SMODE_XOR:
+            selection->bitfield ^= bit;
+            
+            break;
+        default:
+            fprintf(stderr, "Invalid selection mode!\n");
+            exit(EXIT_FAILURE);
+            
+            break;
+        }
     }
     
     // checque if a bit is sett
@@ -50,4 +77,10 @@
         
         return (selection->bitfield[byte] & bit);
     }
+    
+    // select yonder line
+    void SR_SelectLine(
+        SR_Select *selection, char mode,
+        int x0, int y0,
+        int x1, int y1);
 #endif
