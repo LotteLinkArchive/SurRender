@@ -50,4 +50,10 @@
         
         return (selection->bitfield[byte] & bit);
     }
+    
+    // select yonder line
+    void SR_SelectLine(
+        SR_Select *selection,
+        int x0, int y0,
+        int x1, int y1);
 #endif
