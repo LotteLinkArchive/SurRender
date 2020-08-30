@@ -63,7 +63,7 @@
 
         // Modulo LUTs for non-power-of-two textures
         SR_CanvasWHModTable *rmodlut;
-        SR_CanvasWHModTable *cmodlut;
+        SR_CanvasWHModTable cmodlut;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -153,8 +153,8 @@
             x &= canvas->h2width ;
             y &= canvas->h2height;
         } else {
-            canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         }
 
         return (canvas->rwidth * y) + x;

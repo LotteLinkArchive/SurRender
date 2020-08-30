@@ -32,9 +32,8 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
         SR_GenModLUT(canvas->rmodlut->hmodlut, canvas->rheight);
     }
 
-    canvas->cmodlut = realloc(canvas->cmodlut, sizeof(SR_CanvasWHModTable));
-    SR_GenModLUT(canvas->cmodlut->wmodlut, canvas->cwidth );
-    SR_GenModLUT(canvas->cmodlut->hmodlut, canvas->cheight);
+    SR_GenModLUT(canvas->cmodlut.wmodlut, canvas->cwidth );
+    SR_GenModLUT(canvas->cmodlut.hmodlut, canvas->cheight);
 }
 
 bool SR_ResizeCanvas(
@@ -127,8 +126,6 @@ void SR_DestroyCanvas(SR_Canvas *canvas)
         free(canvas->rmodlut);
 
     canvas->rmodlut = NULL;
-
-    if (canvas->cmodlut) free(canvas->cmodlut);
 
     if (canvas->pixels && !(canvas->hflags & 0b00000010))
         free(canvas->pixels);
