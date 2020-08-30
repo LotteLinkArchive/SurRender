@@ -96,4 +96,10 @@
         SR_Select *selection, char mode,
         int x, int y,
         int w, int h);
+    
+    // select yonder circle
+    void SR_SelectCirc(
+        SR_Select *selection, char mode,
+        int x, int y,
+        unsigned long r);
 #endif

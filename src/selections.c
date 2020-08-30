@@ -82,12 +82,37 @@ void SR_SelectRect(
     int x, int y,
     int w, int h)
 {
-    int max_x = MIN(x + w, selection->width);
-    int max_y = MIN(y + h, selection->height);
+    int max_x = MIN(x + w, selection->width - 1);
+    int max_y = MIN(y + h, selection->height - 1);
     
     unsigned short xi, yi;
     for (xi = x; xi < max_x; xi++)
     for (yi = y; yi < max_y; yi++) {
         SR_SelectSetPoint(selection, x, y, mode);
+    }
+}
+void SR_SelectCirc(
+    SR_Select *selection, char mode,
+    int x, int y,
+    unsigned long r)
+{
+    unsigned short min_x, min_y, max_x, max_y;
+    min_x = MAX(0, x - r);
+    min_y = MAX(0, y - r);
+    max_x = MIN(selection->width - 1, x + r);
+    max_y = MIN(selection->height - 1, y + r);
+    r *= r;
+    
+    unsigned short xi, yi;
+    for (xi = min_x; xi <= max_x; xi++)
+    for (yi = min_y; yi <= max_y; yi++) {
+        int xp, yp;
+        xp = xi - x;
+        xp *= xp;
+        yp = yi - y;
+        yp *= yp;
+
+        if (xp + yp <= r)
+            SR_SelectSetPoint(selection, xi, yi, mode);
     }
 }
