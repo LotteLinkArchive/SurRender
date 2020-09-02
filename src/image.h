@@ -4,11 +4,6 @@
     #include "canvas.h"
     #include "colours.h"
 
-    #define STB_IMAGE_IMPLEMENTATION
-    #define STBI_ONLY_BMP
-    #define STBI_NO_LINEAR
-    #include "stb_image.h"
-
     // Load a Radix memory blob as an image and convert it into a canvas
     SR_Canvas SR_ImageMemToCanvas(RadixMemoryBlob image);
 
