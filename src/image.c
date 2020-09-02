@@ -7,8 +7,6 @@
  * from being included multiple times
  */
 #define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_BMP
-#define STBI_NO_LINEAR
 #include "stb_image.h"
 
 uint8_t * LD_Blob_STBI(RadixMemoryBlob image, int *x, int *y, int *n)
