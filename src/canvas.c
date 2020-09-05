@@ -6,7 +6,9 @@
 // Private
 void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
 {
+    #ifndef SUR_BRANCHLESS_POSITION
     if ((mod & (mod - 1)) == 0) return;
+    #endif
 
     for (unsigned short x = 0; x < SR_MAX_CANVAS_SIZE; x++)
         LUT[x] = x % mod;

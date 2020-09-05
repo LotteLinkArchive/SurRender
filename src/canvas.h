@@ -157,8 +157,8 @@
             #endif
         }
         #else
-        x %= canvas->cwidth ;
-        y %= canvas->cheight;
+        x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+        y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         #endif
 
         x += canvas->xclip;
@@ -178,8 +178,8 @@
             #endif
         }
         #else
-        x %= canvas->rwidth ;
-        y %= canvas->rheight;
+        x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+        y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         #endif
 
         return (canvas->rwidth * y) + x;
