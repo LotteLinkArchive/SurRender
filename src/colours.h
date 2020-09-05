@@ -127,25 +127,26 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "mulb  %%dl ;"        // Multiply the top alpha by the alpha modifier
     "shrw  $8   , %%ax ;" // Store only the high bits (shift right by 8)
     "mulq  %%r8;"         // Multiply by %r8 in order to repeat 3 times (RGB)
-    "movq  %%rax, %%mm2;" // Move into %mm2 for future use
-    "movq  %%r9 , %%rdx;" // Move full-sub/full-add mask into %rfx
-    "subq  %%rax, %%rdx;" // Invert %rax to get alpha_mul_neg
-    "movq  %%rdx, %%mm3;" // Move the new inverted alpha_mul_neg into %mm3
 
-    "movd      %%ebx, %%mm0;" // Move top  into %mm0
-    "movd      %%ecx, %%mm4;" // Move base into %mm4
-    "pxor      %%mm1, %%mm1;" // Clear %mm1
-    "punpcklbw %%mm1, %%mm0;" // Interleave lower bytes of %mm1 and %mm0
-    "punpcklbw %%mm1, %%mm4;" // Interleave lower bytes of %mm1 and %mm4
-    "pmullw    %%mm2, %%mm0;" // Multiply %mm0 by %mm2 (alpha_mul)
-    "pmullw    %%mm3, %%mm4;" // Multiply %mm4 by %mm3 (alpha_mul_neg)
-    "movq      %%r9 , %%mm2;" // Move round-mask (r9) into %mm2
-    "paddw     %%mm2, %%mm0;" // Add round-mask to %mm0
-    "paddw     %%mm2, %%mm4;" // Add round-mask to %mm4
-    "psrlw     $8   , %%mm0;" // Shift %mm0 left by 8 bits (fast divide)
-    "psrlw     $8   , %%mm4;" // Shift %mm4 left by 8 bits (fast divide)
-    "packuswb  %%mm4, %%mm0;" // Pack all words from %mm4 into *HIGH* of %mm0
-    "movq      %%mm0, %%rax;" // Move all results into %rax
+    "movq  %%rax, %%xmm2;" // Move into %xmm2 for future use
+    "movq  %%r9 , %%rdx ;" // Move full-sub/full-add mask into %rfx
+    "subq  %%rax, %%rdx ;" // Invert %rax to get alpha_mul_neg
+    "movq  %%rdx, %%xmm3;" // Move the new inverted alpha_mul_neg into %xmm3
+
+    "movd      %%ebx , %%xmm0;" // Move top  into %xmm0
+    "movd      %%ecx , %%xmm1;" // Move base into %xmm1
+    "pxor      %%xmm4, %%xmm4;" // Clear %xmm4
+    "punpcklbw %%xmm4, %%xmm0;" // Interleave lower bytes of %xmm4 and %xmm0
+    "punpcklbw %%xmm4, %%xmm1;" // Interleave lower bytes of %xmm4 and %xmm1
+    "pmullw    %%xmm2, %%xmm0;" // Multiply %xmm0 by %xmm2 (alpha_mul)
+    "pmullw    %%xmm3, %%xmm1;" // Multiply %xmm1 by %xmm3 (alpha_mul_neg)
+
+    "punpcklqdq %%xmm0, %%xmm1;"
+    "movq       %%r9  , %%xmm0;" // Move round-mask (r9) into %xmm0
+    "paddw      %%xmm0, %%xmm1;" // TODO: Missing round-up for high bytes!!!
+    "psrlw      $8    , %%xmm1;"
+    "packuswb   %%xmm0, %%xmm1;"
+    "movq       %%xmm1, %%rax ;"
 
     "andl      $0xFF000000, %%ebx;" // Erase top  RGB but not A
     "andl      $0xFF000000, %%ecx;" // Erase base RGB but not A
@@ -209,14 +210,13 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "xorl  %%ebx, %%ecx;"
     "movl  %%ecx, %%eax;"
 "5:;"
-    "emms;"
     : "+a" (final)
     : "b" (SR_RGBAtoWhole(pixel_top )),
       "c" (SR_RGBAtoWhole(pixel_base)),
       "d" (alpha_modifier),
       "S" (mode)
-    : "cc"  , "%r9" , "%mm0", "%mm1",
-      "%mm2", "%mm3", "%mm4", "%r8" );
+    : "cc"   , "%r9"  , "%xmm0", "%xmm1",
+      "%xmm2", "%xmm3", "%xmm4", "%r8"  );
 #else
     register uint32_t final, pixel_base_whole, pixel_top_whole = 0;
     uint16_t alpha_mul, alpha_mul_neg;
