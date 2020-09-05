@@ -143,6 +143,7 @@
         register unsigned int x,
         register unsigned int y)
     {
+        #ifndef SUR_BRANCHLESS_POSITION
         if (canvas->hflags & 0b00100000) {
             x &= canvas->hwidth;
             y &= canvas->hheight;
@@ -155,10 +156,15 @@
             y %= canvas->cheight;
             #endif
         }
+        #else
+        x %= canvas->cwidth ;
+        y %= canvas->cheight;
+        #endif
 
         x += canvas->xclip;
         y += canvas->yclip;
 
+        #ifndef SUR_BRANCHLESS_POSITION
         if (canvas->hflags & 0b00010000) {
             x &= canvas->h2width ;
             y &= canvas->h2height;
@@ -171,6 +177,10 @@
             y %= canvas->rheight;
             #endif
         }
+        #else
+        x %= canvas->rwidth ;
+        y %= canvas->rheight;
+        #endif
 
         return (canvas->rwidth * y) + x;
     }
