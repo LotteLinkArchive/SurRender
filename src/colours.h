@@ -120,38 +120,38 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     // MMX setup
     "movq      $0x0000000100010001, %%r8;"
     "movq      $0x000000FF00FF00FF, %%r9;"
-    "pxor      %%mm1, %%mm1;"
 
     // Generate alpha_mul and alpha_mul_neg
-    "movl  %%ebx, %%eax;"
-    "shrl  $24  , %%eax;"
-    "mulb  %%dl ;"
-    "shrw  $8   , %%ax ;"
-    "mulq  %%r8;"
-    "movq  %%rax, %%mm2;"
-    "movq  %%r9 , %%rdx;"
-    "subq  %%rax, %%rdx;"
-    "movq  %%rdx, %%mm3;"
+    "movl  %%ebx, %%eax;" // v---v
+    "shrl  $24  , %%eax;" // Get top alpha value into %al
+    "mulb  %%dl ;"        // Multiply the top alpha by the alpha modifier
+    "shrw  $8   , %%ax ;" // Store only the high bits (shift right by 8)
+    "mulq  %%r8;"         // Multiply by %r8 in order to repeat 3 times (RGB)
+    "movq  %%rax, %%mm2;" // Move into %mm2 for future use
+    "movq  %%r9 , %%rdx;" // Move full-sub/full-add mask into %rfx
+    "subq  %%rax, %%rdx;" // Invert %rax to get alpha_mul_neg
+    "movq  %%rdx, %%mm3;" // Move the new inverted alpha_mul_neg into %mm3
 
-    "movd      %%ebx, %%mm0;"
-    "movd      %%ecx, %%mm4;"
-    "punpcklbw %%mm1, %%mm0;"
-    "punpcklbw %%mm1, %%mm4;"
-    "pmullw    %%mm2, %%mm0;"
-    "pmullw    %%mm3, %%mm4;"
-    "movq      %%r9 , %%mm2;"
-    "paddw     %%mm2, %%mm0;"
-    "paddw     %%mm2, %%mm4;"
-    "psrlw     $8   , %%mm0;"
-    "psrlw     $8   , %%mm4;"
-    "packuswb  %%mm4, %%mm0;"
-    "movq      %%mm0, %%rax;"
+    "movd      %%ebx, %%mm0;" // Move top  into %mm0
+    "movd      %%ecx, %%mm4;" // Move base into %mm4
+    "pxor      %%mm1, %%mm1;" // Clear %mm1
+    "punpcklbw %%mm1, %%mm0;" // Interleave lower bytes of %mm1 and %mm0
+    "punpcklbw %%mm1, %%mm4;" // Interleave lower bytes of %mm1 and %mm4
+    "pmullw    %%mm2, %%mm0;" // Multiply %mm0 by %mm2 (alpha_mul)
+    "pmullw    %%mm3, %%mm4;" // Multiply %mm4 by %mm3 (alpha_mul_neg)
+    "movq      %%r9 , %%mm2;" // Move round-mask (r9) into %mm2
+    "paddw     %%mm2, %%mm0;" // Add round-mask to %mm0
+    "paddw     %%mm2, %%mm4;" // Add round-mask to %mm4
+    "psrlw     $8   , %%mm0;" // Shift %mm0 left by 8 bits (fast divide)
+    "psrlw     $8   , %%mm4;" // Shift %mm4 left by 8 bits (fast divide)
+    "packuswb  %%mm4, %%mm0;" // Pack all words from %mm4 into *HIGH* of %mm0
+    "movq      %%mm0, %%rax;" // Move all results into %rax
 
-    "andl      $0xFF000000, %%ebx;"
-    "andl      $0xFF000000, %%ecx;"
-    "orl       %%eax, %%ebx;"
-    "shrq      $32  , %%rax;"
-    "orl       %%eax, %%ecx;"
+    "andl      $0xFF000000, %%ebx;" // Erase top  RGB but not A
+    "andl      $0xFF000000, %%ecx;" // Erase base RGB but not A
+    "orl       %%eax, %%ebx;" // OR resultant RGB into base
+    "shrq      $32  , %%rax;" // Shift right to get top's resultant RGB
+    "orl       %%eax, %%ecx;" // OR resultant RGB into top
 "1:;"
     "leaq   14f(%%rip), %%rdx;"
     "movslq (%%rdx,%%rsi,4), %%rax;"
