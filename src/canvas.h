@@ -215,7 +215,7 @@
 
     // Check if a pixel is non-zero, hopefully
     #define SR_CanvasPixelCNZ(canvas, x, y) \
-    (SR_RGBAtoWhole(SR_CanvasGetPixel((canvas), (x), (y))) != 0)
+    (SR_CanvasGetPixel((canvas), (x), (y)).whole != 0)
 
     /* Destroy the in-memory representation of the canvas
      * (Must create a new canvas or resize the current one in order to access)

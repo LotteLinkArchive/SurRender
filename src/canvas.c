@@ -257,14 +257,10 @@ void SR_BilinearCanvasScale(
 
         // TODO: Clean this up, preferably stop using SR_RGBAtoWhole, it's slow
 
-        uint32_t c00 = SR_RGBAtoWhole(
-            SR_CanvasGetPixel(src, gxi    , gyi    ));
-        uint32_t c10 = SR_RGBAtoWhole(
-            SR_CanvasGetPixel(src, gxi + 1, gyi    ));
-        uint32_t c01 = SR_RGBAtoWhole(
-            SR_CanvasGetPixel(src, gxi    , gyi + 1));
-        uint32_t c11 = SR_RGBAtoWhole(
-            SR_CanvasGetPixel(src, gxi + 1, gyi + 1));
+        uint32_t c00 = SR_CanvasGetPixel(src, gxi    , gyi    ).whole;
+        uint32_t c10 = SR_CanvasGetPixel(src, gxi + 1, gyi    ).whole;
+        uint32_t c01 = SR_CanvasGetPixel(src, gxi    , gyi + 1).whole;
+        uint32_t c11 = SR_CanvasGetPixel(src, gxi + 1, gyi + 1).whole;
 
         uint32_t result = 0;
         for (uint8_t i = 0; i < 4; i++)
@@ -277,7 +273,11 @@ void SR_BilinearCanvasScale(
                 (float)gy - gyi
             ) << (8 * i);
 
-        SR_CanvasSetPixel(dest, x, y, SR_WholetoRGBA(result));
+        SR_RGBAPixel final = {
+            .whole = result
+        };
+
+        SR_CanvasSetPixel(dest, x, y, final);
     }
 }
 
