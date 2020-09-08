@@ -82,16 +82,14 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 
     SRu16x8 buffer = {
         alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, alpha_mul_neg,
-        alpha_mul, alpha_mul, alpha_mul, alpha_mul
-    };
+        alpha_mul, alpha_mul, alpha_mul, alpha_mul};
     SR_RGBADoublePixel merge = {
-        .whole = ((uint64_t)pixel_top.whole << 32) | pixel_base.whole
-    };
+        .whole = ((uint64_t)pixel_top.whole << 32) | pixel_base.whole};
     uint64_t wAlphas = merge.whole & 0xFF000000FF000000;
 
-    buffer *= __builtin_convertvector(merge.splitvec, SRu16x8);
-    buffer = (buffer + 255) >> 8;
-    merge.splitvec = __builtin_convertvector(buffer, SRu8x8);
+    merge.splitvec = __builtin_convertvector(((
+            buffer * __builtin_convertvector(merge.splitvec, SRu16x8)
+        ) + 255) >> 8, SRu8x8);
     merge.whole = (merge.whole & 0x00FFFFFF00FFFFFF) | wAlphas;
     pixel_top.whole  = (merge.whole >> 32);
     pixel_base.whole =  merge.whole;
