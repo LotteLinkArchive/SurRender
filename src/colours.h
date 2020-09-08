@@ -104,7 +104,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     char mode)
 {
 #if defined(__x86_64__) && (defined(__GNUC__) || defined(__clang__))
-    uint32_t final;
+    register uint32_t final;
     __asm__ (
     "movb  %%sil, %%al ;"  // Move mode to spare register D
     "andb  $0xFE, %%al ;"  // AND with 0xFE to check non-mul methods
@@ -118,8 +118,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
      */
 
     // MMX setup
-    "movq      $0x0000000100010001, %%r8;"
-    "movq      $0x000000FF00FF00FF, %%r9;"
+    "movq      $0x0001000100010001, %%r8;"
+    "movq      $0x00FF00FF00FF00FF, %%r9;"
 
     // Generate alpha_mul and alpha_mul_neg
     "movl  %%ebx, %%eax;" // v---v
@@ -134,7 +134,6 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 
     "movd      %%ebx, %%mm0;" // Move top  into %mm0
     "movd      %%ecx, %%mm4;" // Move base into %mm4
-    "pxor      %%mm1, %%mm1;" // Clear %mm1
     "punpcklbw %%mm1, %%mm0;" // Interleave lower bytes of %mm1 and %mm0
     "punpcklbw %%mm1, %%mm4;" // Interleave lower bytes of %mm1 and %mm4
     "pmullw    %%mm2, %%mm0;" // Multiply %mm0 by %mm2 (alpha_mul)
@@ -153,7 +152,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     "shrq      $32  , %%rax;" // Shift right to get top's resultant RGB
     "orl       %%eax, %%ecx;" // OR resultant RGB into top
 "1:;"
-    "leaq   14f(%%rip), %%rdx;"
+    "leaq   14f(%%rip), %%rdx;" // We can't afford to check validity here
     "movslq (%%rdx,%%rsi,4), %%rax;"
     "addq   %%rdx, %%rax;"
     "jmp    *%%rax;"
