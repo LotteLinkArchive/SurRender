@@ -10,7 +10,7 @@ typedef uint8_t  SRu8x4  __attribute__ ((vector_size (4 )));
 typedef uint16_t SRu16x8 __attribute__ ((vector_size (16)));
 typedef uint16_t SRu16x4 __attribute__ ((vector_size (8 )));
 
-typedef struct SR_RGBAPixelChannels {
+typedef struct {
     uint8_t red;
     uint8_t green;
     uint8_t blue;
