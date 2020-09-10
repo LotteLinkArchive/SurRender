@@ -157,8 +157,8 @@
             #endif
         }
         #else
-        x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-        y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+        x = canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+        y = canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         #endif
 
         x += canvas->xclip;
