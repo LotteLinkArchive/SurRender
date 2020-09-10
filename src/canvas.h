@@ -67,7 +67,7 @@
         #ifndef SUR_NO_CANVAS_MOD_LUT
         // Modulo LUTs for non-power-of-two textures
         SR_CanvasWHModTable *rmodlut;
-        SR_CanvasWHModTable *cmodlut;
+        SR_CanvasWHModTable cmodlut; // EVERY canvas has one
         #endif
     } SR_Canvas;
 
@@ -149,16 +149,16 @@
             y &= canvas->hheight;
         } else {
             #ifndef SUR_NO_CANVAS_MOD_LUT
-            x = canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
             #else
             x %= canvas->cwidth ;
             y %= canvas->cheight;
             #endif
         }
         #else
-        x = canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-        y = canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+        x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+        y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
         #endif
 
         x += canvas->xclip;
@@ -224,8 +224,7 @@
     #ifndef SUR_NO_CANVAS_MOD_LUT
     #define SR_CanvasIsValid(canvas) (BOOLIFY(\
 		(canvas)->pixels  &&\
-		(canvas)->rmodlut &&\
-		(canvas)->cmodlut   \
+		(canvas)->rmodlut   \
 	))
 	#else
     #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels))
