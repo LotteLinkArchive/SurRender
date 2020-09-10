@@ -11,7 +11,7 @@
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
 
-    /* This is a modulo LUT table for the width and hegiht of a given canvas.
+    /* This is a modulo LUT table for the width and height of a given canvas.
      * You don't need to worry about this.
      */
     #ifndef SUR_NO_CANVAS_MOD_LUT
