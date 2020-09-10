@@ -67,7 +67,7 @@
         #ifndef SUR_NO_CANVAS_MOD_LUT
         // Modulo LUTs for non-power-of-two textures
         SR_CanvasWHModTable *rmodlut;
-        SR_CanvasWHModTable cmodlut;
+        SR_CanvasWHModTable *cmodlut;
         #endif
     } SR_Canvas;
 
@@ -149,8 +149,8 @@
             y &= canvas->hheight;
         } else {
             #ifndef SUR_NO_CANVAS_MOD_LUT
-            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
+            x = canvas->cmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
+            y = canvas->cmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
             #else
             x %= canvas->cwidth ;
             y %= canvas->cheight;
@@ -197,8 +197,6 @@
         register unsigned short y,
         SR_RGBAPixel pixel)
     {
-        if (!canvas->pixels) return;
-
         canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
     }
 
@@ -208,8 +206,6 @@
         register unsigned short x,
         register unsigned short y)
     {
-        if (!canvas->pixels) { return SR_CreateRGBA(255, 0, 0, 255); }
-
         return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
     }
 
@@ -222,8 +218,18 @@
      */
     void SR_DestroyCanvas(SR_Canvas *canvas);
 
-    // Check if the canvas has been successfully allocated
+    /* Check if the canvas has been successfully allocated. You must ALWAYS
+     * check if a canvas is valid before you use it.
+     */
+    #ifndef SUR_NO_CANVAS_MOD_LUT
+    #define SR_CanvasIsValid(canvas) (BOOLIFY(\
+		(canvas)->pixels  &&\
+		(canvas)->rmodlut &&\
+		(canvas)->cmodlut   \
+	))
+	#else
     #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels))
+	#endif
 
     /* Malloc a new canvas of given size and start copying every pixel from the
      * specified old canvas to the new one, starting at the given position.

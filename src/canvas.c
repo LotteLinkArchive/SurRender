@@ -36,8 +36,10 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
         SR_GenModLUT(canvas->rmodlut->hmodlut, canvas->rheight);
     }
 
-    SR_GenModLUT(canvas->cmodlut.wmodlut, canvas->cwidth );
-    SR_GenModLUT(canvas->cmodlut.hmodlut, canvas->cheight);
+	canvas->cmodlut = realloc(
+		canvas->cmodlut, sizeof(SR_CanvasWHModTable));
+    SR_GenModLUT(canvas->cmodlut->wmodlut, canvas->cwidth );
+    SR_GenModLUT(canvas->cmodlut->hmodlut, canvas->cheight);
     #endif
 }
 
@@ -127,14 +129,21 @@ SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
+	bool hfstate = !(canvas->hflags & 0b00000010);
+	
     #ifndef SUR_NO_CANVAS_MOD_LUT
-    if (canvas->rmodlut && !(canvas->hflags & 0b00000010))
+    if (canvas->rmodlut && hfstate)
         free(canvas->rmodlut);
 
     canvas->rmodlut = NULL;
+    
+    if (canvas->cmodlut && hfstate)
+        free(canvas->cmodlut);
+
+    canvas->cmodlut = NULL;
     #endif
 
-    if (canvas->pixels && !(canvas->hflags & 0b00000010))
+    if (canvas->pixels  && hfstate)
         free(canvas->pixels);
 
     canvas->pixels = NULL;
