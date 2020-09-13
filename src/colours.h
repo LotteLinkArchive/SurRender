@@ -10,21 +10,23 @@ typedef uint8_t  SRu8x4  __attribute__ ((vector_size (4 )));
 typedef uint16_t SRu16x8 __attribute__ ((vector_size (16)));
 typedef uint16_t SRu16x4 __attribute__ ((vector_size (8 )));
 
-typedef struct {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
-    uint8_t alpha;
-} SR_RGBAPixelChannels;
-
 typedef union {
-    SR_RGBAPixelChannels chn;
+    struct {
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+        uint8_t alpha;
+    } chn;
     uint32_t whole;
     SRu8x4 splitvec;
 } SR_RGBAPixel;
 
 typedef union {
     uint64_t whole;
+    struct {
+        uint32_t left;
+        uint32_t right;
+    } components;
     SRu8x8 splitvec;
 } SR_RGBADoublePixel;
 
@@ -80,17 +82,14 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     alpha_mul     = ((uint16_t)pixel_top.chn.alpha * alpha_modifier) >> 8;
     alpha_mul_neg = ~alpha_mul;
 
-    SRu16x8 buffer = {
-        alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, alpha_mul_neg,
-        alpha_mul, alpha_mul, alpha_mul, alpha_mul};
+    SRu16x8 buffer = {alpha_mul_neg, alpha_mul, 255};
+    buffer = __builtin_shufflevector(buffer, buffer, 0, 0, 0, 2, 1, 1, 1, 2);
     SR_RGBADoublePixel merge = {
         .whole = ((uint64_t)pixel_top.whole << 32) | pixel_base.whole};
-    uint64_t wAlphas = merge.whole & 0xFF000000FF000000;
 
     merge.splitvec = __builtin_convertvector(((
             buffer * __builtin_convertvector(merge.splitvec, SRu16x8)
         ) + 255) >> 8, SRu8x8);
-    merge.whole = (merge.whole & 0x00FFFFFF00FFFFFF) | wAlphas;
     pixel_top.whole  = (merge.whole >> 32);
     pixel_base.whole =  merge.whole;
 
