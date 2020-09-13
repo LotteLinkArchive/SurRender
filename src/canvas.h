@@ -5,7 +5,7 @@
 
     // Must be a power of two. Overhead-per-canvas depends on this value.
     // Overhead calculation: SR_MAX_CANVAS_SIZE * 8 = LUT overhead bytes
-    #define SR_MAX_CANVAS_SIZE 2048 // Default overhead: 16 KiB
+    #define SR_MAX_CANVAS_SIZE 4096 // Default overhead: 32 KiB
     // For unlimited canvases, define SUR_NO_CANVAS_MOD_LUT (speed decrease)
 
     // Force little endian, hopefully
