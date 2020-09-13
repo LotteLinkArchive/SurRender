@@ -82,8 +82,9 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     alpha_mul     = ((uint16_t)pixel_top.chn.alpha * alpha_modifier) >> 8;
     alpha_mul_neg = ~alpha_mul;
 
-    SRu16x8 buffer = {alpha_mul_neg, alpha_mul, 255};
-    buffer = __builtin_shufflevector(buffer, buffer, 0, 0, 0, 2, 1, 1, 1, 2);
+    SRu16x8 buffer = {
+        alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
+        alpha_mul,     alpha_mul,     alpha_mul,     255};
     SR_RGBADoublePixel merge = {
         .components.right = pixel_top.whole,
         .components.left  = pixel_base.whole};
