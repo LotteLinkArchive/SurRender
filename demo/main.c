@@ -336,7 +336,7 @@ event_loop:
     afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
     SR_PrintToAtlas(
         &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
-        SR_BLEND_ADDITIVE);
+        SR_BLEND_INVERTED_DRAW);
 #endif
 
     /* update the canvas here, the rest is

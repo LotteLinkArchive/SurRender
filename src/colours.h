@@ -49,7 +49,9 @@ enum SR_BlendingModes {
     SR_BLEND_DIRECT_XOR_ALL,
     // Like additive blending, but doesn't change base alpha and doesn't
     // multiply values. Can overflow. Use it to paint colour onto black.
-    SR_BLEND_ADDITIVE_PAINT
+    SR_BLEND_ADDITIVE_PAINT,
+    // Depending on the alpha value of the top layer, invert the base colours
+    SR_BLEND_INVERTED_DRAW
 };
 
 // Create an RGBA colour value.
@@ -108,9 +110,9 @@ srbl_nomul:
     default:
     case SR_BLEND_ADDITIVE_PAINT:
     case SR_BLEND_ADDITIVE:
-        final.whole  =  pixel_base.whole & 0xFF000000;
-        final.whole |= (pixel_base.whole & 0x00FFFFFF) +
-                       (pixel_top.whole  & 0x00FFFFFF);
+        final.whole = (pixel_base.whole & 0xFF000000) | (
+                      (pixel_base.whole & 0x00FFFFFF) +
+                      (pixel_top.whole  & 0x00FFFFFF));
 
         break;
     case SR_BLEND_OVERLAY:
@@ -136,6 +138,12 @@ srbl_nomul:
         break;
     case SR_BLEND_DIRECT_XOR_ALL:
         final.whole = pixel_base.whole ^ pixel_top.whole;
+
+        break;
+    case SR_BLEND_INVERTED_DRAW:
+        final.whole = pixel_base.whole - ((
+            ((uint16_t)pixel_top.chn.alpha * alpha_modifier)
+        >> 8) * 0x00010101);
 
         break;
     }
