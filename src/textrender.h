@@ -22,6 +22,9 @@
          * MUST VARY.
          * 
          * THE FONT CANVAS WILL BE MODIFIED!
+         * 
+         * FONT ATLASES ARE NOT THREADSAFE (IF ATTEMPTING TO RENDER WITH THE
+         * SAME CANVAS/ATLAS SIMULTANEOUSLY)
          */
         SR_Canvas *font;
         unsigned short charwidth;
