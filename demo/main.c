@@ -333,8 +333,10 @@ event_loop:
         33, 33);
 
     static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!";
-    SR_ColourFontAtlas(&afonta, SR_CreateRGBA(255, 255, 255, 127));
-    SR_PrintToAtlas(&afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0);
+    afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
+    SR_PrintToAtlas(
+        &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
+        SR_BLEND_ADDITIVE);
 #endif
 
     /* update the canvas here, the rest is

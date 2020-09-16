@@ -47,9 +47,6 @@
         unsigned short charwidth,
         unsigned short charheight);
 
-    // Set the text colour of a font atlas
-    #define SR_ColourFontAtlas(font, col) (font)->colour = (col);
-
     /* Draw text on a destination canvas using a given font object.
      * Text must be in UCS-2 format. If length is incorrect, expect undefined
      * behvaiour. X and Y represent the position to draw the text at.
@@ -68,5 +65,6 @@
         size_t length,
         unsigned short x,
         unsigned short y,
-        unsigned short breakpoint);
+        unsigned short breakpoint,
+        unsigned char blendmode);
 #endif

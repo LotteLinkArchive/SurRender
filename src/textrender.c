@@ -28,7 +28,8 @@ void SR_PrintToAtlas(
     size_t length,
     unsigned short x,
     unsigned short y,
-    unsigned short breakpoint)
+    unsigned short breakpoint,
+    unsigned char blendmode)
 {
     unsigned short rootx = x;
 
@@ -84,7 +85,7 @@ void SR_PrintToAtlas(
         }
 
         SR_MergeCanvasIntoCanvas(
-            dest, &character, x, y, font->colour.chn.alpha, SR_BLEND_ADDITIVE);
+            dest, &character, x, y, font->colour.chn.alpha, blendmode);
 
         SR_DestroyCanvas(&character);
 
