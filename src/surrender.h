@@ -7,4 +7,5 @@
     #include "image.h"
     #include "2dscene.h"
     #include "selections.h"
+    #include "textrender.h"
 #endif

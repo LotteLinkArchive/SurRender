@@ -46,7 +46,10 @@ enum SR_BlendingModes {
     // Directly XOR the RGB channels without mutating the alpha
     SR_BLEND_DIRECT_XOR,
     // Directly XOR EVERYTHING (RGBA) without mutating the alpha
-    SR_BLEND_DIRECT_XOR_ALL
+    SR_BLEND_DIRECT_XOR_ALL,
+    // Like additive blending, but doesn't change base alpha and doesn't
+    // multiply values. Can overflow. Use it to paint colour onto black.
+    SR_BLEND_ADDITIVE_PAINT
 };
 
 // Create an RGBA colour value.
@@ -103,6 +106,7 @@ srbl_nomul:
 
         break;
     default:
+    case SR_BLEND_ADDITIVE_PAINT:
     case SR_BLEND_ADDITIVE:
         final.whole  =  pixel_base.whole & 0xFF000000;
         final.whole |= (pixel_base.whole & 0x00FFFFFF) +

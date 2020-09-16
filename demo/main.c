@@ -116,6 +116,8 @@ int main(void)
         &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
     SR_DestroyCanvas(&brick_tileset);
     brick_tileset = brick_tileset_res;
+    SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
+    SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10);
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -329,6 +331,10 @@ event_loop:
         (((cheese_timer >> 3) & 3) << 5) + 23,
         (((cheese_timer >> 5) % 6) << 5) + 23,
         33, 33);
+
+    static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!";
+    SR_ColourFontAtlas(&afonta, SR_CreateRGBA(255, 255, 255, 127));
+    SR_PrintToAtlas(&afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0);
 #endif
 
     /* update the canvas here, the rest is
