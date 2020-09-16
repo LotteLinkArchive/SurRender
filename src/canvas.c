@@ -308,17 +308,13 @@ void SR_CanvasScale(
     char mode)
 {
     switch (mode) {
+    default:
     case SR_SCALE_NEARESTN:
         SR_NearestNeighborCanvasScale(src, dest);
         
         break;
     case SR_SCALE_BILINEAR:
         SR_BilinearCanvasScale(src, dest);
-
-        break;
-    default:
-        fprintf(stderr, "Invalid scaling mode!\n");
-        exit(EXIT_FAILURE);
 
         break;
     }
