@@ -47,14 +47,18 @@ int main(void)
     /* edit: this is the current way of testing whether
        canvas allocation has failed or not for now */
     canvy = SR_NewCanvas(640, 480);
-    SR_DrawRect(
-        &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
-        canvy.width, canvy.height);
 
-    if (!SR_CanvasIsValid(&canvy)) {
+    SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
+
+    if (!SR_CanvasIsValid(&canvy) || !SR_CanvasIsValid(&afont)) {
         status = 3;
         goto sdl_destroywin;
     }
+
+    SR_DrawRect(
+        &canvy, SR_CreateRGBA(255, 255, 255, 255), 0, 0,
+        canvy.width, canvy.height);
+    SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10);
 
 #ifdef FLAG_PIX_TIX
     unsigned int times = 65535;
@@ -116,8 +120,6 @@ int main(void)
         &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
     SR_DestroyCanvas(&brick_tileset);
     brick_tileset = brick_tileset_res;
-    SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
-    SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10);
 #endif
 
     if (!(win = SDL_CreateWindow(
@@ -336,7 +338,7 @@ event_loop:
     afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
     SR_PrintToAtlas(
         &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
-        SR_BLEND_INVERTED_DRAW);
+        SR_BLEND_ADDITIVE);
 #endif
 
     /* update the canvas here, the rest is
