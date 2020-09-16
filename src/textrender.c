@@ -47,6 +47,7 @@ void SR_PrintToAtlas(
         } 
 
         if (ucsc == 0x000a || ucsc == 0x0009) continue;
+        if (ucsc == 0x0000) break;
 
         SR_Canvas character = SR_RefCanvTile(
             font->font,
