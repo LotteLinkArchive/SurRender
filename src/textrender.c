@@ -24,7 +24,7 @@ SR_FontAtlas SR_MakeFontAtlas(
 void SR_PrintToAtlas(
     SR_FontAtlas *font,
     SR_Canvas *dest,
-    const uint16_t *text,
+    uint16_t *text,
     size_t length,
     unsigned short x,
     unsigned short y,
