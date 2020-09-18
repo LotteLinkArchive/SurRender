@@ -2,23 +2,6 @@
 #include "canvas.h"
 #include "colours.h"
 
-// Modulo LUT
-static uint16_t modlut[SR_MAX_CANVAS_SIZE + 1][SR_MAX_CANVAS_SIZE + 1] = {};
-static bool modlut_complete[SR_MAX_CANVAS_SIZE + 1] = {};
-
-unsigned int SR_CanvasCalcPosition(
-    register SR_Canvas *canvas,
-    register unsigned int x,
-    register unsigned int y)
-{
-    x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
-    y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
-    x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
-    y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
-
-    return (canvas->rwidth * y) + x;
-}
-
 void SR_FillModLUT(uint16_t moperand)
 {
     if (modlut_complete[moperand]) goto sr_fmlutexit;

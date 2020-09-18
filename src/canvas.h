@@ -110,13 +110,25 @@
         sizeof(SR_RGBAPixel)                           \
     ))
 
+    // Modulo LUT
+    uint16_t modlut[SR_MAX_CANVAS_SIZE +1][SR_MAX_CANVAS_SIZE +1] = {};
+    bool modlut_complete[SR_MAX_CANVAS_SIZE +1] = {};
+
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-    unsigned int SR_CanvasCalcPosition(
+    inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
         register unsigned int x,
-        register unsigned int y);
+        register unsigned int y)
+    {
+        x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
+        y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
+        x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
+        y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
+
+        return (canvas->rwidth * y) + x;
+    }
 
     // Check if a pixel is out of bounds
     #define SR_CanvasCheckOutOfBounds(canvas, x, y)   \
