@@ -3,23 +3,11 @@
     #include "glbl.h"
     #include "colours.h"
 
-    // Must be a power of two. Overhead-per-canvas depends on this value.
-    // Overhead calculation: SR_MAX_CANVAS_SIZE * 8 = LUT overhead bytes
-    #define SR_MAX_CANVAS_SIZE 4096 // Default overhead: 32 KiB
-    // For unlimited canvases, define SUR_NO_CANVAS_MOD_LUT (speed decrease)
+    // This depends on the modulo table in modlut.h
+    #define SR_MAX_CANVAS_SIZE 4096
 
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
-
-    /* This is a modulo LUT table for the width and height of a given canvas.
-     * You don't need to worry about this.
-     */
-    #ifndef SUR_NO_CANVAS_MOD_LUT
-    typedef struct SR_CanvasWHModTable {
-        unsigned short wmodlut[SR_MAX_CANVAS_SIZE];
-        unsigned short hmodlut[SR_MAX_CANVAS_SIZE];
-    } SR_CanvasWHModTable;
-    #endif
 
     /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
@@ -63,12 +51,6 @@
         unsigned short hheight;
         unsigned short h2width;
         unsigned short h2height;
-
-        #ifndef SUR_NO_CANVAS_MOD_LUT
-        // Modulo LUTs for non-power-of-two textures
-        SR_CanvasWHModTable *rmodlut;
-        SR_CanvasWHModTable cmodlut; // EVERY canvas has one
-        #endif
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -138,52 +120,10 @@
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-    inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
+    unsigned int SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
         register unsigned int x,
-        register unsigned int y)
-    {
-        #ifndef SUR_BRANCHLESS_POSITION
-        if (canvas->hflags & 0b00100000) {
-            x &= canvas->hwidth;
-            y &= canvas->hheight;
-        } else {
-            #ifndef SUR_NO_CANVAS_MOD_LUT
-            x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
-            #else
-            x %= canvas->cwidth ;
-            y %= canvas->cheight;
-            #endif
-        }
-        #else
-        x = canvas->cmodlut.wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-        y = canvas->cmodlut.hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
-        #endif
-
-        x += canvas->xclip;
-        y += canvas->yclip;
-
-        #ifndef SUR_BRANCHLESS_POSITION
-        if (canvas->hflags & 0b00010000) {
-            x &= canvas->h2width ;
-            y &= canvas->h2height;
-        } else {
-            #ifndef SUR_NO_CANVAS_MOD_LUT
-            x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-            y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
-            #else
-            x %= canvas->rwidth ;
-            y %= canvas->rheight;
-            #endif
-        }
-        #else
-        x = canvas->rmodlut->wmodlut[x & (SR_MAX_CANVAS_SIZE - 1)];
-        y = canvas->rmodlut->hmodlut[y & (SR_MAX_CANVAS_SIZE - 1)];
-        #endif
-
-        return (canvas->rwidth * y) + x;
-    }
+        register unsigned int y);
 
     // Check if a pixel is out of bounds
     #define SR_CanvasCheckOutOfBounds(canvas, x, y)   \
@@ -221,14 +161,7 @@
     /* Check if the canvas has been successfully allocated. You must ALWAYS
      * check if a canvas is valid before you use it.
      */
-    #ifndef SUR_NO_CANVAS_MOD_LUT
-    #define SR_CanvasIsValid(canvas) (BOOLIFY(\
-		(canvas)->pixels  &&\
-		(canvas)->rmodlut   \
-	))
-	#else
     #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels))
-	#endif
 
     /* Malloc a new canvas of given size and start copying every pixel from the
      * specified old canvas to the new one, starting at the given position.

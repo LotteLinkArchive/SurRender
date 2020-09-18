@@ -1,19 +1,20 @@
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
+#include "modlut.h"
 
-#ifndef SUR_NO_CANVAS_MOD_LUT
-// Private
-void SR_GenModLUT(unsigned short *LUT, unsigned short mod)
+unsigned int SR_CanvasCalcPosition(
+    register SR_Canvas *canvas,
+    register unsigned int x,
+    register unsigned int y)
 {
-    #ifndef SUR_BRANCHLESS_POSITION
-    if ((mod & (mod - 1)) == 0) return;
-    #endif
+    x = modlut[canvas->cwidth ][x & (SR_MAX_CANVAS_SIZE - 1)] + canvas->xclip;
+    y = modlut[canvas->cheight][y & (SR_MAX_CANVAS_SIZE - 1)] + canvas->yclip;
+    x = modlut[canvas->rwidth ][x & (SR_MAX_CANVAS_SIZE - 1)];
+    y = modlut[canvas->rheight][y & (SR_MAX_CANVAS_SIZE - 1)];
 
-    for (unsigned short x = 0; x < SR_MAX_CANVAS_SIZE; x++)
-        LUT[x] = x % mod;
+    return (canvas->rwidth * y) + x;
 }
-#endif
 
 void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 {
@@ -25,20 +26,6 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
     canvas->hheight  = canvas->cheight - 1;
     canvas->h2width  = canvas->rwidth  - 1;
     canvas->h2height = canvas->rheight - 1;
-
-    #ifndef SUR_NO_CANVAS_MOD_LUT
-    if (canvas->hflags & 0b00000001) {
-        canvas->rmodlut = optsrc->rmodlut;
-    } else {
-        canvas->rmodlut = realloc(
-            canvas->rmodlut, sizeof(SR_CanvasWHModTable));
-        SR_GenModLUT(canvas->rmodlut->wmodlut, canvas->rwidth );
-        SR_GenModLUT(canvas->rmodlut->hmodlut, canvas->rheight);
-    }
-
-    SR_GenModLUT(canvas->cmodlut.wmodlut, canvas->cwidth );
-    SR_GenModLUT(canvas->cmodlut.hmodlut, canvas->cheight);
-    #endif
 }
 
 bool SR_ResizeCanvas(
@@ -128,13 +115,6 @@ SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	bool hfstate = !(canvas->hflags & 0b00000010);
-	
-    #ifndef SUR_NO_CANVAS_MOD_LUT
-    if (canvas->rmodlut && hfstate)
-        free(canvas->rmodlut);
-
-    canvas->rmodlut = NULL;
-    #endif
 
     if (canvas->pixels  && hfstate)
         free(canvas->pixels);
