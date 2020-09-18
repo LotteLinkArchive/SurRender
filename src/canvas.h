@@ -3,8 +3,8 @@
     #include "glbl.h"
     #include "colours.h"
 
-    // This depends on the modulo table in modlut.h
     // Must be (a power of 2) - 1
+    // The larger the size, the larger the modulo LUT overhead
     #define SR_MAX_CANVAS_SIZE 4095
 
     // Force little endian, hopefully
