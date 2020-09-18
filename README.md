@@ -1,4 +1,8 @@
 # SurRender ![Licensed under GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange) ![Written in C](https://img.shields.io/badge/language-C-lightgrey)
+
+<img src="https://git.lotte.link/naphtha/SurRender/raw/branch/master/images/logo.png" align="right"
+     title="SurRender Logo" width="240">
+
 SurRender is an attempt to create an abstract rendering engine for rendering 2D and 3D scenes in C.
 
 As SurRender itself does not do any window creation and intends to be as open-ended as possible, it could potentially be used for the following ideas:
@@ -19,12 +23,16 @@ Right now, SurRender is not very useful. 2D functions are partially completed, b
 If you'd like to contribute, you will need to set up the build environment. To do this...
 
 ```
-git clone https://git.lotte.link/naphtha/SurRender.git
+# Clone the project AND THE SUBMODULES
+git clone --recurse-submodules -j8 https://git.lotte.link/naphtha/SurRender.git
 cd SurRender*
-./build-deps.sh
-```
 
-Run `./build-deps.sh` to update all dependencies, build them and then automatically build SurRender itself and its test code. The test binary is produced as `a.out` currently.
+# Build the project
+make clean; make -j8
+
+# Run the demo
+./demo/a.out
+```
 
 ## Current Dependencies
 
