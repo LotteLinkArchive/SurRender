@@ -4,7 +4,8 @@
     #include "colours.h"
 
     // This depends on the modulo table in modlut.h
-    #define SR_MAX_CANVAS_SIZE 4096
+    // Must be (a power of 2) - 1
+    #define SR_MAX_CANVAS_SIZE 4095
 
     // Force little endian, hopefully
     #pragma scalar_storage_order little-endian
@@ -43,14 +44,6 @@
         // The clipping width and height, used for ignoring segments
         unsigned short cwidth;
         unsigned short cheight;
-
-        // Clipping width and height subtracted by one - stored here so that
-        // the CWIDTH/CHEIGHT don't need to be subtracted by one every time a
-        // pixel is set/get.
-        unsigned short hwidth;
-        unsigned short hheight;
-        unsigned short h2width;
-        unsigned short h2height;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset

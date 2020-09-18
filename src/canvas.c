@@ -1,19 +1,32 @@
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
-#include "modlut.h"
+
+// Modulo LUT
+static uint16_t modlut[SR_MAX_CANVAS_SIZE + 1][SR_MAX_CANVAS_SIZE + 1] = {};
+static bool modlut_complete[SR_MAX_CANVAS_SIZE + 1] = {};
 
 unsigned int SR_CanvasCalcPosition(
     register SR_Canvas *canvas,
     register unsigned int x,
     register unsigned int y)
 {
-    x = modlut[canvas->cwidth ][x & (SR_MAX_CANVAS_SIZE - 1)] + canvas->xclip;
-    y = modlut[canvas->cheight][y & (SR_MAX_CANVAS_SIZE - 1)] + canvas->yclip;
-    x = modlut[canvas->rwidth ][x & (SR_MAX_CANVAS_SIZE - 1)];
-    y = modlut[canvas->rheight][y & (SR_MAX_CANVAS_SIZE - 1)];
+    x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
+    y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
+    x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
+    y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
 
     return (canvas->rwidth * y) + x;
+}
+
+void SR_FillModLUT(uint16_t moperand)
+{
+    if (modlut_complete[moperand]) goto sr_fmlutexit;
+    modlut_complete[moperand] = true;
+    for (uint16_t x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++)
+        modlut[moperand][x] = x % moperand;
+sr_fmlutexit:
+    return;
 }
 
 void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
@@ -22,10 +35,11 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
         canvas->rwidth, canvas->rheight, 0b00010000);
     canvas->hflags  |= SR_CPow2FDtc(
         canvas->cwidth, canvas->cheight, 0b00100000);
-    canvas->hwidth   = canvas->cwidth  - 1;
-    canvas->hheight  = canvas->cheight - 1;
-    canvas->h2width  = canvas->rwidth  - 1;
-    canvas->h2height = canvas->rheight - 1;
+
+    SR_FillModLUT(canvas->cwidth );
+    SR_FillModLUT(canvas->cheight);
+    SR_FillModLUT(canvas->rwidth );
+    SR_FillModLUT(canvas->rheight);
 }
 
 bool SR_ResizeCanvas(
@@ -38,6 +52,7 @@ bool SR_ResizeCanvas(
         !height ||
         canvas->pixels ||
         canvas->hflags & 0b00001011) return false;
+
 
     // @direct
     canvas->width = width;
