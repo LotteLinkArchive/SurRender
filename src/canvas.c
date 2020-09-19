@@ -350,9 +350,9 @@ srnzbbx_empty:
 }
 
 SR_OffsetCanvas SR_CanvasShear(
-        SR_Canvas *src,
-        I32 skew_amount,
-        U1 mode)
+    SR_Canvas *src,
+    I32 skew_amount,
+    U1 mode)
 {
     U16 w, h, mcenter;
     R32 skew;
