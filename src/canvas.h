@@ -75,7 +75,7 @@
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
      */
-    bool SR_ResizeCanvas(
+    U1 SR_ResizeCanvas(
         SR_Canvas *canvas,
         U16 width,
         U16 height);
@@ -112,7 +112,7 @@
 
     // Modulo LUT
     U16 modlut[SR_MAX_CANVAS_SIZE +1][SR_MAX_CANVAS_SIZE +1] = {};
-    bool modlut_complete[SR_MAX_CANVAS_SIZE +1] = {};
+    U1 modlut_complete[SR_MAX_CANVAS_SIZE +1] = {};
 
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
@@ -200,7 +200,7 @@
         U16 yclip,
         U16 width,
         U16 height,
-        bool allow_destroy_host);
+        U1 allow_destroy_host);
 
     /* Allows you to blend/merge a source canvas on to a destination canvas.
      * Can be pasted at a given offset (paste_start_x and paste_start_y)
@@ -251,7 +251,7 @@
     SR_OffsetCanvas SR_CanvasShear(
         SR_Canvas *src,
         I32 skew_amount,
-        bool mode);
+        U1 mode);
     
     /* Returns a canvas that is hecking rotated, hopefully.
      * Expects an angle in degrees - will rotate clockwise.
@@ -273,13 +273,13 @@
     SR_OffsetCanvas SR_CanvasRotate(
         SR_Canvas *src,
         R32 degrees,
-        bool safety_padding,
-        bool autocrop);
+        U1 safety_padding,
+        U1 autocrop);
 
     /* Flip the target canvas - does not malloc, works in-place.
      * Enable vertical to flip vertically. Leave disabled for horizontal.
      */
-    void SR_InplaceFlip(SR_Canvas *src, bool vertical);
+    void SR_InplaceFlip(SR_Canvas *src, U1 vertical);
 
     /* Creates a reference canvas based on a given tile inside another canvas.
      * The col/row argument is modulo'd by the amount of columns and rows in

@@ -64,7 +64,7 @@
     }
     
     // checque if a bit is sett
-    inline __attribute__((always_inline)) bool SR_SelectGetPoint(
+    inline __attribute__((always_inline)) U1 SR_SelectGetPoint(
         SR_Select *selection,
         U16 x,
         U16 y)

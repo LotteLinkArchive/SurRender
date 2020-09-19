@@ -25,7 +25,7 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
     SR_FillModLUT(canvas->rheight);
 }
 
-bool SR_ResizeCanvas(
+U1 SR_ResizeCanvas(
     SR_Canvas *canvas,
     U16 width,
     U16 height)
@@ -112,7 +112,7 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 void SR_DestroyCanvas(SR_Canvas *canvas)
 {
-	bool hfstate = !(canvas->hflags & 0b00000010);
+	U1 hfstate = !(canvas->hflags & 0b00000010);
 
     if (canvas->pixels  && hfstate)
         free(canvas->pixels);
@@ -162,7 +162,7 @@ SR_Canvas SR_RefCanv(
     U16 yclip,
     U16 width,
     U16 height,
-    bool allow_destroy_host)
+    U1 allow_destroy_host)
 {
     // @direct
     SR_Canvas temp = {
@@ -352,7 +352,7 @@ srnzbbx_empty:
 SR_OffsetCanvas SR_CanvasShear(
         SR_Canvas *src,
         I32 skew_amount,
-        bool mode)
+        U1 mode)
 {
     U16 w, h, mcenter;
     R32 skew;
@@ -400,8 +400,8 @@ SR_OffsetCanvas SR_CanvasShear(
 SR_OffsetCanvas SR_CanvasRotate(
     SR_Canvas *src,
     R32 degrees,
-    bool safety_padding,
-    bool autocrop)
+    U1 safety_padding,
+    U1 autocrop)
 {
     // Declare everything here
     SR_Canvas temp;
@@ -529,7 +529,7 @@ srcvrot_finished:
     return final;
 }
 
-void SR_InplaceFlip(SR_Canvas *src, bool vertical)
+void SR_InplaceFlip(SR_Canvas *src, U1 vertical)
 {
     // Flipping canvases honestly doesn't need a new canvas to be allocated,
     // so we can do it in-place just fine for extra speed and less memory
