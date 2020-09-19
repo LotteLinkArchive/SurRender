@@ -28,7 +28,7 @@
         SR_SMODE_XOR
     };
     
-    // Modify a poI32 in a selection
+    // Modify a point in a selection
     inline __attribute__((always_inline)) X0 SR_SelectSetPoint(
         SR_Select *selection,
         U16 x,
