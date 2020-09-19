@@ -101,5 +101,5 @@
     X0 SR_SelectCirc(
         SR_Select *selection, I8 mode,
         I32 x, I32 y,
-        U32 r);
+        I32 r);
 #endif
