@@ -7,9 +7,6 @@
     // The larger the size, the larger the modulo LUT overhead
     #define SR_MAX_CANVAS_SIZE 4095
 
-    // Force little endian, hopefully
-    #pragma scalar_storage_order little-endian
-
     /* This is a canvas, which contains a width and height in pixels, an aspect
      * ratio and a pointer to an array of pixel values.
      */
