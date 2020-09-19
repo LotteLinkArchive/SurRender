@@ -5,29 +5,24 @@
 // Colours must be stored in little endian format
 #pragma scalar_storage_order little-endian
 
-typedef uint8_t  SRu8x8  __attribute__ ((vector_size (8 )));
-typedef uint8_t  SRu8x4  __attribute__ ((vector_size (4 )));
-typedef uint16_t SRu16x8 __attribute__ ((vector_size (16)));
-typedef uint16_t SRu16x4 __attribute__ ((vector_size (8 )));
-
 typedef union {
     struct {
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-        uint8_t alpha;
+        U8 red;
+        U8 green;
+        U8 blue;
+        U8 alpha;
     } chn;
-    uint32_t whole;
-    SRu8x4 splitvec;
+    U32 whole;
+    U8x4 splitvec;
 } SR_RGBAPixel;
 
 typedef union {
-    uint64_t whole;
+    U64 whole;
     struct {
-        uint32_t left;
-        uint32_t right;
+        U32 left;
+        U32 right;
     } components;
-    SRu8x8 splitvec;
+    U8x8 splitvec;
 } SR_RGBADoublePixel;
 
 enum SR_BlendingModes {
@@ -48,7 +43,7 @@ enum SR_BlendingModes {
     // Directly XOR EVERYTHING (RGBA) without mutating the alpha
     SR_BLEND_DIRECT_XOR_ALL,
     // Like additive blending, but doesn't change base alpha and doesn't
-    // multiply values. Can overflow. Use it to paint colour onto black.
+    // multiply values. Can overflow. Use it to paI32 colour onto black.
     SR_BLEND_ADDITIVE_PAINT,
     // Depending on the alpha value of the top layer, invert the base colours
     SR_BLEND_INVERTED_DRAW
@@ -56,10 +51,10 @@ enum SR_BlendingModes {
 
 // Create an RGBA colour value.
 inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
-    register uint8_t red,
-    register uint8_t green,
-    register uint8_t blue,
-    register uint8_t alpha)
+    register U8 red,
+    register U8 green,
+    register U8 blue,
+    register U8 alpha)
 {
     SR_RGBAPixel temp = {
         .chn.red = red,
@@ -76,18 +71,18 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
     SR_RGBAPixel pixel_base,
     SR_RGBAPixel pixel_top,
-    uint8_t alpha_modifier,
-    char mode)
+    U8 alpha_modifier,
+    I8 mode)
 {
     SR_RGBAPixel final;
 
     if (mode > SR_BLEND_ADDITIVE) goto srbl_nomul;
 
-    uint8_t alpha_mul, alpha_mul_neg;
-    alpha_mul     = ((uint16_t)pixel_top.chn.alpha * alpha_modifier) >> 8;
+    U8 alpha_mul, alpha_mul_neg;
+    alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
     alpha_mul_neg = ~alpha_mul;
 
-    SRu16x8 buffer = {
+    U16x8 buffer = {
         alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
         alpha_mul,     alpha_mul,     alpha_mul,     255};
     SR_RGBADoublePixel merge = {
@@ -95,8 +90,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
         .components.left  = pixel_base.whole};
 
     merge.splitvec = __builtin_convertvector(((
-            buffer * __builtin_convertvector(merge.splitvec, SRu16x8)
-        ) + 255) >> 8, SRu8x8);
+            buffer * __builtin_convertvector(merge.splitvec, U16x8)
+        ) + 255) >> 8, U8x8);
     pixel_top.whole  = merge.components.right;
     pixel_base.whole = merge.components.left;
 
@@ -116,7 +111,7 @@ srbl_nomul:
 
         break;
     case SR_BLEND_OVERLAY:
-        if (((uint16_t)alpha_modifier * pixel_top.chn.alpha) >= 255)
+        if (((U16)alpha_modifier * pixel_top.chn.alpha) >= 255)
             final.whole  = (pixel_top.whole  & 0x00FFFFFF) |
                            (pixel_base.whole & 0xFF000000);
         else final.whole = pixel_base.whole;
@@ -142,7 +137,7 @@ srbl_nomul:
         break;
     case SR_BLEND_INVERTED_DRAW:
         final.whole = pixel_base.whole - ((
-            ((uint16_t)pixel_top.chn.alpha * alpha_modifier)
+            ((U16)pixel_top.chn.alpha * alpha_modifier)
         >> 8) * 0x00010101);
 
         break;

@@ -8,15 +8,15 @@
     
     typedef struct SR_Select {
         // Width and height, in bits
-        unsigned short width;
-        unsigned short height;
+        U16 width;
+        U16 height;
         
         // Pointer to an array of bytes
-        uint8_t *bitfield;
+        U8 *bitfield;
     } SR_Select;
     
     // Create a new selecty box of given dimensions
-    SR_Select SR_NewSelect(unsigned short width, unsigned short height);
+    SR_Select SR_NewSelect(U16 width, U16 height);
     
     // Destroy + free a selecty box
     void SR_DestroySelect(SR_Select *selection);
@@ -28,18 +28,18 @@
         SR_SMODE_XOR
     };
     
-    // Modify a point in a selection
+    // Modify a poI32 in a selection
     inline __attribute__((always_inline)) void SR_SelectSetPoint(
         SR_Select *selection,
-        unsigned short x,
-        unsigned short y,
-        char mode)
+        U16 x,
+        U16 y,
+        I8 mode)
     {
         if (!selection->bitfield) return;
         
-        unsigned short position = x + selection->width * y;
-        unsigned short byte = position >> 3;
-        uint8_t bit = 0b10000000 >> (position & 0b00000111);
+        U16 position = x + selection->width * y;
+        U16 byte = position >> 3;
+        U8 bit = 0b10000000 >> (position & 0b00000111);
         
         switch (mode) {
         case SR_SMODE_SET:
@@ -66,40 +66,40 @@
     // checque if a bit is sett
     inline __attribute__((always_inline)) bool SR_SelectGetPoint(
         SR_Select *selection,
-        unsigned short x,
-        unsigned short y)
+        U16 x,
+        U16 y)
     {
         if (!selection->bitfield) return false;
         
-        unsigned short position = x + selection->width * y;
-        unsigned short byte = position >> 3;
-        uint8_t bit = 0b10000000 >> (position & 0b00000111);
+        U16 position = x + selection->width * y;
+        U16 byte = position >> 3;
+        U8 bit = 0b10000000 >> (position & 0b00000111);
         
         return (selection->bitfield[byte] & bit);
     }
     
     // select yonder line
     void SR_SelectLine(
-        SR_Select *selection, char mode,
-        int x0, int y0,
-        int x1, int y1);
+        SR_Select *selection, I8 mode,
+        I32 x0, I32 y0,
+        I32 x1, I32 y1);
     
     // select yonder triangle
     void SR_SelectTri(
-        SR_Select *selection, char mode,
-        int x0, int y0, 
-        int x1, int y1,
-        int x2, int y2);
+        SR_Select *selection, I8 mode,
+        I32 x0, I32 y0, 
+        I32 x1, I32 y1,
+        I32 x2, I32 y2);
     
     // select yonder rectangle
     void SR_SelectRect(
-        SR_Select *selection, char mode,
-        int x, int y,
-        int w, int h);
+        SR_Select *selection, I8 mode,
+        I32 x, I32 y,
+        I32 w, I32 h);
     
     // select yonder circle
     void SR_SelectCirc(
-        SR_Select *selection, char mode,
-        int x, int y,
-        unsigned long r);
+        SR_Select *selection, I8 mode,
+        I32 x, I32 y,
+        U32 r);
 #endif

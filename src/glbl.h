@@ -4,7 +4,4 @@
     #include <math.h>
     #include <string.h>
     #include <stdio.h>
-    #include <stdint.h>
-    #include <xmmintrin.h>
-    #include <pmmintrin.h>
 #endif

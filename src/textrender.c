@@ -2,8 +2,8 @@
 
 SR_FontAtlas SR_MakeFontAtlas(
     SR_Canvas *font,
-    unsigned short charwidth,
-    unsigned short charheight)
+    U16 charwidth,
+    U16 charheight)
 {
     SR_FontAtlas temp = {
         .font          = font,
@@ -24,17 +24,17 @@ SR_FontAtlas SR_MakeFontAtlas(
 void SR_PrintToAtlas(
     SR_FontAtlas *font,
     SR_Canvas *dest,
-    uint16_t *text,
+    U16 *text,
     size_t length,
-    unsigned short x,
-    unsigned short y,
-    unsigned short breakpoint,
-    unsigned char blendmode)
+    U16 x,
+    U16 y,
+    U16 breakpoint,
+    U8 blendmode)
 {
-    unsigned short rootx = x;
+    U16 rootx = x;
 
     while (--length) {
-        uint16_t ucsc = *text++;
+        U16 ucsc = *text++;
 
         if (ucsc == 0x0009) x += (font->rescalewidth * font->tabspaces) +
             (font->hpadding * font->tabspaces);
@@ -58,7 +58,7 @@ void SR_PrintToAtlas(
             
         if ((SR_CanvasGetPixel(&character, 0, 0).whole & 0x00FFFFFF) !=
             (font->colour.whole & 0x00FFFFFF)) {
-            register unsigned short xc, yc;
+            register U16 xc, yc;
             for (xc = 0; xc < character.width; xc++)
             for (yc = 0; yc < character.height; yc++) {
                 SR_CanvasSetPixel(&character, xc, yc, SR_RGBABlender(

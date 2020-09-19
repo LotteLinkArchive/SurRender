@@ -15,16 +15,16 @@
      */
     typedef struct SR_Canvas {
         // General public properties
-        unsigned short width;
-        unsigned short height;
-        float ratio;
+        U16 width;
+        U16 height;
+        R32 ratio;
 
         // Pointer to an array of pixels
         SR_RGBAPixel *pixels;
         
         // Coordinates to clip off, starting from 0, 0 (allow full canvas)
-        unsigned short xclip;
-        unsigned short yclip;
+        U16 xclip;
+        U16 yclip;
 
         /* Internal canvas properties - FORMAT:
          * 0 b 0 0 0 0 0 0 0 0
@@ -35,15 +35,15 @@
          *         | \--------- Canvas Rsize is a power of two
          *         \----------- Canvas Csize is a power of two
          */
-        uint8_t hflags;
+        U8 hflags;
 
         // The "Real data" width and height, used for preventing segfaults
-        unsigned short rwidth;
-        unsigned short rheight;
+        U16 rwidth;
+        U16 rheight;
 
         // The clipping width and height, used for ignoring segments
-        unsigned short cwidth;
-        unsigned short cheight;
+        U16 cwidth;
+        U16 cheight;
     } SR_Canvas;
 
     /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -53,8 +53,8 @@
      * to those coordinates.
      */
     typedef struct SR_OffsetCanvas {
-        int offset_x;
-        int offset_y;
+        I32 offset_x;
+        I32 offset_y;
         SR_Canvas canvas;
     } SR_OffsetCanvas;
 
@@ -77,8 +77,8 @@
      */
     bool SR_ResizeCanvas(
         SR_Canvas *canvas,
-        unsigned short width,
-        unsigned short height);
+        U16 width,
+        U16 height);
 
     /* Change the visual width/height of a canvas without modifying the real
      * width and height, allowing you to tile a texture or something without
@@ -86,8 +86,8 @@
      */
     void SR_TileTo(
         SR_Canvas *canvas,
-        unsigned short width,
-        unsigned short height);
+        U16 width,
+        U16 height);
 
     /* A canvas may contain garbage data when initially created. This will
      * zero fill it for you, if needed.
@@ -95,7 +95,7 @@
     void SR_ZeroFill(SR_Canvas *canvas);
 
     // Create a new canvas of the given size
-    SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height);
+    SR_Canvas SR_NewCanvas(U16 width, U16 height);
 
     // Get the height and width of a canvas
     #define SR_CanvasGetWidth(canvas) ((canvas)->width)
@@ -104,23 +104,23 @@
     /* Calculate the "real" size (in memory) of a canvas - not really
      * recommended to use this yourself.
      */
-    #define SR_CanvasCalcSize(canvas) ((unsigned int)( \
-        (unsigned int)((canvas)->rwidth)  *            \
-        (unsigned int)((canvas)->rheight) *            \
+    #define SR_CanvasCalcSize(canvas) ((U32)( \
+        (U32)((canvas)->rwidth)  *            \
+        (U32)((canvas)->rheight) *            \
         sizeof(SR_RGBAPixel)                           \
     ))
 
     // Modulo LUT
-    uint16_t modlut[SR_MAX_CANVAS_SIZE +1][SR_MAX_CANVAS_SIZE +1] = {};
+    U16 modlut[SR_MAX_CANVAS_SIZE +1][SR_MAX_CANVAS_SIZE +1] = {};
     bool modlut_complete[SR_MAX_CANVAS_SIZE +1] = {};
 
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
      */
-    inline __attribute__((always_inline)) unsigned int SR_CanvasCalcPosition(
+    inline __attribute__((always_inline)) U32 SR_CanvasCalcPosition(
         register SR_Canvas *canvas,
-        register unsigned int x,
-        register unsigned int y)
+        register U32 x,
+        register U32 y)
     {
         x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
         x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
@@ -138,8 +138,8 @@
     // Set the value of a pixel in the canvas
     inline __attribute__((always_inline)) void SR_CanvasSetPixel(
         register SR_Canvas *canvas,
-        register unsigned short x,
-        register unsigned short y,
+        register U16 x,
+        register U16 y,
         SR_RGBAPixel pixel)
     {
         canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
@@ -148,8 +148,8 @@
     // Get a pixel in the canvas
     inline __attribute__((always_inline)) SR_RGBAPixel SR_CanvasGetPixel(
         SR_Canvas *canvas,
-        register unsigned short x,
-        register unsigned short y)
+        register U16 x,
+        register U16 y)
     {
         return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
     }
@@ -176,10 +176,10 @@
      */
     SR_Canvas SR_CopyCanvas(
         register SR_Canvas *canvas,
-        register unsigned short copy_start_x,
-        register unsigned short copy_start_y,
-        unsigned short new_width,
-        unsigned short new_height);
+        register U16 copy_start_x,
+        register U16 copy_start_y,
+        U16 new_width,
+        U16 new_height);
 
     /* Takes pretty much the same arguments as SR_CopyCanvas, except it doesn't
      * malloc a new canvas - it returns essentially a segment of the original
@@ -196,10 +196,10 @@
      */
     SR_Canvas SR_RefCanv(
         SR_Canvas *src,
-        unsigned short xclip,
-        unsigned short yclip,
-        unsigned short width,
-        unsigned short height,
+        U16 xclip,
+        U16 yclip,
+        U16 width,
+        U16 height,
         bool allow_destroy_host);
 
     /* Allows you to blend/merge a source canvas on to a destination canvas.
@@ -215,22 +215,22 @@
     void SR_MergeCanvasIntoCanvas(
         register SR_Canvas *dest_canvas,
         register SR_Canvas *src_canvas,
-        register unsigned short paste_start_x,
-        register unsigned short paste_start_y,
-        register uint8_t alpha_modifier,
-        register char mode);
+        register U16 paste_start_x,
+        register U16 paste_start_y,
+        register U8 alpha_modifier,
+        register I8 mode);
 
     /* Scales the source canvas into the destination canvas. Bad things will
-     * happen if the source and destination point to the same canvas.
+     * happen if the source and destination poI32 to the same canvas.
      * The new width and height is the width and height of the destination
      * canvas.
      */
     void SR_CanvasScale(
         SR_Canvas *src,
         SR_Canvas *dest,
-        char mode);
+        I8 mode);
     
-    /* Returns a pointer to a static array containing 4 unsigned shorts.
+    /* Returns a pointer to a static array containing 4 U16s.
      * The first 2 values are the x, y coordinates of the top left of the
      * bounding box. The last 2 values are the x, y coordinates of the bottom
      * right of the bounding box.
@@ -241,7 +241,7 @@
      * 
      * Note that this is a particularly slow operation.
      */
-    unsigned short * SR_NZBoundingBox(SR_Canvas *src);
+    U16 * SR_NZBoundingBox(SR_Canvas *src);
 
     /* Returns a canvas with the input canvas's content skewed
      * set mode for vertical shearing, else turn off for horizontal
@@ -250,7 +250,7 @@
      */
     SR_OffsetCanvas SR_CanvasShear(
         SR_Canvas *src,
-        int skew_amount,
+        I32 skew_amount,
         bool mode);
     
     /* Returns a canvas that is hecking rotated, hopefully.
@@ -272,7 +272,7 @@
      */
     SR_OffsetCanvas SR_CanvasRotate(
         SR_Canvas *src,
-        float degrees,
+        R32 degrees,
         bool safety_padding,
         bool autocrop);
 
@@ -293,8 +293,8 @@
      */
     SR_Canvas SR_RefCanvTile(
         SR_Canvas *atlas,
-        unsigned short tile_w,
-        unsigned short tile_h,
-        unsigned short col,
-        unsigned short row);
+        U16 tile_w,
+        U16 tile_h,
+        U16 col,
+        U16 row);
 #endif

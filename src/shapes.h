@@ -8,61 +8,61 @@
     void SR_DrawLine(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        int x0,
-        int y0,
-        int x1,
-        int y1);
+        I32 x0,
+        I32 y0,
+        I32 x1,
+        I32 y1);
     
     //triangle drawing function
     void SR_DrawTriOutline(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        int x0,
-        int y0,
-        int x1,
-        int y1,
-        int x2,
-        int y2);
+        I32 x0,
+        I32 y0,
+        I32 x1,
+        I32 y1,
+        I32 x2,
+        I32 y2);
 
     void SR_DrawTri(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        int x0,
-        int y0, 
-        int x1, 
-        int y1,
-        int x2,
-        int y2);
+        I32 x0,
+        I32 y0, 
+        I32 x1, 
+        I32 y1,
+        I32 x2,
+        I32 y2);
     
     //get pain wrecked
     void SR_DrawRectOutline(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        unsigned short x,
-        unsigned short y,
-        unsigned short w,
-        unsigned short h);
+        U16 x,
+        U16 y,
+        U16 w,
+        U16 h);
     
     void SR_DrawRect(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        unsigned short x,
-        unsigned short y,
-        unsigned short w,
-        unsigned short h);
+        U16 x,
+        U16 y,
+        U16 w,
+        U16 h);
     
     //round
     void SR_DrawCircOutline(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        unsigned short x,
-        unsigned short y,
-        unsigned short r);
+        U16 x,
+        U16 y,
+        U16 r);
     
     void SR_DrawCirc(
         SR_Canvas *canvas,
         SR_RGBAPixel colour,
-        int x,
-        int y,
-        unsigned long r);
+        I32 x,
+        I32 y,
+        U32 r);
 #endif

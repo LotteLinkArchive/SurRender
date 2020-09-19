@@ -27,33 +27,33 @@
          * SAME CANVAS/ATLAS SIMULTANEOUSLY)
          */
         SR_Canvas *font;
-        unsigned short charwidth;
-        unsigned short charheight;
+        U16 charwidth;
+        U16 charheight;
 
         /* The colour to use when drawing each character */
         SR_RGBAPixel colour;
 
         /* The "new font size" and how it should be scaled, see canvas.h */
-        unsigned short rescalewidth;
-        unsigned short rescaleheight;
-        unsigned char  rescalemode;
+        U16 rescalewidth;
+        U16 rescaleheight;
+        U8  rescalemode;
 
         /* The hpadding (between characters) and vpadding (between lines) */
-        unsigned short hpadding;
-        unsigned short vpadding;
-        unsigned short tabspaces;
+        U16 hpadding;
+        U16 vpadding;
+        U16 tabspaces;
     } SR_FontAtlas;
 
     // Create a font atlas with default values for a given font map.
     SR_FontAtlas SR_MakeFontAtlas(
         SR_Canvas *font,
-        unsigned short charwidth,
-        unsigned short charheight);
+        U16 charwidth,
+        U16 charheight);
 
     /* Draw text on a destination canvas using a given font object.
      * Text must be in UCS-2 format. If length is incorrect, expect undefined
      * behvaiour. X and Y represent the position to draw the text at.
-     * Breakpoint is the amount of horizontal pixels that each line can consume
+     * BreakpoI32 is the amount of horizontal pixels that each line can consume
      * before it will automatically insert a line break. Set to 0 to turn this
      * off completely.
      * 
@@ -64,10 +64,10 @@
     void SR_PrintToAtlas(
         SR_FontAtlas *font,
         SR_Canvas *dest,
-        uint16_t *text,
+        U16 *text,
         size_t length,
-        unsigned short x,
-        unsigned short y,
-        unsigned short breakpoint,
-        unsigned char blendmode);
+        U16 x,
+        U16 y,
+        U16 breakpoint,
+        U8 blendmode);
 #endif

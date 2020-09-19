@@ -2,11 +2,11 @@
 #include "canvas.h"
 #include "colours.h"
 
-void SR_FillModLUT(uint16_t moperand)
+void SR_FillModLUT(U16 moperand)
 {
     if (modlut_complete[moperand]) goto sr_fmlutexit;
     modlut_complete[moperand] = true;
-    for (uint16_t x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++)
+    for (U16 x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++)
         modlut[moperand][x] = x % moperand;
 sr_fmlutexit:
     return;
@@ -27,8 +27,8 @@ void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 
 bool SR_ResizeCanvas(
     SR_Canvas *canvas,
-    unsigned short width,
-    unsigned short height)
+    U16 width,
+    U16 height)
 {
     // It is impossible to create a 0-width/0-height canvas.
     if (!width  ||
@@ -49,7 +49,7 @@ bool SR_ResizeCanvas(
     SR_GenCanvLUT(canvas, NULL);
 
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
-    canvas->ratio = (float)width / height;
+    canvas->ratio = (R32)width / height;
 
     /* FYI: We can actually use realloc here if we assume that canvas->pixels
      * contains either a valid allocation or none at all (represented by NULL)
@@ -58,9 +58,9 @@ bool SR_ResizeCanvas(
      */
     canvas->pixels = realloc(
         canvas->pixels,
-        (unsigned int)(
-            (unsigned int)width *
-            (unsigned int)height *
+        (U32)(
+            (U32)width *
+            (U32)height *
             sizeof(SR_RGBAPixel)));
 
     // Return the allocation state.
@@ -69,8 +69,8 @@ bool SR_ResizeCanvas(
 
 void SR_TileTo(
     SR_Canvas *canvas,
-    unsigned short width,
-    unsigned short height)
+    U16 width,
+    U16 height)
 {
     // @direct
     canvas->width = width;
@@ -85,7 +85,7 @@ void SR_ZeroFill(SR_Canvas *canvas)
         canvas->yclip   != 0 ||
         canvas->cwidth  != canvas->rwidth  ||
         canvas->cheight != canvas->rheight ) {
-        register unsigned short x, y;
+        register U16 x, y;
         for (x = 0; x < canvas->width; x++)
         for (y = 0; y < canvas->height; y++)
             SR_CanvasSetPixel(canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
@@ -98,7 +98,7 @@ void SR_ZeroFill(SR_Canvas *canvas)
     memset(canvas->pixels, 0, SR_CanvasCalcSize(canvas));
 }
 
-SR_Canvas SR_NewCanvas(unsigned short width, unsigned short height)
+SR_Canvas SR_NewCanvas(U16 width, U16 height)
 {
     SR_Canvas temp = {};
     temp.pixels = NULL; // Just for realloc's sake. Can NULL be non-zero?
@@ -122,10 +122,10 @@ void SR_DestroyCanvas(SR_Canvas *canvas)
 
 SR_Canvas SR_CopyCanvas(
     register SR_Canvas *canvas,
-    register unsigned short copy_start_x,
-    register unsigned short copy_start_y,
-    unsigned short new_width,
-    unsigned short new_height)
+    register U16 copy_start_x,
+    register U16 copy_start_y,
+    U16 new_width,
+    U16 new_height)
 {
     // Create the destination canvas
     SR_Canvas new = SR_NewCanvas(new_width, new_height);
@@ -146,7 +146,7 @@ SR_Canvas SR_CopyCanvas(
     }
 
     // Slower copying, but not much slower - used for cropping/panning
-    register unsigned short x, y;
+    register U16 x, y;
     for (x = 0; x < new.width; x++)
     for (y = 0; y < new.height; y++)
         SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(
@@ -158,10 +158,10 @@ srcc_finish:
 
 SR_Canvas SR_RefCanv(
     SR_Canvas *src,
-    unsigned short xclip,
-    unsigned short yclip,
-    unsigned short width,
-    unsigned short height,
+    U16 xclip,
+    U16 yclip,
+    U16 width,
+    U16 height,
     bool allow_destroy_host)
 {
     // @direct
@@ -169,7 +169,7 @@ SR_Canvas SR_RefCanv(
         .hflags  = 0b00000001,
         .width   = width,
         .height  = height,
-        .ratio   = (float)width / height,
+        .ratio   = (R32)width / height,
         .pixels  = src->pixels,
         .rwidth  = src->rwidth,
         .rheight = src->rheight,
@@ -189,12 +189,12 @@ SR_Canvas SR_RefCanv(
 void SR_MergeCanvasIntoCanvas(
     register SR_Canvas *dest_canvas,
     register SR_Canvas *src_canvas,
-    register unsigned short paste_start_x,
-    register unsigned short paste_start_y,
-    register uint8_t alpha_modifier,
-    register char mode)
+    register U16 paste_start_x,
+    register U16 paste_start_y,
+    register U8 alpha_modifier,
+    register I8 mode)
 {
-    register unsigned short x, y;
+    register U16 x, y;
     for (x = 0; x < src_canvas->width; x++)
     for (y = 0; y < src_canvas->height; y++) {
         // Uses the function for blending individual RGBA values.
@@ -226,31 +226,31 @@ void SR_BilinearCanvasScale(
 {
     if (!dest->pixels) return;
 
-    register unsigned int x, y;
+    register U32 x, y;
     for (x = 0, y = 0; y < dest->height; x++) {
         if (x > dest->width) { x = 0; y++; }
 
-        float gx = x / (float)(dest->width ) * (SR_CanvasGetWidth (src) - 1);
-        float gy = y / (float)(dest->height) * (SR_CanvasGetHeight(src) - 1);
-        int gxi = (int)gx;
-        int gyi = (int)gy;
+        R32 gx = x / (R32)(dest->width ) * (SR_CanvasGetWidth (src) - 1);
+        R32 gy = y / (R32)(dest->height) * (SR_CanvasGetHeight(src) - 1);
+        I32 gxi = (int)gx;
+        I32 gyi = (int)gy;
 
         // TODO: Clean this up, preferably stop using SR_RGBAtoWhole, it's slow
 
-        uint32_t c00 = SR_CanvasGetPixel(src, gxi    , gyi    ).whole;
-        uint32_t c10 = SR_CanvasGetPixel(src, gxi + 1, gyi    ).whole;
-        uint32_t c01 = SR_CanvasGetPixel(src, gxi    , gyi + 1).whole;
-        uint32_t c11 = SR_CanvasGetPixel(src, gxi + 1, gyi + 1).whole;
+        U32 c00 = SR_CanvasGetPixel(src, gxi    , gyi    ).whole;
+        U32 c10 = SR_CanvasGetPixel(src, gxi + 1, gyi    ).whole;
+        U32 c01 = SR_CanvasGetPixel(src, gxi    , gyi + 1).whole;
+        U32 c11 = SR_CanvasGetPixel(src, gxi + 1, gyi + 1).whole;
 
-        uint32_t result = 0;
-        for (uint8_t i = 0; i < 4; i++)
-            result |= (uint8_t)blerp(
-                (float)getByte(c00, i),
-                (float)getByte(c10, i),
-                (float)getByte(c01, i),
-                (float)getByte(c11, i),
-                (float)gx - gxi,
-                (float)gy - gyi
+        U32 result = 0;
+        for (U8 i = 0; i < 4; i++)
+            result |= (U8)blerp(
+                (R32)getByte(c00, i),
+                (R32)getByte(c10, i),
+                (R32)getByte(c01, i),
+                (R32)getByte(c11, i),
+                (R32)gx - gxi,
+                (R32)gy - gyi
             ) << (8 * i);
 
         SR_RGBAPixel final = {
@@ -268,10 +268,10 @@ void SR_NearestNeighborCanvasScale(
 {
     if (!dest->pixels) return;
 
-    float x_factor = (float)src->width  / (float)dest->width;
-    float y_factor = (float)src->height / (float)dest->height;
+    R32 x_factor = (R32)src->width  / (R32)dest->width;
+    R32 y_factor = (R32)src->height / (R32)dest->height;
     
-    unsigned short x, y;
+    U16 x, y;
     for (x = 0; x < dest->width; x++)
     for (y = 0; y < dest->height; y++) {
         SR_RGBAPixel sample = SR_CanvasGetPixel(
@@ -283,7 +283,7 @@ void SR_NearestNeighborCanvasScale(
 void SR_CanvasScale(
     SR_Canvas *src,
     SR_Canvas *dest,
-    char mode)
+    I8 mode)
 {
     switch (mode) {
     default:
@@ -298,14 +298,14 @@ void SR_CanvasScale(
     }
 }
 
-unsigned short * SR_NZBoundingBox(SR_Canvas *src)
+U16 * SR_NZBoundingBox(SR_Canvas *src)
 {
     // TODO: Test this for bugs
     // TODO: Find some way to clean up the repetition here
 
     // Static declaration prevents a dangling pointer
-    static unsigned short bbox[4] = {0, 0, 0, 0};
-    register unsigned short xC, yC, firstX, firstY, lastX, lastY, x, y;
+    static U16 bbox[4] = {0, 0, 0, 0};
+    register U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
     for (y = 0; y < src->height; y++)
     for (x = 0; x < src->width; x++)
@@ -337,7 +337,7 @@ srnzbbx_found_first:
             goto srnzbbx_bounded;
         }
 
-    goto srnzbbx_no_end_in_sight; // No last point found - is this possible?
+    goto srnzbbx_no_end_in_sight; // No last poI32 found - is this possible?
 srnzbbx_no_end_in_sight:
     bbox[2] = src->width - 1; bbox[3] = src->height - 1;
 srnzbbx_bounded:
@@ -351,16 +351,16 @@ srnzbbx_empty:
 
 SR_OffsetCanvas SR_CanvasShear(
         SR_Canvas *src,
-        int skew_amount,
+        I32 skew_amount,
         bool mode)
 {
-    unsigned short w, h, mcenter;
-    float skew;
+    U16 w, h, mcenter;
+    R32 skew;
 
     w = src->width;
     h = src->height;
     mcenter = mode ? w >> 1 : h >> 1;
-    skew = (float)skew_amount / (float)mcenter;
+    skew = (R32)skew_amount / (R32)mcenter;
     skew_amount = abs(skew_amount);
 
     SR_OffsetCanvas final;
@@ -372,22 +372,22 @@ SR_OffsetCanvas SR_CanvasShear(
     final.offset_x = mode ? 0 : -skew_amount;
     final.offset_y = mode ? -skew_amount : 0;
 
-    int mshift;
+    I32 mshift;
 
     // TODO: Find some way to clean up the repetition here
 
     if (mode) {
-        for (unsigned short x = 0; x < w; x++) {
+        for (U16 x = 0; x < w; x++) {
             mshift = skew_amount + (x - mcenter) * skew;
-            for (unsigned short y = 0; y < h; y++) {
+            for (U16 y = 0; y < h; y++) {
                 SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);
                 SR_CanvasSetPixel(&(final.canvas), x, y + mshift, pixel);
             }
         }
 	} else {
-        for (unsigned short y = 0; y < h; y++) {
+        for (U16 y = 0; y < h; y++) {
             mshift = skew_amount + (y - mcenter) * skew;
-            for (unsigned short x = 0; x < w; x++) {
+            for (U16 x = 0; x < w; x++) {
                 SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);
                 SR_CanvasSetPixel(&(final.canvas), x + mshift, y, pixel);
             }
@@ -399,19 +399,19 @@ SR_OffsetCanvas SR_CanvasShear(
 
 SR_OffsetCanvas SR_CanvasRotate(
     SR_Canvas *src,
-    float degrees,
+    R32 degrees,
     bool safety_padding,
     bool autocrop)
 {
     // Declare everything here
     SR_Canvas temp;
-    register unsigned short w, h, boundary, xC, yC, nx, ny;
-    int x, y, nxM, nyM, half_w, half_h;
-    float the_sin, the_cos;
+    register U16 w, h, boundary, xC, yC, nx, ny;
+    I32 x, y, nxM, nyM, half_w, half_h;
+    R32 the_sin, the_cos;
     SR_RGBAPixel pixel, pixbuf;
     SR_OffsetCanvas final;
 
-    // There's no point in considering unique values above 359. 360 -> 0
+    // There's no poI32 in considering unique values above 359. 360 -> 0
     degrees = fmod(degrees, 360);
 
     // For simplicity's sake
@@ -437,7 +437,7 @@ SR_OffsetCanvas SR_CanvasRotate(
     if (fmod(degrees, 90) != .0) goto srcvrot_mismatch;
 
     // Trying to rotate 0 degrees? Just copy the canvas, I guess.
-    if (!((unsigned short)degrees % 360)) {
+    if (!((U16)degrees % 360)) {
         SR_MergeCanvasIntoCanvas(
             &final.canvas,
             src,
@@ -461,7 +461,7 @@ SR_OffsetCanvas SR_CanvasRotate(
     for (yC = 0; yC < h; yC++) {
         pixbuf = SR_CanvasGetPixel(src, xC, yC);
         nx = 0, ny = 0;
-        switch (((unsigned short)degrees) % 360) {
+        switch (((U16)degrees) % 360) {
         case 90:
             nx = (h - 1) - yC;
             ny = xC;
@@ -509,7 +509,7 @@ srcvrot_finished:
     if (safety_padding && autocrop) {
         // If autocropping is enabled, auto-crop padded images. This is slow,
         // but saves memory.
-        unsigned short * bbox = SR_NZBoundingBox(&final.canvas);
+        U16 * bbox = SR_NZBoundingBox(&final.canvas);
         if (bbox) {
             temp = SR_RefCanv(
                 &final.canvas,
@@ -534,7 +534,7 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
     // Flipping canvases honestly doesn't need a new canvas to be allocated,
     // so we can do it in-place just fine for extra speed and less memory
     // usage.
-    register unsigned short x, y, wmax, hmax, xdest, ydest;
+    register U16 x, y, wmax, hmax, xdest, ydest;
     SR_RGBAPixel temp, pixel;
 
     wmax = vertical ? src->width : src->width >> 1;
@@ -554,14 +554,14 @@ void SR_InplaceFlip(SR_Canvas *src, bool vertical)
 
 SR_Canvas SR_RefCanvTile(
     SR_Canvas *atlas,
-    unsigned short tile_w,
-    unsigned short tile_h,
-    unsigned short col,
-    unsigned short row)
+    U16 tile_w,
+    U16 tile_h,
+    U16 col,
+    U16 row)
 {
-    unsigned short columns, rows;
-    columns = ceilf((float)atlas->width / tile_w);
-    rows = ceilf((float)atlas->height / tile_h);
+    U16 columns, rows;
+    columns = ceilf((R32)atlas->width / tile_w);
+    rows = ceilf((R32)atlas->height / tile_h);
 
     return SR_RefCanv(atlas,
         (col % columns) * tile_w,
