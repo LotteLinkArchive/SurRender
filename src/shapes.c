@@ -161,12 +161,12 @@ X0 SR_DrawCirc(
     for (xi = min_x; xi <= max_x; xi++)
     for (yi = min_y; yi <= max_y; yi++) {
         I32 xp, yp;
-        xp = xx - x;
+        xp = xi - x;
         xp *= xp;
-        yp = yy - y;
+        yp = yi - y;
         yp *= yp;
         U32 pos = (U32)(xp + yp);
         
-        if (pos <= r) SR_CanvasSetPixel(canvas, xx, yy, colour);
+        if (pos <= r) SR_CanvasSetPixel(canvas, xi, yi, colour);
     }
 }
