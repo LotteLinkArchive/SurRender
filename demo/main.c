@@ -384,6 +384,5 @@ sdl_destroywin:
     SDL_DestroyWindow(win);
 sdl_quit:
     SDL_Quit();
-retstatus:
     return status;
 }
