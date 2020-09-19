@@ -52,6 +52,17 @@ int main(void)
 
     SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
 
+    if (!(win = SDL_CreateWindow(
+        "SurRender your mysteries to zoidberg!",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        canvy.width,
+        canvy.height,
+        SDL_WINDOW_RESIZABLE))) {
+        status = 2;
+        goto sdl_quit;
+    }
+
     if (!SR_CanvasIsValid(&canvy) || !SR_CanvasIsValid(&afont)) {
         status = 3;
         goto sdl_destroywin;
@@ -123,17 +134,6 @@ int main(void)
     SR_DestroyCanvas(&brick_tileset);
     brick_tileset = brick_tileset_res;
 #endif
-
-    if (!(win = SDL_CreateWindow(
-        "SurRender your mysteries to zoidberg!",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        canvy.width,
-        canvy.height,
-        SDL_WINDOW_RESIZABLE))) {
-        status = 2;
-        goto sdl_quit;
-    }
 
     if (!(canvysurf = SDL_CreateRGBSurfaceFrom(
         canvy.pixels,
@@ -339,7 +339,7 @@ event_loop:
     static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!";
     afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
     SR_PrintToCanvas(
-        &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
+        &afonta, &canvy, hstri, sizeof(hstri) / 2, 128, 128, 0,
         SR_BLEND_ADDITIVE);
 #endif
 
@@ -380,10 +380,6 @@ sdl_freesurf:
     SDL_FreeSurface(canvysurf);
 sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
-sr_testcleanup:
-    #ifdef FLAG_ATLAS
-        SR_DestroyCanvas(&brick_tileset);
-    #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);
 sdl_quit:
