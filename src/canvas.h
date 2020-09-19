@@ -70,7 +70,7 @@
 
     // Generate the modulo LUT for a canvas. This should not be used by normal
     // people.
-    void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc);
+    X0 SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc);
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
@@ -84,7 +84,7 @@
      * width and height, allowing you to tile a texture or something without
      * consuming any memory or doing any difficult operations.
      */
-    void SR_TileTo(
+    X0 SR_TileTo(
         SR_Canvas *canvas,
         U16 width,
         U16 height);
@@ -92,7 +92,7 @@
     /* A canvas may contain garbage data when initially created. This will
      * zero fill it for you, if needed.
      */
-    void SR_ZeroFill(SR_Canvas *canvas);
+    X0 SR_ZeroFill(SR_Canvas *canvas);
 
     // Create a new canvas of the given size
     SR_Canvas SR_NewCanvas(U16 width, U16 height);
@@ -136,7 +136,7 @@
     (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
     // Set the value of a pixel in the canvas
-    inline __attribute__((always_inline)) void SR_CanvasSetPixel(
+    inline __attribute__((always_inline)) X0 SR_CanvasSetPixel(
         register SR_Canvas *canvas,
         register U16 x,
         register U16 y,
@@ -161,7 +161,7 @@
     /* Destroy the in-memory representation of the canvas
      * (Must create a new canvas or resize the current one in order to access)
      */
-    void SR_DestroyCanvas(SR_Canvas *canvas);
+    X0 SR_DestroyCanvas(SR_Canvas *canvas);
 
     /* Check if the canvas has been successfully allocated. You must ALWAYS
      * check if a canvas is valid before you use it.
@@ -212,7 +212,7 @@
      * use SR_BLEND_REPLACE, as other blend modes will re-use the alpha value
      * of the base canvas in order to perform correct blending.
      */
-    void SR_MergeCanvasIntoCanvas(
+    X0 SR_MergeCanvasIntoCanvas(
         register SR_Canvas *dest_canvas,
         register SR_Canvas *src_canvas,
         register U16 paste_start_x,
@@ -225,7 +225,7 @@
      * The new width and height is the width and height of the destination
      * canvas.
      */
-    void SR_CanvasScale(
+    X0 SR_CanvasScale(
         SR_Canvas *src,
         SR_Canvas *dest,
         I8 mode);
@@ -279,7 +279,7 @@
     /* Flip the target canvas - does not malloc, works in-place.
      * Enable vertical to flip vertically. Leave disabled for horizontal.
      */
-    void SR_InplaceFlip(SR_Canvas *src, U1 vertical);
+    X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical);
 
     /* Creates a reference canvas based on a given tile inside another canvas.
      * The col/row argument is modulo'd by the amount of columns and rows in

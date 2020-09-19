@@ -19,7 +19,7 @@
     SR_Select SR_NewSelect(U16 width, U16 height);
     
     // Destroy + free a selecty box
-    void SR_DestroySelect(SR_Select *selection);
+    X0 SR_DestroySelect(SR_Select *selection);
     
     // Different ways to modify a selection with SR_SelectSetPoint
     enum SR_SelectModes {
@@ -29,7 +29,7 @@
     };
     
     // Modify a poI32 in a selection
-    inline __attribute__((always_inline)) void SR_SelectSetPoint(
+    inline __attribute__((always_inline)) X0 SR_SelectSetPoint(
         SR_Select *selection,
         U16 x,
         U16 y,
@@ -79,26 +79,26 @@
     }
     
     // select yonder line
-    void SR_SelectLine(
+    X0 SR_SelectLine(
         SR_Select *selection, I8 mode,
         I32 x0, I32 y0,
         I32 x1, I32 y1);
     
     // select yonder triangle
-    void SR_SelectTri(
+    X0 SR_SelectTri(
         SR_Select *selection, I8 mode,
         I32 x0, I32 y0, 
         I32 x1, I32 y1,
         I32 x2, I32 y2);
     
     // select yonder rectangle
-    void SR_SelectRect(
+    X0 SR_SelectRect(
         SR_Select *selection, I8 mode,
         I32 x, I32 y,
         I32 w, I32 h);
     
     // select yonder circle
-    void SR_SelectCirc(
+    X0 SR_SelectCirc(
         SR_Select *selection, I8 mode,
         I32 x, I32 y,
         U32 r);

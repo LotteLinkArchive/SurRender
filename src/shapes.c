@@ -5,7 +5,7 @@
 
 //copy pasted from:
 //https://gist.github.com/bert/1085538#file-plot_line-c-L9
-void SR_DrawLine(
+X0 SR_DrawLine(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     I32 x0, I32 y0, 
@@ -27,7 +27,7 @@ void SR_DrawLine(
     }
 }
 
-void SR_DrawTriOutline(
+X0 SR_DrawTriOutline(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     I32 x0, I32 y0,
@@ -39,7 +39,7 @@ void SR_DrawTriOutline(
     SR_DrawLine(canvas, colour, x2, y2, x0, y0);
 }
 
-void SR_DrawTri(
+X0 SR_DrawTri(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     I32 x0, I32 y0,
@@ -75,7 +75,7 @@ void SR_DrawTri(
         }
 }
 
-void SR_DrawRectOutline(
+X0 SR_DrawRectOutline(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     U16 x,
@@ -99,7 +99,7 @@ void SR_DrawRectOutline(
     }
 }
 
-void SR_DrawRect(
+X0 SR_DrawRect(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     U16 x,
@@ -115,7 +115,7 @@ void SR_DrawRect(
             SR_CanvasSetPixel(canvas, xi, yi, colour);
 }
 
-void SR_DrawCircOutline(
+X0 SR_DrawCircOutline(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     U16 x,
@@ -141,7 +141,7 @@ void SR_DrawCircOutline(
     }
 }
 
-void SR_DrawCirc(
+X0 SR_DrawCirc(
     SR_Canvas *canvas,
     SR_RGBAPixel colour,
     I32 x,

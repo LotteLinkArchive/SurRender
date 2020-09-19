@@ -14,14 +14,14 @@ SR_Select SR_NewSelect(U16 width, U16 height)
     return temp;
 }
 
-void SR_DestroySelect(SR_Select *selection)
+X0 SR_DestroySelect(SR_Select *selection)
 {
     if (!selection->bitfield) return;
     free(selection->bitfield);
     selection->bitfield = NULL;
 }
 
-void SR_SelectLine(
+X0 SR_SelectLine(
     SR_Select *selection, I8 mode,
     I32 x0, I32 y0,
     I32 x1, I32 y1)
@@ -42,7 +42,7 @@ void SR_SelectLine(
     }
 }
 
-void SR_SelectTri(
+X0 SR_SelectTri(
     SR_Select *selection, I8 mode,
     I32 x0, I32 y0, 
     I32 x1, I32 y1,
@@ -77,7 +77,7 @@ void SR_SelectTri(
     }
 }
 
-void SR_SelectRect(
+X0 SR_SelectRect(
     SR_Select *selection, I8 mode,
     I32 x, I32 y,
     I32 w, I32 h)
@@ -91,7 +91,7 @@ void SR_SelectRect(
         SR_SelectSetPoint(selection, x, y, mode);
     }
 }
-void SR_SelectCirc(
+X0 SR_SelectCirc(
     SR_Select *selection, I8 mode,
     I32 x, I32 y,
     U32 r)

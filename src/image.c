@@ -9,7 +9,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-U8 * LD_Blob_STBI(void *data, size_t length, I32 *x, I32 *y, I32 *n)
+U8 * LD_Blob_STBI(X0 *data, size_t length, I32 *x, I32 *y, I32 *n)
 {
     return stbi_load_from_memory(data, length, x, y, n, 4);
 }
@@ -43,7 +43,7 @@ ldstbicanv_fin:
     return temp;
 }
 
-SR_Canvas SR_ImageMemToCanvas(void *data, size_t length)
+SR_Canvas SR_ImageMemToCanvas(X0 *data, size_t length)
 {
     I32 x, y, n = 0;
     return LD_STBICanv(LD_Blob_STBI(data, length, &x, &y, &n), &x, &y);

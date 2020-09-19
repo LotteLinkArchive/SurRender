@@ -2,7 +2,7 @@
 #include "canvas.h"
 #include "colours.h"
 
-void SR_FillModLUT(U16 moperand)
+X0 SR_FillModLUT(U16 moperand)
 {
     if (modlut_complete[moperand]) goto sr_fmlutexit;
     modlut_complete[moperand] = true;
@@ -12,7 +12,7 @@ sr_fmlutexit:
     return;
 }
 
-void SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
+X0 SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
 {
     canvas->hflags  |= SR_CPow2FDtc(
         canvas->rwidth, canvas->rheight, 0b00010000);
@@ -67,7 +67,7 @@ U1 SR_ResizeCanvas(
     return BOOLIFY(canvas->pixels);
 }
 
-void SR_TileTo(
+X0 SR_TileTo(
     SR_Canvas *canvas,
     U16 width,
     U16 height)
@@ -77,7 +77,7 @@ void SR_TileTo(
     canvas->height = height;
 }
 
-void SR_ZeroFill(SR_Canvas *canvas)
+X0 SR_ZeroFill(SR_Canvas *canvas)
 {
     if (!canvas->pixels) return;
 
@@ -110,7 +110,7 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 }
 
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
-void SR_DestroyCanvas(SR_Canvas *canvas)
+X0 SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	U1 hfstate = !(canvas->hflags & 0b00000010);
 
@@ -186,7 +186,7 @@ SR_Canvas SR_RefCanv(
     return temp;
 }
 
-void SR_MergeCanvasIntoCanvas(
+X0 SR_MergeCanvasIntoCanvas(
     register SR_Canvas *dest_canvas,
     register SR_Canvas *src_canvas,
     register U16 paste_start_x,
@@ -220,7 +220,7 @@ void SR_MergeCanvasIntoCanvas(
 (lerp(lerp((c00), (c10), (tx)), lerp((c01), (c11), (tx)), (ty)))
 
 // Private
-void SR_BilinearCanvasScale(
+X0 SR_BilinearCanvasScale(
     register SR_Canvas *src,
     register SR_Canvas *dest)
 {
@@ -262,7 +262,7 @@ void SR_BilinearCanvasScale(
 }
 
 // Private
-void SR_NearestNeighborCanvasScale(
+X0 SR_NearestNeighborCanvasScale(
     register SR_Canvas *src,
     register SR_Canvas *dest)
 {
@@ -280,7 +280,7 @@ void SR_NearestNeighborCanvasScale(
     }
 }
 
-void SR_CanvasScale(
+X0 SR_CanvasScale(
     SR_Canvas *src,
     SR_Canvas *dest,
     I8 mode)
@@ -529,7 +529,7 @@ srcvrot_finished:
     return final;
 }
 
-void SR_InplaceFlip(SR_Canvas *src, U1 vertical)
+X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical)
 {
     // Flipping canvases honestly doesn't need a new canvas to be allocated,
     // so we can do it in-place just fine for extra speed and less memory

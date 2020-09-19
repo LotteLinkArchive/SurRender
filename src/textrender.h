@@ -61,7 +61,7 @@
      * For example, a 64 byte string is 32 16-bit characters, thus a length of
      * 32 characters.
      */
-    void SR_PrintToAtlas(
+    X0 SR_PrintToAtlas(
         SR_FontAtlas *font,
         SR_Canvas *dest,
         U16 *text,
