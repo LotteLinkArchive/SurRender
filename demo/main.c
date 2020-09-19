@@ -336,7 +336,7 @@ event_loop:
 
     static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!";
     afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
-    SR_PrintToAtlas(
+    SR_PrintToCanvas(
         &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
         SR_BLEND_ADDITIVE);
 #endif

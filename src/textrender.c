@@ -21,7 +21,7 @@ SR_FontAtlas SR_MakeFontAtlas(
     return temp;
 }
 
-X0 SR_PrintToAtlas(
+X0 SR_PrintToCanvas(
     SR_FontAtlas *font,
     SR_Canvas    *dest,
     U16 *text,
