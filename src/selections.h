@@ -39,7 +39,7 @@
         
         U16 position = x + selection->width * y;
         U16 byte = position >> 3;
-        U8 bit = 0b10000000 >> (position & 0b00000111);
+        U8 bit = 0x80 >> (position & 0x07);
         
         switch (mode) {
         case SR_SMODE_SET:
@@ -73,7 +73,7 @@
         
         U16 position = x + selection->width * y;
         U16 byte = position >> 3;
-        U8 bit = 0b10000000 >> (position & 0b00000111);
+        U8 bit = 0x80 >> (position & 0x07);
         
         return (selection->bitfield[byte] & bit);
     }
