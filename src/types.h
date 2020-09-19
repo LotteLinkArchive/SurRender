@@ -105,11 +105,9 @@ typedef U32VEC_2D  U32x2;
 #define UXPowGen(type, name)                                    \
 inline __attribute__((always_inline)) type name(type x, type y) \
     { y = MAX(1, y); while ((y--) - 1) x *= x; return x; }
-
 UXPowGen(U16, U16Pow)
 UXPowGen(U32, U32Pow)
 UXPowGen(U64, U64Pow)
-
 #undef UXPowGen
 
 #endif
