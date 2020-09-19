@@ -123,8 +123,8 @@
         register unsigned int y)
     {
         x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
-        y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
         x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
+        y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
         y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
 
         return (canvas->rwidth * y) + x;
