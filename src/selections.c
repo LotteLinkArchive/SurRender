@@ -94,14 +94,16 @@ X0 SR_SelectRect(
 X0 SR_SelectCirc(
     SR_Select *selection, I8 mode,
     I32 x, I32 y,
-    U32 r)
+    I32 r)
 {
     U16 min_x, min_y, max_x, max_y;
     min_x = MAX(0, x - r);
     min_y = MAX(0, y - r);
     max_x = MIN(selection->width - 1, x + r);
     max_y = MIN(selection->height - 1, y + r);
-    r *= r;
+    
+    U32 radius = (U32)(r);
+    radius *= radius;
     
     U16 xi, yi;
     for (xi = min_x; xi <= max_x; xi++)
@@ -111,8 +113,9 @@ X0 SR_SelectCirc(
         xp *= xp;
         yp = yi - y;
         yp *= yp;
+        U32 pos = (U32)(xp + yp);
 
-        if (xp + yp <= r)
+        if (pos <= radius)
             SR_SelectSetPoint(selection, xi, yi, mode);
     }
 }

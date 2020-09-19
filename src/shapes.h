@@ -64,5 +64,5 @@
         SR_RGBAPixel colour,
         I32 x,
         I32 y,
-        U32 r);
+        I32 r);
 #endif

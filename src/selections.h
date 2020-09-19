@@ -28,7 +28,7 @@
         SR_SMODE_XOR
     };
     
-    // Modify a poI32 in a selection
+    // Modify a point in a selection
     inline __attribute__((always_inline)) X0 SR_SelectSetPoint(
         SR_Select *selection,
         U16 x,
@@ -39,7 +39,7 @@
         
         U16 position = x + selection->width * y;
         U16 byte = position >> 3;
-        U8 bit = 0b10000000 >> (position & 0b00000111);
+        U8 bit = 0x80 >> (position & 0x07);
         
         switch (mode) {
         case SR_SMODE_SET:
@@ -73,7 +73,7 @@
         
         U16 position = x + selection->width * y;
         U16 byte = position >> 3;
-        U8 bit = 0b10000000 >> (position & 0b00000111);
+        U8 bit = 0x80 >> (position & 0x07);
         
         return (selection->bitfield[byte] & bit);
     }
@@ -101,5 +101,5 @@
     X0 SR_SelectCirc(
         SR_Select *selection, I8 mode,
         I32 x, I32 y,
-        U32 r);
+        I32 r);
 #endif
