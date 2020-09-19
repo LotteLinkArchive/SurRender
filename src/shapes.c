@@ -167,6 +167,6 @@ X0 SR_DrawCirc(
         yp *= yp;
         U32 pos = (U32)(xp + yp);
         
-        if (pos <= r) SR_CanvasSetPixel(canvas, xi, yi, colour);
+        if (pos <= radius) SR_CanvasSetPixel(canvas, xi, yi, colour);
     }
 }
