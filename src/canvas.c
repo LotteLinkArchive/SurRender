@@ -12,7 +12,7 @@ sr_fmlutexit:
     return;
 }
 
-X0 SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc)
+X0 SR_GenCanvLUT(SR_Canvas *canvas)
 {
     canvas->hflags  |= SR_CPow2FDtc(
         canvas->rwidth, canvas->rheight, 0b00010000);
@@ -46,7 +46,7 @@ U1 SR_ResizeCanvas(
 
     canvas->cwidth = width;
     canvas->cheight = height;
-    SR_GenCanvLUT(canvas, NULL);
+    SR_GenCanvLUT(canvas);
 
     // Not strictly neccessary, but rodger put it here anyway, so whatever.
     canvas->ratio = (R32)width / height;
@@ -181,7 +181,7 @@ SR_Canvas SR_RefCanv(
 
     if (!allow_destroy_host) temp.hflags |= 0b00000010;
 
-    SR_GenCanvLUT(&temp, src);
+    SR_GenCanvLUT(&temp);
 
     return temp;
 }

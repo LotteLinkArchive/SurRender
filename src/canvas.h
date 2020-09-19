@@ -70,7 +70,7 @@
 
     // Generate the modulo LUT for a canvas. This should not be used by normal
     // people.
-    X0 SR_GenCanvLUT(SR_Canvas *canvas, SR_Canvas *optsrc);
+    X0 SR_GenCanvLUT(SR_Canvas *canvas);
 
     /* Make a canvas larger or smaller. Preserves the contents, but not
      * accurately. May ruin the current contents of the canvas.
