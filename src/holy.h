@@ -9,8 +9,6 @@
 
 #include <stdint.h>
 #include <stdbool.h> // C99
-#include <xmmintrin.h>
-#include <pmmintrin.h>
 
 // Integer maximums
 #define U8_MAX  UINT8_MAX
@@ -51,6 +49,10 @@ typedef      R32 RNAT;
 // Boolean types
 typedef     bool U1;
 #define BOOLIFY(a) ((a)?(true):(false)) // May not be needed with _Bool
+
+#ifndef HOLY_NO_VECTORS
+#include <xmmintrin.h>
+#include <pmmintrin.h>
 
 // Vector definition macro
 #define DEF_VECTYPE(name, element_type, elements) \
@@ -108,6 +110,7 @@ typedef U32VEC_2D  U32x2;
  * In the future, this header may be expanded to create its own simple,
  * standardized vector interface.
  */
+#endif
 
 // Useful macros
 #define MIN(a,b)         \
