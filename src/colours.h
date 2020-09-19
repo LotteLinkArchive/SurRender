@@ -43,7 +43,7 @@ enum SR_BlendingModes {
     // Directly XOR EVERYTHING (RGBA) without mutating the alpha
     SR_BLEND_DIRECT_XOR_ALL,
     // Like additive blending, but doesn't change base alpha and doesn't
-    // multiply values. Can overflow. Use it to paI32 colour onto black.
+    // multiply values. Can overflow. Use it to paint colour onto black.
     SR_BLEND_ADDITIVE_PAINT,
     // Depending on the alpha value of the top layer, invert the base colours
     SR_BLEND_INVERTED_DRAW
