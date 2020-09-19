@@ -108,8 +108,8 @@
     ))
 
     // Modulo LUT
-    U16 modlut[SR_MAX_CANVAS_SIZE +1][SR_MAX_CANVAS_SIZE +1] = {};
-    U1 modlut_complete[SR_MAX_CANVAS_SIZE +1] = {};
+    __extension__ U16 modlut[SR_MAX_CANVAS_SIZE+1][SR_MAX_CANVAS_SIZE+1] = {};
+    __extension__ U1 modlut_complete[SR_MAX_CANVAS_SIZE+1] = {};
 
     /* Calculate the "real" position of a pixel in the canvas - not really
      * recommended to use this yourself.
