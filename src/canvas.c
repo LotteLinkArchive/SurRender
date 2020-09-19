@@ -15,9 +15,9 @@ sr_fmlutexit:
 X0 SR_GenCanvLUT(SR_Canvas *canvas)
 {
     canvas->hflags  |= SR_CPow2FDtc(
-        canvas->rwidth, canvas->rheight, 0b00010000);
+        canvas->rwidth, canvas->rheight, 0x10);
     canvas->hflags  |= SR_CPow2FDtc(
-        canvas->cwidth, canvas->cheight, 0b00100000);
+        canvas->cwidth, canvas->cheight, 0x20);
 
     SR_FillModLUT(canvas->cwidth );
     SR_FillModLUT(canvas->cheight);
@@ -34,8 +34,7 @@ U1 SR_ResizeCanvas(
     if (!width  ||
         !height ||
         canvas->pixels ||
-        canvas->hflags & 0b00001011) return false;
-
+        canvas->hflags & 0x0B) return false;
 
     // @direct
     canvas->width = width;
@@ -112,7 +111,7 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 X0 SR_DestroyCanvas(SR_Canvas *canvas)
 {
-	U1 hfstate = !(canvas->hflags & 0b00000010);
+	U1 hfstate = !(canvas->hflags & 0x02);
 
     if (canvas->pixels  && hfstate)
         free(canvas->pixels);
@@ -166,7 +165,7 @@ SR_Canvas SR_RefCanv(
 {
     // @direct
     SR_Canvas temp = {
-        .hflags  = 0b00000001,
+        .hflags  = 0x01,
         .width   = width,
         .height  = height,
         .ratio   = (R32)width / height,
@@ -179,7 +178,7 @@ SR_Canvas SR_RefCanv(
         .cheight = MIN(src->cheight, height)
     };
 
-    if (!allow_destroy_host) temp.hflags |= 0b00000010;
+    if (!allow_destroy_host) temp.hflags |= 0x02;
 
     SR_GenCanvLUT(&temp);
 
