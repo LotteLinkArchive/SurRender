@@ -58,7 +58,7 @@ X0 SR_PrintToCanvas(
             
         if ((SR_CanvasGetPixel(&character, 0, 0).whole & 0x00FFFFFF) !=
             (font->colour.whole & 0x00FFFFFF)) {
-            register U16 xc, yc;
+            U16 xc, yc;
             for (xc = 0; xc < character.width; xc++)
             for (yc = 0; yc < character.height; yc++) {
                 SR_CanvasSetPixel(&character, xc, yc, SR_RGBABlender(

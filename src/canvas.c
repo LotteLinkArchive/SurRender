@@ -85,7 +85,7 @@ X0 SR_ZeroFill(SR_Canvas *canvas)
         canvas->yclip   != 0 ||
         canvas->cwidth  != canvas->rwidth  ||
         canvas->cheight != canvas->rheight ) {
-        register U16 x, y;
+        U16 x, y;
         for (x = 0; x < canvas->width; x++)
         for (y = 0; y < canvas->height; y++)
             SR_CanvasSetPixel(canvas, x, y, SR_CreateRGBA(0, 0, 0, 0));
@@ -121,9 +121,9 @@ X0 SR_DestroyCanvas(SR_Canvas *canvas)
 }
 
 SR_Canvas SR_CopyCanvas(
-    register SR_Canvas *canvas,
-    register U16 copy_start_x,
-    register U16 copy_start_y,
+    SR_Canvas *canvas,
+    U16 copy_start_x,
+    U16 copy_start_y,
     U16 new_width,
     U16 new_height)
 {
@@ -146,7 +146,7 @@ SR_Canvas SR_CopyCanvas(
     }
 
     // Slower copying, but not much slower - used for cropping/panning
-    register U16 x, y;
+    U16 x, y;
     for (x = 0; x < new.width; x++)
     for (y = 0; y < new.height; y++)
         SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(
@@ -187,14 +187,14 @@ SR_Canvas SR_RefCanv(
 }
 
 X0 SR_MergeCanvasIntoCanvas(
-    register SR_Canvas *dest_canvas,
-    register SR_Canvas *src_canvas,
-    register U16 paste_start_x,
-    register U16 paste_start_y,
-    register U8 alpha_modifier,
-    register I8 mode)
+    SR_Canvas *dest_canvas,
+    SR_Canvas *src_canvas,
+    U16 paste_start_x,
+    U16 paste_start_y,
+    U8 alpha_modifier,
+    I8 mode)
 {
-    register U16 x, y;
+    U16 x, y;
     for (x = 0; x < src_canvas->width; x++)
     for (y = 0; y < src_canvas->height; y++) {
         // Uses the function for blending individual RGBA values.
@@ -221,12 +221,12 @@ X0 SR_MergeCanvasIntoCanvas(
 
 // Private
 X0 SR_BilinearCanvasScale(
-    register SR_Canvas *src,
-    register SR_Canvas *dest)
+    SR_Canvas *src,
+    SR_Canvas *dest)
 {
     if (!dest->pixels) return;
 
-    register U32 x, y;
+    U32 x, y;
     for (x = 0, y = 0; y < dest->height; x++) {
         if (x > dest->width) { x = 0; y++; }
 
@@ -263,8 +263,8 @@ X0 SR_BilinearCanvasScale(
 
 // Private
 X0 SR_NearestNeighborCanvasScale(
-    register SR_Canvas *src,
-    register SR_Canvas *dest)
+    SR_Canvas *src,
+    SR_Canvas *dest)
 {
     if (!dest->pixels) return;
 
@@ -305,7 +305,7 @@ U16 * SR_NZBoundingBox(SR_Canvas *src)
 
     // Static declaration prevents a dangling pointer
     static U16 bbox[4] = {0, 0, 0, 0};
-    register U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
+    U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
     for (y = 0; y < src->height; y++)
     for (x = 0; x < src->width; x++)
@@ -405,7 +405,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 {
     // Declare everything here
     SR_Canvas temp;
-    register U16 w, h, boundary, xC, yC, nx, ny;
+    U16 w, h, boundary, xC, yC, nx, ny;
     I32 x, y, nxM, nyM, half_w, half_h;
     R32 the_sin, the_cos;
     SR_RGBAPixel pixel, pixbuf;
@@ -534,7 +534,7 @@ X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical)
     // Flipping canvases honestly doesn't need a new canvas to be allocated,
     // so we can do it in-place just fine for extra speed and less memory
     // usage.
-    register U16 x, y, wmax, hmax, xdest, ydest;
+    U16 x, y, wmax, hmax, xdest, ydest;
     SR_RGBAPixel temp, pixel;
 
     wmax = vertical ? src->width : src->width >> 1;

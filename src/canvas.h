@@ -118,9 +118,9 @@
      * recommended to use this yourself.
      */
     inline __attribute__((always_inline)) U32 SR_CanvasCalcPosition(
-        register SR_Canvas *canvas,
-        register U32 x,
-        register U32 y)
+        SR_Canvas *canvas,
+        U32 x,
+        U32 y)
     {
         x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
         x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
@@ -137,9 +137,9 @@
 
     // Set the value of a pixel in the canvas
     inline __attribute__((always_inline)) X0 SR_CanvasSetPixel(
-        register SR_Canvas *canvas,
-        register U16 x,
-        register U16 y,
+        SR_Canvas *canvas,
+        U16 x,
+        U16 y,
         SR_RGBAPixel pixel)
     {
         canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
@@ -148,8 +148,8 @@
     // Get a pixel in the canvas
     inline __attribute__((always_inline)) SR_RGBAPixel SR_CanvasGetPixel(
         SR_Canvas *canvas,
-        register U16 x,
-        register U16 y)
+        U16 x,
+        U16 y)
     {
         return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
     }
@@ -175,9 +175,9 @@
      * don't forget to destroy it, or it will remain allocated.
      */
     SR_Canvas SR_CopyCanvas(
-        register SR_Canvas *canvas,
-        register U16 copy_start_x,
-        register U16 copy_start_y,
+        SR_Canvas *canvas,
+        U16 copy_start_x,
+        U16 copy_start_y,
         U16 new_width,
         U16 new_height);
 
@@ -213,12 +213,12 @@
      * of the base canvas in order to perform correct blending.
      */
     X0 SR_MergeCanvasIntoCanvas(
-        register SR_Canvas *dest_canvas,
-        register SR_Canvas *src_canvas,
-        register U16 paste_start_x,
-        register U16 paste_start_y,
-        register U8 alpha_modifier,
-        register I8 mode);
+        SR_Canvas *dest_canvas,
+        SR_Canvas *src_canvas,
+        U16 paste_start_x,
+        U16 paste_start_y,
+        U8 alpha_modifier,
+        I8 mode);
 
     /* Scales the source canvas into the destination canvas. Bad things will
      * happen if the source and destination poI32 to the same canvas.

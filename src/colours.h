@@ -51,10 +51,10 @@ enum SR_BlendingModes {
 
 // Create an RGBA colour value.
 inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
-    register U8 red,
-    register U8 green,
-    register U8 blue,
-    register U8 alpha)
+    U8 red,
+    U8 green,
+    U8 blue,
+    U8 alpha)
 {
     SR_RGBAPixel temp = {
         .chn.red = red,
