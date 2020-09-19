@@ -9,12 +9,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-uint8_t * LD_Blob_STBI(RadixMemoryBlob image, int *x, int *y, int *n)
+uint8_t * LD_Blob_STBI(void *data, size_t length, int *x, int *y, int *n)
 {
-    return stbi_load_from_memory(
-        RadixAbstract_GetBlobPointer(image),
-        RadixAbstract_GetBlobLength (image),
-        x, y, n, 4);
+    return stbi_load_from_memory(data, length, x, y, n, 4);
 }
 
 SR_Canvas LD_STBICanv(uint8_t *image, int *x, int *y)
@@ -46,10 +43,10 @@ ldstbicanv_fin:
     return temp;
 }
 
-SR_Canvas SR_ImageMemToCanvas(RadixMemoryBlob image)
+SR_Canvas SR_ImageMemToCanvas(void *data, size_t length)
 {
     int x, y, n = 0;
-    return LD_STBICanv(LD_Blob_STBI(image, &x, &y, &n), &x, &y);
+    return LD_STBICanv(LD_Blob_STBI(data, length, &x, &y, &n), &x, &y);
 }
 
 SR_Canvas SR_ImageFileToCanvas(char *filename)
