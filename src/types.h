@@ -11,9 +11,9 @@
 #include <pmmintrin.h>
 
 // Integer maximums
-#define U8_MAX UINT8_MAX
-#define I8_MIN INT8_MIN
-#define I8_MAX INT8_MAX
+#define U8_MAX  UINT8_MAX
+#define I8_MIN  INT8_MIN
+#define I8_MAX  INT8_MAX
 #define U16_MAX UINT16_MAX
 #define I16_MIN INT16_MIN
 #define I16_MAX INT16_MAX
@@ -41,8 +41,14 @@ typedef  int64_t I64;
 typedef    float R32; // May not be exactly 32 or 64 bits depending on arch
 typedef   double R64;
 
+// Natural types (Spoiler: they're all 32-bit)
+typedef      I32 INAT;
+typedef      U32 UNAT;
+typedef      R32 RNAT;
+
 // Boolean types
 typedef     bool U1;
+#define BOOLIFY(a) ((a)?(true):(false)) // May not be needed with _Bool
 
 // Useful vector types
 typedef R64        R64VEC_4D     __attribute__ ((vector_size (32)));
@@ -82,5 +88,28 @@ typedef R64VEC_2D  R64x2;
 typedef R32VEC_2D  R32x2;
 typedef I32VEC_2D  I32x2;
 typedef U32VEC_2D  U32x2;
+
+// Useful macros
+#define MIN(a,b) \
+({ typeof (a) _a = (a); \
+    typeof (b) _b = (b); \
+    _a < _b ? _a : _b; })
+#define MAX(a,b) \
+({ typeof (a) _a = (a); \
+    typeof (b) _b = (b); \
+    _a > _b ? _a : _b; })
+
+#define forever for (;;)
+
+// Fast unsigned power functions
+#define UXPowGen(type, name)                                    \
+inline __attribute__((always_inline)) type name(type x, type y) \
+    { y = MAX(1, y); while ((y--) - 1) x *= x; return x; }
+
+UXPowGen(U16, U16Pow)
+UXPowGen(U32, U32Pow)
+UXPowGen(U64, U64Pow)
+
+#undef UXPowGen
 
 #endif
