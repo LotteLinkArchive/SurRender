@@ -49,7 +49,7 @@ SR_Canvas SR_ImageMemToCanvas(void *data, size_t length)
     return LD_STBICanv(LD_Blob_STBI(data, length, &x, &y, &n), &x, &y);
 }
 
-SR_Canvas SR_ImageFileToCanvas(I8 *filename)
+SR_Canvas SR_ImageFileToCanvas(CHR *filename)
 {
     I32 x, y, n = 0;
     return LD_STBICanv(stbi_load(filename, &x, &y, &n, 4), &x, &y);

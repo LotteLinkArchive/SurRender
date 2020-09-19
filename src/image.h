@@ -8,7 +8,7 @@
     SR_Canvas SR_ImageMemToCanvas(void *data, size_t length);
 
     // Load an image file into a new canvas (currently only supports BMP)
-    SR_Canvas SR_ImageFileToCanvas(I8 *filename);
+    SR_Canvas SR_ImageFileToCanvas(CHR *filename);
 
     // WARNING: All created canvases must be freed as they are mallocated.
 #endif
