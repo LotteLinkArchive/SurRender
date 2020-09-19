@@ -1,6 +1,3 @@
-[submodule "radix"]
-	path = libs/radix
-	url = https://git.lotte.link/naphtha/radix
 [submodule "libs/holyh"]
 	path = libs/holyh
 	url = https://git.lotte.link/naphtha/HolyH
