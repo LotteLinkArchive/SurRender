@@ -65,7 +65,7 @@
         SR_FontAtlas *font,
         SR_Canvas *dest,
         U16 *text,
-        size_t length,
+        SX length,
         U16 x,
         U16 y,
         U16 breakpoint,
