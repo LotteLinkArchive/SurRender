@@ -1,5 +1,7 @@
-/* Standard, short-hand fixed-width data types for C
- * Inspired by Terry Davis' HolyC types
+/* Standardization of C types and addition of a few useful macros
+ * Inspired by Terry Davis' HolyC
+ * 
+ * May he rest in peace.
  */
 
 #ifndef STANDTYPE_HEADER_FILE
@@ -90,12 +92,12 @@ typedef I32VEC_2D  I32x2;
 typedef U32VEC_2D  U32x2;
 
 // Useful macros
-#define MIN(a,b) \
-({ typeof (a) _a = (a); \
+#define MIN(a,b)         \
+({ typeof (a) _a = (a);  \
     typeof (b) _b = (b); \
     _a < _b ? _a : _b; })
-#define MAX(a,b) \
-({ typeof (a) _a = (a); \
+#define MAX(a,b)         \
+({ typeof (a) _a = (a);  \
     typeof (b) _b = (b); \
     _a > _b ? _a : _b; })
 
