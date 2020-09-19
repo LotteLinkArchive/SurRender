@@ -1,6 +1,8 @@
 #include <SDL2/SDL.h>
 #include "../src/surrender.h"
 #include <complex.h>
+#include <time.h>
+#include <stdlib.h>
 
 /* This is the code we use to test if things are working. It may look kinda
  * ugly. Please excuse the mess, we change this literally all the time and why
