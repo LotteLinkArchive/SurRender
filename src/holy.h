@@ -4,8 +4,8 @@
  * May he rest in peace.
  */
 
-#ifndef STANDTYPE_HEADER_FILE
-#define STANDTYPE_HEADER_FILE
+#ifndef HOLY_HEADER_FILE
+#define HOLY_HEADER_FILE
 
 #include <stdint.h>
 #include <stdbool.h> // C99
@@ -90,6 +90,20 @@ typedef R64VEC_2D  R64x2;
 typedef R32VEC_2D  R32x2;
 typedef I32VEC_2D  I32x2;
 typedef U32VEC_2D  U32x2;
+
+// Vector macros
+#define hcl_vector_convert __builtin_convertvector
+/* See https://github.com/simd-everywhere/simde
+ * This is a much better library for doing vector stuff anywhere, but the good
+ * news is that you ought to be able to do most things without it assuming
+ * you're on GCC or Clang. (E.g vector shuffling can be done simply by
+ * defining a new vector containing elements from other vectors, and the
+ * compiler ought to optimize it automatically. This should work anywhere, but
+ * it'll just look kinda ugly.)
+ * 
+ * In the future, this header may be expanded to create its own simple,
+ * standardized vector interface.
+ */
 
 // Useful macros
 #define MIN(a,b)         \
