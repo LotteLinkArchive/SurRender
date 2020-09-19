@@ -23,13 +23,13 @@ SR_FontAtlas SR_MakeFontAtlas(
 
 X0 SR_PrintToAtlas(
     SR_FontAtlas *font,
-    SR_Canvas *dest,
+    SR_Canvas    *dest,
     U16 *text,
-    SX length,
+    SX  length,
     U16 x,
     U16 y,
     U16 breakpoint,
-    U8 blendmode)
+    U8  blendmode)
 {
     U16 rootx = x;
 
