@@ -107,7 +107,7 @@
     #define SR_CanvasCalcSize(canvas) ((U32)( \
         (U32)((canvas)->rwidth)  *            \
         (U32)((canvas)->rheight) *            \
-        sizeof(SR_RGBAPixel)                           \
+        sizeof(SR_RGBAPixel)                  \
     ))
 
     // Modulo LUT
