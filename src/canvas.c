@@ -507,7 +507,8 @@ srcvrot_mismatch:
 srcvrot_finished:
     if (safety_padding && autocrop) {
         // If autocropping is enabled, auto-crop padded images. This is slow,
-        // but saves memory.
+        // but speeds up merging a fair bit. Use if you only intend to rotate
+        // once.
         U16 * bbox = SR_NZBoundingBox(&final.canvas);
         if (bbox) {
             temp = SR_RefCanv(
