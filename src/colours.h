@@ -86,8 +86,8 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
         .components.right = pixel_top.whole,
         .components.left  = pixel_base.whole};
 
-    merge.splitvec = __builtin_convertvector(((
-            buffer * __builtin_convertvector(merge.splitvec, U16x8)
+    merge.splitvec = hcl_vector_convert(((
+            buffer * hcl_vector_convert(merge.splitvec, U16x8)
         ) + 255) >> 8, U8x8);
     pixel_top.whole  = merge.components.right;
     pixel_base.whole = merge.components.left;
