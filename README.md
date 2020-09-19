@@ -27,10 +27,8 @@ If you'd like to contribute, you will need to set up the build environment. To d
 git clone --recurse-submodules -j8 https://git.lotte.link/naphtha/SurRender.git
 cd SurRender*
 
-# Update the submodules just in case (Always do this BEFORE you build)
-git submodule update --remote --merge
-
-# Build the project
+# Update and build the project
+git pull --recurse-submodules
 make clean; make -j8
 
 # Run the demo
