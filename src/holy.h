@@ -52,28 +52,31 @@ typedef      R32 RNAT;
 typedef     bool U1;
 #define BOOLIFY(a) ((a)?(true):(false)) // May not be needed with _Bool
 
+// Vector definition macro
+#define DEF_VECTYPE(name, element_type, elements) \
+typedef element_type name __attribute__ \
+((vector_size (sizeof(element_type) * elements)));
+// TODO: Automatically round up to power of two for vector size
+
 // Useful vector types
-typedef R64        R64VEC_4D     __attribute__ ((vector_size (32)));
+DEF_VECTYPE(R64VEC_4D, R64, 4)
+DEF_VECTYPE(R64VEC_2D, R64, 2)
 typedef R64VEC_4D  R64VEC_3D; // Only power of 2 vectors are allowed
-typedef R64        R64VEC_2D     __attribute__ ((vector_size (16)));
-
-typedef R32        R32VEC_4D     __attribute__ ((vector_size (16)));
+DEF_VECTYPE(R32VEC_4D, R32, 4)
+DEF_VECTYPE(R32VEC_2D, R32, 2)
 typedef R32VEC_4D  R32VEC_3D;
-typedef R32        R32VEC_2D     __attribute__ ((vector_size (8 )));
-
-typedef I32        I32VEC_4D     __attribute__ ((vector_size (16)));
-typedef I32VEC_4D  I32VEC_3D;
-typedef I32        I32VEC_2D     __attribute__ ((vector_size (8 )));
-
-typedef U32        U32VEC_4D     __attribute__ ((vector_size (16)));
+DEF_VECTYPE(U32VEC_4D, U32, 4)
+DEF_VECTYPE(U32VEC_2D, U32, 2)
 typedef U32VEC_4D  U32VEC_3D;
-typedef U32        U32VEC_2D     __attribute__ ((vector_size (8 )));
+DEF_VECTYPE(I32VEC_4D, I32, 4)
+DEF_VECTYPE(I32VEC_2D, I32, 2)
+typedef I32VEC_4D  I32VEC_3D;
 
 // These specific ones are useful for colour manipulation
-typedef U8         U8x8          __attribute__ ((vector_size (8 )));
-typedef U8         U8x4          __attribute__ ((vector_size (4 )));
-typedef U16        U16x8         __attribute__ ((vector_size (16)));
-typedef U16        U16x4         __attribute__ ((vector_size (8 )));
+DEF_VECTYPE(U8x8, U8, 8)
+DEF_VECTYPE(U8x4, U8, 4)
+DEF_VECTYPE(U16x8, U16, 8)
+DEF_VECTYPE(U16x4, U16, 4)
 
 // Sensible aliases
 typedef R64VEC_4D  R64x4;
@@ -90,6 +93,7 @@ typedef R64VEC_2D  R64x2;
 typedef R32VEC_2D  R32x2;
 typedef I32VEC_2D  I32x2;
 typedef U32VEC_2D  U32x2;
+// TODO: Do this the other way round (e.g R64VEC_4D points to R64x4)
 
 // Vector macros
 #define hcl_vector_convert __builtin_convertvector
