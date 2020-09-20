@@ -57,6 +57,12 @@
 
     // Bounding box
     typedef union {
+        struct {
+            U16 sx;
+            U16 sy;
+            U16 ex;
+            U16 ey;
+        } named;
         U64 whole;
         U16x4 parts;
     } SR_BBox;

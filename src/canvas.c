@@ -323,7 +323,7 @@ srnzbbx_last_pixel_done:
     for (xC = 0; xC <= firstX; xC++)
     for (yC = firstY; yC <= lastY; yC++)
         if (SR_CanvasPixelCNZ(src, xC, yC)) {
-            bbox.parts[0] = xC; bbox.parts[1] = firstY;
+            bbox.named.sx = xC; bbox.named.sy = firstY;
             goto srnzbbx_found_first;
         }
 
@@ -332,13 +332,13 @@ srnzbbx_found_first:
     for (xC = src->width - 1; xC > lastX; xC--)
     for (yC = lastY; yC >= firstY; yC--)
         if (SR_CanvasPixelCNZ(src, xC, yC)) {
-            bbox.parts[2] = xC; bbox.parts[3] = lastY;
+            bbox.named.ex = xC; bbox.named.ey = lastY;
             goto srnzbbx_bounded;
         }
 
     goto srnzbbx_no_end_in_sight; // No last poI32 found - is this possible?
 srnzbbx_no_end_in_sight:
-    bbox.parts[2] = src->width - 1; bbox.parts[3] = src->height - 1;
+    bbox.named.ex = src->width - 1; bbox.named.ey = src->height - 1;
 srnzbbx_bounded:
     return bbox; // Return the box (er, I mean RETURN THE SLAB)
 srnzbbx_empty:
@@ -510,16 +510,16 @@ srcvrot_finished:
         if (bbox.whole) {
             temp = SR_RefCanv(
                 &final.canvas,
-                bbox.parts[0],
-                bbox.parts[1],
-                (bbox.parts[2] - bbox.parts[0]) + 1,
-                (bbox.parts[3] - bbox.parts[1]) + 1,
+                bbox.named.sx,
+                bbox.named.sy,
+                (bbox.named.ex - bbox.named.sx) + 1,
+                (bbox.named.ey - bbox.named.sy) + 1,
                 true);
 
             final.canvas = temp;
 
-            final.offset_x += bbox.parts[0];
-            final.offset_y += bbox.parts[1];
+            final.offset_x += bbox.named.sx;
+            final.offset_y += bbox.named.sy;
         }
     }
 
