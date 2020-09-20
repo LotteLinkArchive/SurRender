@@ -30,7 +30,7 @@ static __inline__ unsigned long long rdtsc(void)
 
 #endif
 
-int main(void)
+int main(int argc, char *argv[])
 {
     SR_Canvas canvy;
     SDL_Window *win;
@@ -352,7 +352,7 @@ event_loop:
     frames++;
     cur = time(NULL);
     if (((cur & 1) == 0) && (laf != cur)) {
-        printf("FPS: %u AT %ld\n", frames >> 1, cur);
+        printf("FPS: %u AT %lld\n", frames >> 1, (long long int)cur);
         laf = cur;
         frames = 0;
     }
