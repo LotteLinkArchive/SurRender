@@ -56,11 +56,13 @@ When contributing to the project, keep these ideas in mind:
 * Your code should be easy to use, but not in such a way that performance is crippled.
 * Remember that this project is intended to be used by actual humans, for actual projects. Make sure your contributions are generally secure, easy to understand, fast and have a generally positive effect on the project.
 
-Here's a [generally useful document](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)  outlining how your code should be formatted, although we don't follow all of the points outlined there (for example, we use 4-space indentation, not 8-space. Our code would probably look just fine with 8-space indentation, but 4-space just looks better to me. It's personal preference. Don't start wars over it.)
+Here's a [generally useful document](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)  outlining how your code should be formatted, although we don't follow all of the points outlined there.
 
 If your code doesn't quite follow these guidelines but you'd still like to make a pull request, that's fine! We'll take a look at what you've written and help you fix parts of it for you if needed.
 
-We also don't just need help programming - we also need people to test for bugs, assess what could be made easier to use, and so on.
+We also don't **only** need help programming - we also need people to test for bugs, assess what could be made easier to use, and so on.
+
+Also, when you submit any code changes, please make sure you are conforming to the types defined by [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH), e.g use CHR instead of char, U8 instead of uint8_t, etc.
 
 ## Bugs, feature requests and general issues
 
