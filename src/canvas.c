@@ -501,7 +501,7 @@ srcvrot_mismatch:
     }
 
 srcvrot_finished:
-    if (safety_padding && autocrop) {
+    if (autocrop) {
         // If autocropping is enabled, auto-crop padded images. This is slow,
         // but speeds up merging a fair bit. Use if you only intend to rotate
         // once.
