@@ -113,10 +113,10 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height);
 /* Calculate the "real" size (in memory) of a canvas - not really
  * recommended to use this yourself.
  */
-#define SR_CanvasCalcSize(canvas) ((U32)( \
-	(U32)((canvas)->rwidth)  *			\
-	(U32)((canvas)->rheight) *			\
-	sizeof(SR_RGBAPixel)				  \
+#define SR_CanvasCalcSize(canvas) ((U32)(\
+	(U32)((canvas)->rwidth)  *\
+	(U32)((canvas)->rheight) *\
+	sizeof(SR_RGBAPixel)\
 ))
 
 // Modulo LUT
@@ -126,7 +126,7 @@ __extension__ U1 modlut_complete[SR_MAX_CANVAS_SIZE+1] = {};
 /* Calculate the "real" position of a pixel in the canvas - not really
  * recommended to use this yourself.
  */
-inline __attribute__((always_inline)) U32 SR_CanvasCalcPosition(
+inline U32 SR_CanvasCalcPosition(
 	SR_Canvas *canvas,
 	U32 x,
 	U32 y)
@@ -145,7 +145,7 @@ inline __attribute__((always_inline)) U32 SR_CanvasCalcPosition(
 (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
 // Set the value of a pixel in the canvas
-inline __attribute__((always_inline)) X0 SR_CanvasSetPixel(
+inline X0 SR_CanvasSetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y,
@@ -155,7 +155,7 @@ inline __attribute__((always_inline)) X0 SR_CanvasSetPixel(
 }
 
 // Get a pixel in the canvas
-inline __attribute__((always_inline)) SR_RGBAPixel SR_CanvasGetPixel(
+inline SR_RGBAPixel SR_CanvasGetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y)

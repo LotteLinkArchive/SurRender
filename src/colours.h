@@ -49,7 +49,7 @@ enum SR_BlendingModes {
 };
 
 // Create an RGBA colour value.
-inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
+inline  SR_RGBAPixel SR_CreateRGBA(
 	U8 red,
 	U8 green,
 	U8 blue,
@@ -67,7 +67,7 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 // Blend RGBA values
 // Use mode provided by SR_BlendingModes
 // Usually, you'll want to set alpha_modifier to 255.
-inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
+inline  SR_RGBAPixel SR_RGBABlender(
 	SR_RGBAPixel pixel_base,
 	SR_RGBAPixel pixel_top,
 	U8 alpha_modifier,
