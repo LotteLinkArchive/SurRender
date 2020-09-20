@@ -2,17 +2,6 @@
 #include "canvas.h"
 #include "colours.h"
 
-X0 SR_FillModLUT(U16 moperand)
-{
-	if (modlut_complete[moperand]) goto sr_fmlutexit;
-
-	modlut_complete[moperand] = true;
-	for (U16 x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++) modlut[moperand][x] = x % moperand;
-	
-sr_fmlutexit:
-	return;
-}
-
 X0 SR_GenCanvLUT(SR_Canvas *canvas)
 {
 	canvas->hflags |= SR_CPow2FDtc(canvas->rwidth, canvas->rheight, 0x10);

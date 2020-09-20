@@ -5,7 +5,9 @@
 
 // Must be (a power of 2) - 1
 // The larger the size, the larger the modulo LUT overhead
+#ifndef SR_MAX_CANVAS_SIZE
 #define SR_MAX_CANVAS_SIZE 4095
+#endif
 
 /* This is a canvas, which contains a width and height in pixels, an aspect
  * ratio and a pointer to an array of pixel values.
@@ -120,13 +122,26 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height);
 ))
 
 // Modulo LUT
-__extension__ U16 modlut[SR_MAX_CANVAS_SIZE+1][SR_MAX_CANVAS_SIZE+1] = {};
-__extension__ U1 modlut_complete[SR_MAX_CANVAS_SIZE+1] = {};
+#define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
+__extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
+__extension__ U1 modlut_complete[SR_MXCS_P1] = {};
+
+X0 SR_FillModLUT(U16 moperand)
+{
+	if (modlut_complete[moperand]) goto sr_fmlutexit;
+
+	modlut_complete[moperand] = true;
+	for (U16 x = 0; x < SR_MXCS_P1; x++) modlut[moperand][x] = x % moperand;
+	
+sr_fmlutexit:
+	return;
+}
+#undef SR_MXCS_P1
 
 /* Calculate the "real" position of a pixel in the canvas - not really
  * recommended to use this yourself.
  */
-inline U32 SR_CanvasCalcPosition(
+inline  U32 SR_CanvasCalcPosition(
 	SR_Canvas *canvas,
 	U32 x,
 	U32 y)
@@ -145,7 +160,7 @@ inline U32 SR_CanvasCalcPosition(
 (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
 // Set the value of a pixel in the canvas
-inline X0 SR_CanvasSetPixel(
+inline  X0 SR_CanvasSetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y,
@@ -155,7 +170,7 @@ inline X0 SR_CanvasSetPixel(
 }
 
 // Get a pixel in the canvas
-inline SR_RGBAPixel SR_CanvasGetPixel(
+inline  SR_RGBAPixel SR_CanvasGetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y)
