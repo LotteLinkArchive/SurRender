@@ -187,17 +187,16 @@ X0 SR_MergeCanvasIntoCanvas(
 }
 
 // Private
-#define getByte(value, n) (value >> (n * 8) & 0xFF)
-#define lerp(s, e, t) ((s) + ((e) - (s)) * (t))
-#define blerp(c00, c10, c01, c11, tx, ty) \
-(lerp(lerp((c00), (c10), (tx)), lerp((c01), (c11), (tx)), (ty)))
-
-// Private
 X0 SR_BilinearCanvasScale(
 	SR_Canvas *src,
 	SR_Canvas *dest)
 {
 	if (!dest->pixels) return;
+
+	#define getByte(value, n) (value >> (n * 8) & 0xFF)
+	#define lerp(s, e, t) ((s) + ((e) - (s)) * (t))
+	#define blerp(c00, c10, c01, c11, tx, ty) \
+	(lerp(lerp((c00), (c10), (tx)), lerp((c01), (c11), (tx)), (ty)))
 
 	U32 x, y;
 	for (x = 0, y = 0; y < dest->height; x++) {
@@ -228,6 +227,10 @@ X0 SR_BilinearCanvasScale(
 
 		SR_CanvasSetPixel(dest, x, y, final);
 	}
+
+	#undef getByte
+	#undef lerp
+	#undef blerp
 }
 
 // Private
