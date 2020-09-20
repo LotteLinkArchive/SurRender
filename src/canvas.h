@@ -55,6 +55,12 @@
         SR_Canvas canvas;
     } SR_OffsetCanvas;
 
+    // Bounding box
+    typedef union {
+        U64 whole;
+        U16x4 parts;
+    } SR_BBox;
+
     // All supported scaling modes for canvases
     enum SR_ScaleModes {
         SR_SCALE_NEARESTN,
@@ -238,7 +244,7 @@
      * 
      * Note that this is a particularly slow operation.
      */
-    U16 * SR_NZBoundingBox(SR_Canvas *src);
+    SR_BBox SR_NZBoundingBox(SR_Canvas *src);
 
     /* Returns a canvas with the input canvas's content skewed
      * set mode for vertical shearing, else turn off for horizontal

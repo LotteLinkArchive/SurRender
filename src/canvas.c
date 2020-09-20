@@ -297,13 +297,13 @@ X0 SR_CanvasScale(
     }
 }
 
-U16 * SR_NZBoundingBox(SR_Canvas *src)
+SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 {
     // TODO: Test this for bugs
     // TODO: Find some way to clean up the repetition here
 
     // Static declaration prevents a dangling pointer
-    static __thread U16 bbox[4] = {0, 0, 0, 0};
+    SR_BBox bbox = {};
     U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
     for (y = 0; y < src->height; y++)
@@ -323,7 +323,7 @@ srnzbbx_last_pixel_done:
     for (xC = 0; xC <= firstX; xC++)
     for (yC = firstY; yC <= lastY; yC++)
         if (SR_CanvasPixelCNZ(src, xC, yC)) {
-            bbox[0] = xC; bbox[1] = firstY;
+            bbox.parts[0] = xC; bbox.parts[1] = firstY;
             goto srnzbbx_found_first;
         }
 
@@ -332,20 +332,21 @@ srnzbbx_found_first:
     for (xC = src->width - 1; xC > lastX; xC--)
     for (yC = lastY; yC >= firstY; yC--)
         if (SR_CanvasPixelCNZ(src, xC, yC)) {
-            bbox[2] = xC; bbox[3] = lastY;
+            bbox.parts[2] = xC; bbox.parts[3] = lastY;
             goto srnzbbx_bounded;
         }
 
     goto srnzbbx_no_end_in_sight; // No last poI32 found - is this possible?
 srnzbbx_no_end_in_sight:
-    bbox[2] = src->width - 1; bbox[3] = src->height - 1;
+    bbox.parts[2] = src->width - 1; bbox.parts[3] = src->height - 1;
 srnzbbx_bounded:
     return bbox; // Return the box (er, I mean RETURN THE SLAB)
 srnzbbx_empty:
     /* We can return a null pointer if we believe the canvas is empty, making
      * it easier to check the state of a canvas.
      */
-    return NULL;
+    bbox.whole = 0;
+    goto srnzbbx_bounded;
 }
 
 SR_OffsetCanvas SR_CanvasShear(
@@ -505,20 +506,20 @@ srcvrot_finished:
         // If autocropping is enabled, auto-crop padded images. This is slow,
         // but speeds up merging a fair bit. Use if you only intend to rotate
         // once.
-        U16 * bbox = SR_NZBoundingBox(&final.canvas);
-        if (bbox) {
+        SR_BBox bbox = SR_NZBoundingBox(&final.canvas);
+        if (bbox.whole) {
             temp = SR_RefCanv(
                 &final.canvas,
-                bbox[0],
-                bbox[1],
-                (bbox[2] - bbox[0]) + 1,
-                (bbox[3] - bbox[1]) + 1,
+                bbox.parts[0],
+                bbox.parts[1],
+                (bbox.parts[2] - bbox.parts[0]) + 1,
+                (bbox.parts[3] - bbox.parts[1]) + 1,
                 true);
 
             final.canvas = temp;
 
-            final.offset_x += bbox[0];
-            final.offset_y += bbox[1];
+            final.offset_x += bbox.parts[0];
+            final.offset_y += bbox.parts[1];
         }
     }
 
