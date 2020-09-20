@@ -31,7 +31,7 @@ static __inline__ unsigned long long rdtsc(void)
 
 #endif
 
-int main(int argc, char *argv[])
+int main(void)
 {
     SR_Canvas canvy;
     SDL_Window *win;
