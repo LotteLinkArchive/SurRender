@@ -56,11 +56,10 @@ U1 SR_ResizeCanvas(
      * malloc does when you feed it a null pointer. Magic!
      */
     canvas->pixels = realloc(
-        canvas->pixels,
-        (U32)(
-            (U32)width *
-            (U32)height *
-            sizeof(SR_RGBAPixel)));
+        canvas->pixels, (U32)(
+        (U32)width *
+        (U32)height *
+        sizeof(SR_RGBAPixel)));
 
     // Return the allocation state.
     return BOOLIFY(canvas->pixels);
