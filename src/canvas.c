@@ -371,27 +371,23 @@ SR_OffsetCanvas SR_CanvasShear(
     final.offset_x = mode ? 0 : -skew_amount;
     final.offset_y = mode ? -skew_amount : 0;
 
-    I32 mshift;
-
     // TODO: Find some way to clean up the repetition here
 
-    if (mode) {
-        for (U16 x = 0; x < w; x++) {
-            mshift = skew_amount + (x - mcenter) * skew;
-            for (U16 y = 0; y < h; y++) {
-                SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);
-                SR_CanvasSetPixel(&(final.canvas), x, y + mshift, pixel);
-            }
-        }
-	} else {
-        for (U16 y = 0; y < h; y++) {
-            mshift = skew_amount + (y - mcenter) * skew;
-            for (U16 x = 0; x < w; x++) {
-                SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);
-                SR_CanvasSetPixel(&(final.canvas), x + mshift, y, pixel);
-            }
-        }
+    U16 x, y;
+    I32 mshift;
+
+    #define TMP_SKEWTRFS(ol, olc, il, ilc, ils0, ils1)                     \
+    for (ol = 0; olc; ol++) {                                              \
+        mshift = skew_amount + (ol - mcenter) * skew;                      \
+        for (il = 0; ilc; il++) {                                          \
+            SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);             \
+            SR_CanvasSetPixel(&(final.canvas), ils0, ils1, pixel);         \
+        }                                                                  \
     }
+
+    if (mode) TMP_SKEWTRFS(x, x < w, y, y < h, x, y + mshift)
+    else      TMP_SKEWTRFS(y, y < h, x, x < w, x + mshift, y)
+    #undef TMP_SKEWTRFS
 
     return final;
 }
