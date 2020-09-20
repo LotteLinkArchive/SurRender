@@ -303,7 +303,7 @@ U16 * SR_NZBoundingBox(SR_Canvas *src)
     // TODO: Find some way to clean up the repetition here
 
     // Static declaration prevents a dangling pointer
-    static U16 bbox[4] = {0, 0, 0, 0};
+    static __thread U16 bbox[4] = {0, 0, 0, 0};
     U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
     for (y = 0; y < src->height; y++)
