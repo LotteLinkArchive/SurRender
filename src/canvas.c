@@ -210,20 +210,16 @@ X0 SR_BilinearCanvasScale(
 
 		// TODO: Clean this up, preferably stop using SR_RGBAtoWhole, it's slow
 
-		U32 c00 = SR_CanvasGetPixel(src, gxi	, gyi	).whole;
-		U32 c10 = SR_CanvasGetPixel(src, gxi + 1, gyi	).whole;
-		U32 c01 = SR_CanvasGetPixel(src, gxi	, gyi + 1).whole;
+		U32 c00 = SR_CanvasGetPixel(src, gxi    , gyi    ).whole;
+		U32 c10 = SR_CanvasGetPixel(src, gxi + 1, gyi    ).whole;
+		U32 c01 = SR_CanvasGetPixel(src, gxi    , gyi + 1).whole;
 		U32 c11 = SR_CanvasGetPixel(src, gxi + 1, gyi + 1).whole;
 
 		U32 result = 0;
 		for (U8 i = 0; i < 4; i++)
 			result |= (U8)blerp(
-				(R32)getByte(c00, i),
-				(R32)getByte(c10, i),
-				(R32)getByte(c01, i),
-				(R32)getByte(c11, i),
-				(R32)gx - gxi,
-				(R32)gy - gyi
+				(R32)getByte(c00, i), (R32)getByte(c10, i), (R32)getByte(c01, i), (R32)getByte(c11, i),
+				(R32)gx - gxi, (R32)gy - gyi
 			) << (8 * i);
 
 		SR_RGBAPixel final = {
