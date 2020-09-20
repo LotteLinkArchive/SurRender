@@ -18,13 +18,13 @@ SR_Canvas LD_STBICanv(U8 *image, I32 *x, I32 *y)
 {
 	SR_Canvas temp = {
 		.pixels   = (SR_RGBAPixel *) image,
-		.width	= *x,
+		.width    = *x,
 		.height   = *y,
 		.rwidth   = *x,
 		.rheight  = *y,
 		.cwidth   = *x,
 		.cheight  = *y,
-		.ratio	= (R32)*x / *y,
+		.ratio    = (R32)*x / *y,
 	};
 
 	if (!temp.pixels) goto ldstbicanv_missing;

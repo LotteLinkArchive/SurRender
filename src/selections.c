@@ -72,8 +72,7 @@ X0 SR_SelectTri(
 		R32 t = (R32)(v0x * vqy - v0y * vqx);
 		t /= vcross;
 		
-		if ((s >= 0) && (t >= 0) && (s + t <= 1))
-			SR_SelectSetPoint(selection, x, y, mode);
+		if ((s >= 0) && (t >= 0) && (s + t <= 1)) SR_SelectSetPoint(selection, x, y, mode);
 	}
 }
 
@@ -87,9 +86,8 @@ X0 SR_SelectRect(
 	
 	U16 xi, yi;
 	for (xi = x; xi < max_x; xi++)
-	for (yi = y; yi < max_y; yi++) {
+	for (yi = y; yi < max_y; yi++)
 		SR_SelectSetPoint(selection, x, y, mode);
-	}
 }
 X0 SR_SelectCirc(
 	SR_Select *selection, I8 mode,
@@ -115,7 +113,6 @@ X0 SR_SelectCirc(
 		yp *= yp;
 		U32 pos = (U32)(xp + yp);
 
-		if (pos <= radius)
-			SR_SelectSetPoint(selection, xi, yi, mode);
+		if (pos <= radius) SR_SelectSetPoint(selection, xi, yi, mode);
 	}
 }

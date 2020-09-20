@@ -43,7 +43,9 @@ enum SR_BlendingModes {
 	// multiply values. Can overflow. Use it to paint colour onto black.
 	SR_BLEND_ADDITIVE_PAINT,
 	// Depending on the alpha value of the top layer, invert the base colours
-	SR_BLEND_INVERTED_DRAW
+	SR_BLEND_INVERTED_DRAW,
+	// Keep the bottom's alpha but use the top's RGB values
+	SR_BLEND_PAINT
 };
 
 // Create an RGBA colour value.
@@ -53,10 +55,10 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	U8 blue,
 	U8 alpha)
 {
-	SR_RGBAPixel temp = {
-		.chn.red = red,
+	SR_RGBAPixel temp  = {
+		.chn.red   = red,
 		.chn.green = green,
-		.chn.blue = blue,
+		.chn.blue  = blue,
 		.chn.alpha = alpha
 	};
 	return temp;
@@ -76,19 +78,16 @@ inline __attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	if (mode > SR_BLEND_ADDITIVE) goto srbl_nomul;
 
 	U8 alpha_mul, alpha_mul_neg;
-	alpha_mul	 = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
+	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
 	alpha_mul_neg = ~alpha_mul;
 
 	U16x8 buffer = {
 		alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
-		alpha_mul,	 alpha_mul,	 alpha_mul,	 255};
-	SR_RGBADoublePixel merge = {
-		.components.right = pixel_top.whole,
-		.components.left  = pixel_base.whole};
+		alpha_mul,     alpha_mul,     alpha_mul,     255};
+	SR_RGBADoublePixel merge = {.components.right = pixel_top.whole, .components.left  = pixel_base.whole};
 
 	merge.splitvec = hcl_vector_convert(((
-			buffer * hcl_vector_convert(merge.splitvec, U16x8)
-		) + 255) >> 8, U8x8);
+		buffer * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8);
 	pixel_top.whole  = merge.components.right;
 	pixel_base.whole = merge.components.left;
 
@@ -102,26 +101,22 @@ srbl_nomul:
 	default:
 	case SR_BLEND_ADDITIVE_PAINT:
 	case SR_BLEND_ADDITIVE:
-		final.whole = (pixel_base.whole & 0xFF000000) | (
-					  (pixel_base.whole & 0x00FFFFFF) +
-					  (pixel_top.whole  & 0x00FFFFFF));
+		final.whole = (
+			(pixel_base.whole & 0xFF000000) | (
+			(pixel_base.whole & 0x00FFFFFF) +
+			(pixel_top.whole  & 0x00FFFFFF)));
 
 		break;
 	case SR_BLEND_OVERLAY:
 		if (((U16)alpha_modifier * pixel_top.chn.alpha) >= 255)
-			final.whole  = (pixel_top.whole  & 0x00FFFFFF) |
-						   (pixel_base.whole & 0xFF000000);
-		else final.whole = pixel_base.whole;
+			final.whole  = (pixel_top.whole  & 0x00FFFFFF) | (pixel_base.whole & 0xFF000000);
+		else 	final.whole  = pixel_base.whole;
 
 		break;
 	case SR_BLEND_INVERT_DROP:
-		final.whole = (pixel_base.whole & 0x00FFFFFF) |
-					 ~(pixel_top.whole  & 0xFF000000);
-
-		break;
 	case SR_BLEND_DROP:
-		final.whole = (pixel_base.whole & 0x00FFFFFF) |
-					  (pixel_top.whole  & 0xFF000000);
+		final.whole = (pixel_base.whole & 0x00FFFFFF) | (
+			(mode == SR_BLEND_INVERT_DROP ? 0xFFFFFFFF : 0x00000000) ^ (pixel_top.whole  & 0xFF000000));
 
 		break;
 	case SR_BLEND_REPLACE:
@@ -133,12 +128,15 @@ srbl_nomul:
 
 		break;
 	case SR_BLEND_INVERTED_DRAW:
-		final.whole = pixel_base.whole - ((
-			((U16)pixel_top.chn.alpha * alpha_modifier)
-		>> 8) * 0x00010101);
+		final.whole = pixel_base.whole - ((((U16)pixel_top.chn.alpha * alpha_modifier) >> 8) * 0x00010101);
+
+		break;
+	case SR_BLEND_PAINT:
+		final.whole = (pixel_base.whole & 0xFF000000) | (pixel_top.whole & 0x00FFFFFF);
 
 		break;
 	}
+
 	return final;
 }
 #endif

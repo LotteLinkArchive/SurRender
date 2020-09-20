@@ -5,19 +5,18 @@
 X0 SR_FillModLUT(U16 moperand)
 {
 	if (modlut_complete[moperand]) goto sr_fmlutexit;
+
 	modlut_complete[moperand] = true;
-	for (U16 x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++)
-		modlut[moperand][x] = x % moperand;
+	for (U16 x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++) modlut[moperand][x] = x % moperand;
+	
 sr_fmlutexit:
 	return;
 }
 
 X0 SR_GenCanvLUT(SR_Canvas *canvas)
 {
-	canvas->hflags  |= SR_CPow2FDtc(
-		canvas->rwidth, canvas->rheight, 0x10);
-	canvas->hflags  |= SR_CPow2FDtc(
-		canvas->cwidth, canvas->cheight, 0x20);
+	canvas->hflags  |= SR_CPow2FDtc(canvas->rwidth, canvas->rheight, 0x10);
+	canvas->hflags  |= SR_CPow2FDtc(canvas->cwidth, canvas->cheight, 0x20);
 
 	SR_FillModLUT(canvas->cwidth );
 	SR_FillModLUT(canvas->cheight);
@@ -31,7 +30,7 @@ U1 SR_ResizeCanvas(
 	U16 height)
 {
 	// It is impossible to create a 0-width/0-height canvas.
-	if (!width  ||
+	if (	!width  ||
 		!height ||
 		canvas->pixels ||
 		canvas->hflags & 0x0B) return false;
@@ -55,11 +54,7 @@ U1 SR_ResizeCanvas(
 	 * That way, we can simplify the whole process, as realloc works just like
 	 * malloc does when you feed it a null pointer. Magic!
 	 */
-	canvas->pixels = realloc(
-		canvas->pixels, (U32)(
-		(U32)width *
-		(U32)height *
-		sizeof(SR_RGBAPixel)));
+	canvas->pixels = realloc(canvas->pixels, (U32)width * (U32)height * sizeof(SR_RGBAPixel));
 
 	// Return the allocation state.
 	return BOOLIFY(canvas->pixels);
@@ -79,7 +74,7 @@ X0 SR_ZeroFill(SR_Canvas *canvas)
 {
 	if (!canvas->pixels) return;
 
-	if (canvas->xclip   != 0 ||
+	if (	canvas->xclip   != 0 ||
 		canvas->yclip   != 0 ||
 		canvas->cwidth  != canvas->rwidth  ||
 		canvas->cheight != canvas->rheight ) {
@@ -110,10 +105,10 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
 X0 SR_DestroyCanvas(SR_Canvas *canvas)
 {
+	// Just in case we need to free anything else
 	U1 hfstate = !(canvas->hflags & 0x02);
 
-	if (canvas->pixels  && hfstate)
-		free(canvas->pixels);
+	if (canvas->pixels  && hfstate) free(canvas->pixels);
 
 	canvas->pixels = NULL;
 }
@@ -131,9 +126,9 @@ SR_Canvas SR_CopyCanvas(
 	// If it isn't valid, just return the metadata and pray it doesn't get used
 	if (!new.pixels) goto srcc_finish;
 
-	if (copy_start_x == 0 &&
+	if (	copy_start_x == 0 &&
 		copy_start_y == 0 &&
-		new.width	== canvas->width  &&
+		new.width    == canvas->width  &&
 		new.height   == canvas->height &&
 		!canvas->xclip &&
 		!canvas->yclip ) {
@@ -147,8 +142,7 @@ SR_Canvas SR_CopyCanvas(
 	U16 x, y;
 	for (x = 0; x < new.width; x++)
 	for (y = 0; y < new.height; y++)
-		SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(
-			canvas, x + copy_start_x, y + copy_start_y));
+		SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
 
 srcc_finish:
 	return new;
@@ -196,18 +190,10 @@ X0 SR_MergeCanvasIntoCanvas(
 	for (x = 0; x < src_canvas->width; x++)
 	for (y = 0; y < src_canvas->height; y++) {
 		// Uses the function for blending individual RGBA values.
-		SR_CanvasSetPixel(
-			dest_canvas,
-			x + paste_start_x,
-			y + paste_start_y,
-			SR_RGBABlender(
-				SR_CanvasGetPixel(
-					dest_canvas,
-					x + paste_start_x,
-					y + paste_start_y),
-				SR_CanvasGetPixel(src_canvas, x, y),
-				alpha_modifier,
-				mode));
+		SR_CanvasSetPixel(dest_canvas, x + paste_start_x, y + paste_start_y, SR_RGBABlender(
+			SR_CanvasGetPixel(dest_canvas, x + paste_start_x, y + paste_start_y),
+			SR_CanvasGetPixel(src_canvas, x, y),
+			alpha_modifier, mode));
 	}
 }
 
@@ -272,8 +258,7 @@ X0 SR_NearestNeighborCanvasScale(
 	U16 x, y;
 	for (x = 0; x < dest->width; x++)
 	for (y = 0; y < dest->height; y++) {
-		SR_RGBAPixel sample = SR_CanvasGetPixel(
-			src, x * x_factor, y * y_factor);
+		SR_RGBAPixel sample = SR_CanvasGetPixel(src, x * x_factor, y * y_factor);
 		SR_CanvasSetPixel(dest, x, y, sample);
 	}
 }
@@ -376,17 +361,17 @@ SR_OffsetCanvas SR_CanvasShear(
 	U16 x, y;
 	I32 mshift;
 
-	#define TMP_SKEWTRFS(ol, olc, il, ilc, ils0, ils1)					 \
-	for (ol = 0; olc; ol++) {											  \
-		mshift = skew_amount + (ol - mcenter) * skew;					  \
-		for (il = 0; ilc; il++) {										  \
-			SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);			 \
-			SR_CanvasSetPixel(&(final.canvas), ils0, ils1, pixel);		 \
-		}																  \
+	#define TMP_SKEWTRFS(ol, olc, il, ilc, ils0, ils1)\
+	for (ol = 0; olc; ol++) {\
+		mshift = skew_amount + (ol - mcenter) * skew;\
+		for (il = 0; ilc; il++) {\
+			SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);\
+			SR_CanvasSetPixel(&(final.canvas), ils0, ils1, pixel);\
+		}\
 	}
 
 	if (mode) TMP_SKEWTRFS(x, x < w, y, y < h, x, y + mshift)
-	else	  TMP_SKEWTRFS(y, y < h, x, x < w, x + mshift, y)
+	else      TMP_SKEWTRFS(y, y < h, x, x < w, x + mshift, y)
 	#undef TMP_SKEWTRFS
 
 	return final;

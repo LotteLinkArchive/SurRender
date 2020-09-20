@@ -6,16 +6,16 @@ SR_FontAtlas SR_MakeFontAtlas(
 	U16 charheight)
 {
 	SR_FontAtlas temp = {
-		.font		  = font,
-		.charwidth	 = charwidth,
-		.charheight	= charheight,
-		.colour		= SR_CreateRGBA(255, 255, 255, 255),
+		.font          = font,
+		.charwidth     = charwidth,
+		.charheight    = charheight,
+		.colour        = SR_CreateRGBA(255, 255, 255, 255),
 		.rescalewidth  = charwidth,
 		.rescaleheight = charheight,
 		.rescalemode   = SR_SCALE_NEARESTN,
-		.hpadding	  = 2,
-		.vpadding	  = 2,
-		.tabspaces	 = 4
+		.hpadding      = 2,
+		.vpadding      = 2,
+		.tabspaces     = 8
 	};
 
 	return temp;
@@ -23,7 +23,7 @@ SR_FontAtlas SR_MakeFontAtlas(
 
 X0 SR_PrintToCanvas(
 	SR_FontAtlas *font,
-	SR_Canvas	*dest,
+	SR_Canvas    *dest,
 	U16 *text,
 	SX  length,
 	U16 x,
@@ -36,12 +36,9 @@ X0 SR_PrintToCanvas(
 	while (--length) {
 		U16 ucsc = *text++;
 
-		if (ucsc == 0x0009) x += (font->rescalewidth * font->tabspaces) +
-			(font->hpadding * font->tabspaces);
+		if (ucsc == 0x0009) x += (font->rescalewidth * font->tabspaces) + (font->hpadding * font->tabspaces);
 
-		if (ucsc == 0x000a ||
-			(breakpoint != 0 &&
-				((x - rootx) > (breakpoint - font->rescalewidth)))) {
+		if (ucsc == 0x000a || (breakpoint != 0 && ((x - rootx) > (breakpoint - font->rescalewidth)))) {
 			y += font->rescaleheight + font->vpadding;
 			x =  rootx;
 		} 
@@ -56,26 +53,21 @@ X0 SR_PrintToCanvas(
 			ucsc & 255,
 			ucsc >> 8);
 			
-		if ((SR_CanvasGetPixel(&character, 0, 0).whole & 0x00FFFFFF) !=
-			(font->colour.whole & 0x00FFFFFF)) {
+		if ((SR_CanvasGetPixel(&character, 0, 0).whole & 0x00FFFFFF) != (font->colour.whole & 0x00FFFFFF)) {
 			U16 xc, yc;
 			for (xc = 0; xc < character.width; xc++)
-			for (yc = 0; yc < character.height; yc++) {
-				SR_CanvasSetPixel(&character, xc, yc, SR_RGBABlender(
-					SR_CanvasGetPixel(&character, xc, yc),
-					font->colour, 255, SR_BLEND_ADDITIVE_PAINT));
-			}
+			for (yc = 0; yc < character.height; yc++) SR_CanvasSetPixel(&character, xc, yc, SR_RGBABlender(
+				SR_CanvasGetPixel(&character, xc, yc),
+				font->colour, 255, SR_BLEND_PAINT));
 		}
 
 		if ((font->rescalewidth  != font->charwidth) ||
 			(font->rescaleheight != font->charheight)) {
-			SR_Canvas temp = SR_NewCanvas(
-				font->rescalewidth, font->rescaleheight);
+			SR_Canvas temp = SR_NewCanvas(font->rescalewidth, font->rescaleheight);
 
 			if (!SR_CanvasIsValid(&temp)) break;
 
-			character = SR_CopyCanvas(
-				&character, 0, 0, font->charwidth, font->charheight);
+			character = SR_CopyCanvas(&character, 0, 0, font->charwidth, font->charheight);
 
 			if (!SR_CanvasIsValid(&character)) break;
 

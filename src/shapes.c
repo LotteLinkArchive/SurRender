@@ -28,7 +28,7 @@ X0 SR_DrawLine(
 }
 
 X0 SR_DrawTriOutline(
-	SR_Canvas *canvas,
+	SR_Canvas    *canvas,
 	SR_RGBAPixel colour,
 	I32 x0, I32 y0,
 	I32 x1, I32 y1,
@@ -40,7 +40,7 @@ X0 SR_DrawTriOutline(
 }
 
 X0 SR_DrawTri(
-	SR_Canvas *canvas,
+	SR_Canvas    *canvas,
 	SR_RGBAPixel colour,
 	I32 x0, I32 y0,
 	I32 x1, I32 y1,
@@ -76,7 +76,7 @@ X0 SR_DrawTri(
 }
 
 X0 SR_DrawRectOutline(
-	SR_Canvas *canvas,
+	SR_Canvas    *canvas,
 	SR_RGBAPixel colour,
 	U16 x,
 	U16 y,
@@ -111,8 +111,8 @@ X0 SR_DrawRect(
 	U16 y1 = MIN(canvas->height - 1, h + y);
 
 	for (U16 yi = y; yi < y1; yi++)
-		for (U16 xi = x; xi < x1; xi++)
-			SR_CanvasSetPixel(canvas, xi, yi, colour);
+	for (U16 xi = x; xi < x1; xi++)
+		SR_CanvasSetPixel(canvas, xi, yi, colour);
 }
 
 X0 SR_DrawCircOutline(
