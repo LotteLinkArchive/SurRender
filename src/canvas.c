@@ -15,8 +15,8 @@ sr_fmlutexit:
 
 X0 SR_GenCanvLUT(SR_Canvas *canvas)
 {
-	canvas->hflags  |= SR_CPow2FDtc(canvas->rwidth, canvas->rheight, 0x10);
-	canvas->hflags  |= SR_CPow2FDtc(canvas->cwidth, canvas->cheight, 0x20);
+	canvas->hflags |= SR_CPow2FDtc(canvas->rwidth, canvas->rheight, 0x10);
+	canvas->hflags |= SR_CPow2FDtc(canvas->cwidth, canvas->cheight, 0x20);
 
 	SR_FillModLUT(canvas->cwidth );
 	SR_FillModLUT(canvas->cheight);
