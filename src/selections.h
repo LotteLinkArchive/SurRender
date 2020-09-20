@@ -42,6 +42,7 @@
         U8 bit = 0x80 >> (position & 0x07);
         
         switch (mode) {
+        default:
         case SR_SMODE_SET:
             selection->bitfield[byte] |= bit;
             
@@ -53,11 +54,6 @@
             break;
         case SR_SMODE_XOR:
             selection->bitfield[byte] ^= bit;
-            
-            break;
-        default:
-            fprintf(stderr, "Invalid selection mode!\n");
-            exit(EXIT_FAILURE);
             
             break;
         }
