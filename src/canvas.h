@@ -25,12 +25,12 @@
 
 		/* Internal canvas properties - FORMAT:
 		 * 0 b 0 0 0 0 0 0 0 0
-		 *	 X X | | | | | \- Canvas is a reference to another canvas' pixels
-		 *		 | | | | \--- Canvas is indestructible
-		 *		 | | | \----- Canvas is important			 [UNIMPLEMENTED]
-		 *		 | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
-		 *		 | \--------- Canvas Rsize is a power of two
-		 *		 \----------- Canvas Csize is a power of two
+		 *   X X | | | | | \- Canvas is a reference to another canvas' pixels
+		 *       | | | | \--- Canvas is indestructible
+		 *       | | | \----- Canvas is important             [UNIMPLEMENTED]
+		 *       | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+		 *       | \--------- Canvas Rsize is a power of two
+		 *       \----------- Canvas Csize is a power of two
 		 */
 		U8 hflags;
 
