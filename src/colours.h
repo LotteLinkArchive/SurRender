@@ -84,7 +84,7 @@ inline  SR_RGBAPixel SR_RGBABlender(
 	U16x8 buffer = {
 		alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
 		alpha_mul,     alpha_mul,     alpha_mul,     255};
-	SR_RGBADoublePixel merge = {.components.right = pixel_top.whole, .components.left  = pixel_base.whole};
+	SR_RGBADoublePixel merge = {.components.right = pixel_top.whole, .components.left = pixel_base.whole};
 
 	merge.splitvec = hcl_vector_convert(((
 		buffer * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8);
