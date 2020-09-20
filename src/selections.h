@@ -29,7 +29,7 @@ enum SR_SelectModes {
 };
 
 // Modify a point in a selection
-inline __attribute__((always_inline)) X0 SR_SelectSetPoint(
+inline  X0 SR_SelectSetPoint(
 	SR_Select *selection,
 	U16 x,
 	U16 y,
@@ -60,7 +60,7 @@ inline __attribute__((always_inline)) X0 SR_SelectSetPoint(
 }
 
 // checque if a bit is sett
-inline __attribute__((always_inline)) U1 SR_SelectGetPoint(
+inline  U1 SR_SelectGetPoint(
 	SR_Select *selection,
 	U16 x,
 	U16 y)
