@@ -245,7 +245,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	I8 mode);
 
 /* Scales the source canvas into the destination canvas. Bad things will
- * happen if the source and destination poI32 to the same canvas.
+ * happen if the source and destination point to the same canvas.
  * The new width and height is the width and height of the destination
  * canvas.
  */
@@ -254,12 +254,12 @@ X0 SR_CanvasScale(
 	SR_Canvas *dest,
 	I8 mode);
 
-/* Returns a pointer to a static array containing 4 U16s.
+/* Returns a SR_BBox representing the bounding box of a canvas.
  * The first 2 values are the x, y coordinates of the top left of the
  * bounding box. The last 2 values are the x, y coordinates of the bottom
  * right of the bounding box.
  * 
- * If the canvas is empty, returns a null pointer.
+ * If the canvas is empty, returns all zeros.
  * 
  * The bounding box is created when a non-zero value is found.
  * 
