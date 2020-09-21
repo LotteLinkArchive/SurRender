@@ -25,14 +25,9 @@ U1 SR_ResizeCanvas(
 		canvas->hflags & 0x0B) return false;
 
 	// @direct
-	canvas->width  = width;
-	canvas->height = height;
+	canvas->width  = canvas->rwidth  = canvas->cwidth  = width;
+	canvas->height = canvas->rheight = canvas->cheight = height;
 
-	canvas->rwidth  = width;
-	canvas->rheight = height;
-
-	canvas->cwidth  = width;
-	canvas->cheight = height;
 	SR_GenCanvLUT(canvas);
 
 	// Not strictly neccessary, but rodger put it here anyway, so whatever.
