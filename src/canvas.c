@@ -95,10 +95,16 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 X0 SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	// Just in case we need to free anything else
-	U1 hfstate = !(canvas->hflags & 0x02);
+	if      (canvas->hflags & 0x02 || canvas->references > 0 || !canvas->pixels) return;
+	else if (canvas->hflags & 0x01 ) {
+		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
+		canvas->pixels = NULL;
 
-	if (canvas->pixels  && hfstate) free(canvas->pixels);
+		return;
+	}
 
+	// If it is a source canvas
+	free(canvas->pixels);
 	canvas->pixels = NULL;
 }
 
@@ -143,11 +149,21 @@ SR_Canvas SR_RefCanv(
 	U16 yclip,
 	U16 width,
 	U16 height,
-	U1 allow_destroy_host)
+	U1  absorb_host)
 {
+	if ((src->hflags & 0x01) && src->refsrc) {
+		xclip += src->xclip;
+		yclip += src->yclip;
+
+		width  = MIN(src->cwidth , width );
+		height = MIN(src->cheight, height);
+
+		src = (SR_Canvas *)src->refsrc;
+	}
+
 	// @direct
 	SR_Canvas temp = {
-		.hflags  = 0x01,
+		.hflags  = absorb_host ? 0x00 : 0x01,
 		.width   = width,
 		.height  = height,
 		.ratio   = (R32)width / height,
@@ -157,10 +173,11 @@ SR_Canvas SR_RefCanv(
 		.xclip   = xclip,
 		.yclip   = yclip,
 		.cwidth  = MIN(src->cwidth , width ),
-		.cheight = MIN(src->cheight, height)
+		.cheight = MIN(src->cheight, height),
+		.refsrc  = (void *)src
 	};
 
-	if (!allow_destroy_host) temp.hflags |= 0x02;
+	if (absorb_host) src->references++;
 
 	SR_GenCanvLUT(&temp);
 

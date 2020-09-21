@@ -197,6 +197,7 @@ event_loop:
         0, 0,
         255, SR_BLEND_REPLACE);
     mod++;
+    SR_DestroyCanvas(&temp);
 
     SR_MergeCanvasIntoCanvas(
         &canvy, &logo,
@@ -323,6 +324,7 @@ event_loop:
         &canvy, &the,
         0, 0,
         255, SR_BLEND_REPLACE);
+    SR_DestroyCanvas(&the);
 
     // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(

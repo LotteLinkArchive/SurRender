@@ -27,22 +27,26 @@ typedef struct SR_Canvas {
 
 	/* Internal canvas properties - FORMAT:
 	 * 0 b 0 0 0 0 0 0 0 0
-	 *   X X | | | | | \- Canvas is a reference to another canvas' pixels
-	 *       | | | | \--- Canvas is indestructible
-	 *       | | | \----- Canvas is important             [UNIMPLEMENTED]
-	 *       | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
-	 *       | \--------- Canvas Rsize is a power of two
-	 *       \----------- Canvas Csize is a power of two
+	 *     X X | | | | | \- Canvas is a reference to another canvas' pixels
+	 *         | | | | \--- Canvas is indestructible
+	 *         | | | \----- Canvas is important             [UNIMPLEMENTED]
+	 *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+	 *         | \--------- Canvas Rsize is a power of two
+	 *         \----------- Canvas Csize is a power of two
 	 */
 	U8 hflags;
 
-	// The "Real data" width and height, used for preventing segfaults
+	// The "Real data" width and height, used for preventing segfaults due to invalid access positions
 	U16 rwidth;
 	U16 rheight;
 
-	// The clipping width and height, used for ignoring segments
+	// The clipping width and height, used for ignoring segments of the source data, useful for reference canvases
 	U16 cwidth;
 	U16 cheight;
+
+	// The amount of references a canvas has. A canvas cannot be destroyed if its reference count is above 0.
+	U32 references;
+	X0 *refsrc; // Keep track of the referenced source so we can decrement the reference counter on it.
 } SR_Canvas;
 
 /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -210,13 +214,26 @@ SR_Canvas SR_CopyCanvas(
  * canvas instead. This doesn't allocate any memory, but it relies on the
  * host canvas still existing in memory.
  * 
- * If you destroy the host canvas, the reference canvas becomes a dangling
- * pointer. If you destroy the reference canvas, the host canvas becomes
- * a dangling pointer. See the problem here?
+ * When you create a reference canvas, it increments the reference count of
+ * the source canvas, which prevents it from being destroyed. You must
+ * destroy all reference canvases when you are done using them, otherwise
+ * your source canvas will become indestructible. The source canvas can
+ * only be destroyed when it is referenced by zero reference canvases.
  * 
- * The allow_destroy_host allows you to destroy the reference canvas, which
- * actually just destroys the host canvas, but will turn any references to
- * the host canvas into a dangling pointer, so be careful.
+ * The act of destroying a reference canvas will decrement the reference
+ * counter of the source canvas automatically.
+ * 
+ * If you attempt to create a reference to a reference canvas, this
+ * function will automatically resolve to the original canvas and
+ * increment the reference count of the original accordingly. That way,
+ * you won't need to destroy your reference canvases in any particular
+ * order.
+ * 
+ * If absorb_host is enabled, reference counting is disabled and the result
+ * of SR_RefCanv is nolonger a reference canvas but rather a normal canvas
+ * that just points to the same pixels as another one. In that case, you
+ * can safely discard the source canvas without destroying it, as long as
+ * you destroy the absorbed version at some point.
  */
 SR_Canvas SR_RefCanv(
 	SR_Canvas *src,
@@ -224,7 +241,7 @@ SR_Canvas SR_RefCanv(
 	U16 yclip,
 	U16 width,
 	U16 height,
-	U1 allow_destroy_host);
+	U1  absorb_host);
 
 /* Allows you to blend/merge a source canvas on to a destination canvas.
  * Can be pasted at a given offset (paste_start_x and paste_start_y)
