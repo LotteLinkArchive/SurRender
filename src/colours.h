@@ -18,7 +18,11 @@ typedef union {
 	struct {
 		U32 left;
 		U32 right;
-	} components;
+	} uparts;
+	struct {
+		SR_RGBAPixel left;
+		SR_RGBAPixel right;
+	} srparts;
 	U8x8 splitvec;
 } SR_RGBADoublePixel;
 
@@ -84,12 +88,12 @@ inline  SR_RGBAPixel SR_RGBABlender(
 	U16x8 buffer = {
 		alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
 		alpha_mul,     alpha_mul,     alpha_mul,     255};
-	SR_RGBADoublePixel merge = {.components.right = pixel_top.whole, .components.left = pixel_base.whole};
+	SR_RGBADoublePixel merge = {.uparts.right = pixel_top.whole, .uparts.left = pixel_base.whole};
 
 	merge.splitvec = hcl_vector_convert(((
 		buffer * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8);
-	pixel_top.whole  = merge.components.right;
-	pixel_base.whole = merge.components.left;
+	pixel_top.whole  = merge.uparts.right;
+	pixel_base.whole = merge.uparts.left;
 
 srbl_nomul:
 	switch (mode) {
