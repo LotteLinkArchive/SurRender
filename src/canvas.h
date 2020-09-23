@@ -128,7 +128,7 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height);
 // Modulo LUT
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
-__extension__ U1 modlut_complete[SR_MXCS_P1] = {};
+__extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
 
 X0 SR_FillModLUT(U16 moperand)
 {
