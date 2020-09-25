@@ -11,9 +11,6 @@ X0 SR_GenCanvLUT(SR_Canvas *canvas)
 	SR_FillModLUT(canvas->cheight);
 	SR_FillModLUT(canvas->rwidth );
 	SR_FillModLUT(canvas->rheight);
-
-	canvas->rm1width  = canvas->rwidth  - 1;
-	canvas->rm1height = canvas->rheight - 1;
 }
 
 U1 SR_ResizeCanvas(
@@ -28,10 +25,8 @@ U1 SR_ResizeCanvas(
 		canvas->hflags & 0x0B) return false;
 
 	// @direct
-	canvas->width   = canvas->cwidth  = width;
-	canvas->height  = canvas->cheight = height;
-	canvas->rwidth  = u32rup2(width );
-	canvas->rheight = u32rup2(height);
+	canvas->width  = canvas->rwidth  = canvas->cwidth  = width;
+	canvas->height = canvas->rheight = canvas->cheight = height;
 
 	SR_GenCanvLUT(canvas);
 

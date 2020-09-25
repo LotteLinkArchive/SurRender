@@ -141,7 +141,7 @@ int main(void)
         canvy.width,
         canvy.height,
         32,
-        canvy.rwidth * sizeof(SR_RGBAPixel),
+        canvy.width * sizeof(SR_RGBAPixel),
         0x000000FF,
         0x0000FF00,
         0x00FF0000,

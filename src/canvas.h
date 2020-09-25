@@ -39,9 +39,6 @@ typedef struct SR_Canvas {
 	// The "Real data" width and height, used for preventing segfaults due to invalid access positions
 	U16 rwidth;
 	U16 rheight;
-	// Ditto, but subtracted by 1. This is to prevent multiple subtractions by 1 in a hot loop.
-	U16 rm1width;
-	U16 rm1height;
 
 	// The clipping width and height, used for ignoring segments of the source data, useful for reference canvases
 	U16 cwidth;
@@ -153,8 +150,10 @@ inline  U32 SR_CanvasCalcPosition(
 	U32 x,
 	U32 y)
 {
-	x = ((U32)modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip) & canvas->rm1width ;
-	y = ((U32)modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip) & canvas->rm1height;
+	x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
+	x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
+	y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
+	y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
 
 	return (canvas->rwidth * y) + x;
 }
