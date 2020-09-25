@@ -42,8 +42,6 @@ ldstbicanv_perfect:
 	if (!UINTP2CHK(temp.rwidth) || !UINTP2CHK(temp.rheight)) {
 		SR_Canvas temp_old = temp;
 		temp = SR_NewCanvas(u32rup2(temp_old.rwidth), u32rup2(temp_old.rheight));
-		temp.width  = temp.cwidth  = temp_old.width ;
-		temp.height = temp.cheight = temp_old.height;
 		if (!temp.pixels) goto ldstbicanv_fin;
 		SR_ZeroFill(&temp);
 
