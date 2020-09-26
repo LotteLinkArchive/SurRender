@@ -136,6 +136,7 @@ extern U16 modlut[SR_MXCS_P1][SR_MXCS_P1];
 extern U1  modlut_complete   [SR_MXCS_P1];
 #undef SR_MXCS_P1
 
+// Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates.
 #define SR_CanvasCalcPosition(canvas, x, y) (\
 	((canvas)->rwidth * (modlut[(canvas)->rheight][\
 			(modlut[(canvas)->cheight][(y) & SR_MAX_CANVAS_SIZE] + (canvas)->yclip) & SR_MAX_CANVAS_SIZE])\
