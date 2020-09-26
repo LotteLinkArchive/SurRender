@@ -3,8 +3,7 @@
 #include "glbl.h"
 #include "colours.h"
 
-// Must be (a power of 2) - 1
-// The larger the size, the larger the modulo LUT overhead
+// Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead!
 #ifndef SR_MAX_CANVAS_SIZE
 #define SR_MAX_CANVAS_SIZE 4095
 #endif
@@ -83,8 +82,7 @@ enum SR_ScaleModes {
 #define SR_CPow2FDtc(w, h, flag) \
 ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
 
-// Generate the modulo LUT for a canvas. This should not be used by normal
-// people.
+// Generate the modulo LUT for a canvas. This should not be used by normal people.
 X0 SR_GenCanvLUT(SR_Canvas *canvas);
 
 /* Make a canvas larger or smaller. Preserves the contents, but not
@@ -104,9 +102,7 @@ X0 SR_TileTo(
 	U16 width,
 	U16 height);
 
-/* A canvas may contain garbage data when initially created. This will
- * zero fill it for you, if needed.
- */
+// A canvas may contain garbage data when initially created. This will zero fill it for you, if needed.
 X0 SR_ZeroFill(SR_Canvas *canvas);
 
 // Create a new canvas of the given size
@@ -116,9 +112,7 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height);
 #define SR_CanvasGetWidth(canvas) ((canvas)->width)
 #define SR_CanvasGetHeight(canvas) ((canvas)->height)
 
-/* Calculate the "real" size (in memory) of a canvas - not really
- * recommended to use this yourself.
- */
+// Calculate the "real" size (in memory) of a canvas - not really recommended to use this yourself.
 #define SR_CanvasCalcSize(canvas) ((U32)(\
 	(U32)((canvas)->rwidth)  *\
 	(U32)((canvas)->rheight) *\
@@ -142,10 +136,8 @@ sr_fmlutexit:
 }
 #undef SR_MXCS_P1
 
-/* Calculate the "real" position of a pixel in the canvas - not really
- * recommended to use this yourself.
- */
-inline  U32 SR_CanvasCalcPosition(
+// Calculate the "real" position of a pixel in the canvas - not really recommended to use this yourself.
+inline	U32 SR_CanvasCalcPosition(
 	SR_Canvas *canvas,
 	U32 x,
 	U32 y)
@@ -164,7 +156,7 @@ inline  U32 SR_CanvasCalcPosition(
 (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
 // Set the value of a pixel in the canvas
-inline  X0 SR_CanvasSetPixel(
+inline	X0 SR_CanvasSetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y,
@@ -174,7 +166,7 @@ inline  X0 SR_CanvasSetPixel(
 }
 
 // Get a pixel in the canvas
-inline  SR_RGBAPixel SR_CanvasGetPixel(
+inline	SR_RGBAPixel SR_CanvasGetPixel(
 	SR_Canvas *canvas,
 	U16 x,
 	U16 y)
