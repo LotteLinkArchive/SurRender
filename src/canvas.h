@@ -130,24 +130,26 @@ U32 SR_CanvasCalcPosition(
 (((((canvas)->xclip) + (x)) >= (canvas)->width || \
 (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
+// Modulo LUT
+#define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
+extern U16 modlut[SR_MXCS_P1][SR_MXCS_P1];
+extern U1  modlut_complete   [SR_MXCS_P1];
+#undef SR_MXCS_P1
+
+#define SR_CanvasCalcPosition(canvas, x, y) (\
+	((canvas)->rwidth * (modlut[(canvas)->rheight][\
+			(modlut[(canvas)->cheight][(y) & SR_MAX_CANVAS_SIZE] + (canvas)->yclip) & SR_MAX_CANVAS_SIZE])\
+	) + (\
+		modlut[(canvas)->rwidth ][\
+			(modlut[(canvas)->cwidth ][(x) & SR_MAX_CANVAS_SIZE] + (canvas)->xclip) & SR_MAX_CANVAS_SIZE])\
+)
+
 // Set the value of a pixel in the canvas
-inline	X0 SR_CanvasSetPixel(
-	SR_Canvas *canvas,
-	U16 x,
-	U16 y,
-	SR_RGBAPixel pixel)
-{
-	canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)] = pixel;
-}
+#define SR_CanvasSetPixel(canvas, x, y, pixel) (canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))] =\
+(pixel)
 
 // Get a pixel in the canvas
-inline	SR_RGBAPixel SR_CanvasGetPixel(
-	SR_Canvas *canvas,
-	U16 x,
-	U16 y)
-{
-	return canvas->pixels[SR_CanvasCalcPosition(canvas, x, y)];
-}
+#define SR_CanvasGetPixel(canvas, x, y) ((canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))])
 
 // Check if a pixel is non-zero, hopefully
 #define SR_CanvasPixelCNZ(canvas, x, y) \

@@ -2,34 +2,20 @@
 #include "canvas.h"
 #include "colours.h"
 
-// Modulo LUT
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
 __extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
+#undef SR_MXCS_P1
 
 X0 SR_FillModLUT(U16 moperand)
 {
 	if (modlut_complete[moperand]) goto sr_fmlutexit;
 
 	modlut_complete[moperand] = true;
-	for (U16 x = 0; x < SR_MXCS_P1; x++) modlut[moperand][x] = x % moperand;
+	for (U16 x = 0; x < (SR_MAX_CANVAS_SIZE + 1); x++) modlut[moperand][x] = x % moperand;
 	
 sr_fmlutexit:
 	return;
-}
-#undef SR_MXCS_P1
-
-U32 SR_CanvasCalcPosition(
-	SR_Canvas *canvas,
-	U32 x,
-	U32 y)
-{
-	x = modlut[canvas->cwidth ][x & SR_MAX_CANVAS_SIZE] + canvas->xclip;
-	x = modlut[canvas->rwidth ][x & SR_MAX_CANVAS_SIZE];
-	y = modlut[canvas->cheight][y & SR_MAX_CANVAS_SIZE] + canvas->yclip;
-	y = modlut[canvas->rheight][y & SR_MAX_CANVAS_SIZE];
-
-	return (canvas->rwidth * y) + x;
 }
 
 X0 SR_GenCanvLUT(SR_Canvas *canvas)
