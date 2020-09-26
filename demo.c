@@ -1,6 +1,6 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
-#include "../src/surrender.h"
+#include "src/surrender.h"
 #include <complex.h>
 #include <time.h>
 #include <stdlib.h>
@@ -30,6 +30,19 @@ static __inline__ unsigned long long rdtsc(void)
 }
 
 #endif
+
+/* Compile flags for various test features
+# FLAG_DOKI: DDLC
+# FLAG_PIX_TIX: No clue lol
+# FLAG_FRACTAL: Fractal :)
+# FLAG_RAND_LINES: random lines
+# FLAG_RAND_TRIS: random triangles
+# FLAG_SQUISH: gooba
+# FLAG_PUCK: pucku (broken)
+# FLAG_ROT: Rotation test (broken)
+# FLAG_ATLAS: texture atlas test (broken)
+*/
+#define FLAG_ATLAS
 
 int main(void)
 {
