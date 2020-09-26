@@ -6,7 +6,8 @@ AC_INIT([SurRender], [0.0.0.0000], [naphtha@lotte.link])
 AC_CONFIG_SRCDIR([demo.c], [src/surrender.h])
 # AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE
+LT_INIT
+AM_INIT_AUTOMAKE([subdir-objects])
 
 # Checks for programs.
 AC_PROG_CXX
