@@ -53,6 +53,16 @@ This will effectively clone SurRender into `<destination_folder>` without breaki
 
 Alternatively, you can install `libsurrender.so` to your system via `make install` and link your program against it. Then, you only need to use the header files in the submodule for your application.
 
+The following guides may come in handy:
+* https://devconnected.com/how-to-add-and-update-git-submodules/
+* https://www.gnu.org/software/libtool/manual/html_node/Using-Automake.html
+* https://autotools.io/index.html
+* https://opensource.com/article/19/7/introduction-gnu-autotools
+* https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install
+* https://www.gnu.org/software/automake/manual/html_node/Libtool-Libraries.html#Libtool-Libraries
+* https://www.gnu.org/software/automake/manual/html_node/A-Library.html
+* https://autotools.io/whosafraid.html
+
 ## Current Dependencies
 
 In order to use SurRender, you'll need a few dependencies.
