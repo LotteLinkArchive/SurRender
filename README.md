@@ -48,6 +48,7 @@ You can add SurRender to your Git repository as a submodule like so...
 ```
 git submodule add https://git.lotte.link/naphtha/SurRender <destination_folder>
 ```
+*Note: When you add the SurRender submodule, keep in mind that SurRender has its own submodules, which you will need to recursively update/pull/initialize too!*
 
 This will effectively clone SurRender into `<destination_folder>` without breaking anything. Once you've done this, you will need to rewrite the build script of your application to depend on SurRender/automatically initialize and compile it.
 
