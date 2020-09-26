@@ -29,10 +29,17 @@ cd SurRender*
 
 # Update and build the project
 git pull --recurse-submodules
-make clean; make -j8
+aclocal
+autoconf
+automake --add-missing
+./configure
+make CFLAGS='-g -Ofast -march=native -mtune=native' clean all
 
 # Run the demo
-./demo/a.out
+./surdemo
+
+# Install SurRender?
+make install
 ```
 
 ## Current Dependencies
