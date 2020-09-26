@@ -45,7 +45,7 @@ In order to use SurRender, you'll need a few dependencies.
 
 ### SurRender itself
 
-* `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender)**
+* `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender as a Git submodule)**
 * [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH) **(bundled with SurRender as a Git submodule)**
 
 ## Contributor Advice
