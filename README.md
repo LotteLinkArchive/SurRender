@@ -42,6 +42,17 @@ make CFLAGS='-g -Ofast -march=native -mtune=native' clean all
 make install
 ```
 
+### Using SurRender as a Git submodule
+
+You can add SurRender to your Git repository as a submodule like so...
+```
+git submodule add https://git.lotte.link/naphtha/SurRender <destination_folder>
+```
+
+This will effectively clone SurRender into `<destination_folder>` without breaking anything. Once you've done this, you will need to rewrite the build script of your application to depend on SurRender/automatically initialize and compile it.
+
+Alternatively, you can install `libsurrender.so` to your system via `make install` and link your program against it. Then, you only need to use the header files in the submodule for your application.
+
 ## Current Dependencies
 
 In order to use SurRender, you'll need a few dependencies.
