@@ -1,3 +1,6 @@
 [submodule "libs/holyh"]
 	path = libs/holyh
 	url = https://git.lotte.link/naphtha/HolyH
+[submodule "libs/stb"]
+	path = libs/stb
+	url = https://github.com/nothings/stb

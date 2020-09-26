@@ -3,11 +3,8 @@
 #include "canvas.h"
 #include "colours.h"
 
-/* Including in the header prevents SurRender
- * from being included multiple times
- */
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "../libs/stb/stb_image.h"
 
 U8 * LD_Blob_STBI(X0 *data, SX length, I32 *x, I32 *y, I32 *n)
 {
