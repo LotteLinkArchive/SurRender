@@ -6,3 +6,4 @@ include_HEADERS = src/2dscene.h src/canvas.h src/image.h src/selections.h src/sh
 
 bin_PROGRAMS = surdemo
 surdemo_SOURCES = demo.c
+surdemo_LDADD = libsurrender.la

@@ -64,7 +64,7 @@ int main(void)
        canvas allocation has failed or not for now */
     canvy = SR_NewCanvas(640, 480);
 
-    SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
+    SR_Canvas afont = SR_ImageFileToCanvas("./assets/AFONT.PNG");
 
     if (!(win = SDL_CreateWindow(
         "SurRender your mysteries to zoidberg!",
@@ -97,9 +97,9 @@ int main(void)
 
     /* Define variables for test here */
 #ifdef FLAG_DOKI
-    SR_Canvas ball = SR_ImageFileToCanvas("./demo/images/TILEROTTEX.BMP");
-    SR_Canvas logo = SR_ImageFileToCanvas("./demo/images/DDLC.BMP");
-    SR_Canvas monkas = SR_ImageFileToCanvas("./demo/images/MENU_HELL.BMP");
+    SR_Canvas ball = SR_ImageFileToCanvas("./assets/TILEROTTEX.BMP");
+    SR_Canvas logo = SR_ImageFileToCanvas("./assets/DDLC.BMP");
+    SR_Canvas monkas = SR_ImageFileToCanvas("./assets/MENU_HELL.BMP");
 #endif
 
 #if defined(FLAG_PUCK) || defined(FLAG_SQUISH)
@@ -107,7 +107,7 @@ int main(void)
 #endif
 
 #ifdef FLAG_PUCK
-    SR_Canvas imagetest = SR_ImageFileToCanvas("./demo/images/PUCK.BMP");
+    SR_Canvas imagetest = SR_ImageFileToCanvas("./assets/PUCK.BMP");
     SR_OffsetCanvas rotcanvas;
 #endif
     
@@ -136,12 +136,12 @@ int main(void)
 #endif
 
 #ifdef FLAG_SQUISH
-    SR_Canvas pokesquish = SR_ImageFileToCanvas("./demo/images/GOODRA.BMP");
+    SR_Canvas pokesquish = SR_ImageFileToCanvas("./assets/GOODRA.BMP");
     SR_OffsetCanvas squish;
 #endif
 
 #ifdef FLAG_ATLAS
-    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
+    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./assets/BRICKS.BMP");
     SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192);
     SR_CanvasScale(
         &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
