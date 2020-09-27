@@ -16,6 +16,7 @@ AC_PROG_CC
 # Checks for libraries.
 AC_CHECK_LIB([m], [fmax])
 AC_CHECK_LIB([SDL2], [SDL_Init])
+AC_CHECK_LIB([pthread], [pthread_create])
 
 # Checks for header files.
 AC_FUNC_ALLOCA
