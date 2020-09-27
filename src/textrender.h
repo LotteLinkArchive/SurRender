@@ -60,6 +60,18 @@ SR_FontAtlas SR_MakeFontAtlas(
  * NOTE: `length` is NOT MEASURED IN BYTES, it is measured in CHARACTERS.
  * For example, a 64 byte string is 32 16-bit characters, thus a length of
  * 32 characters.
+ * 
+ * NEW! - Added `dry` option. If set to true, no characters are actually
+ * printed, but the shape (return value) is still given. This is extremely
+ * useful for creating a reusable canvas containing the text you want,
+ * since it'll be exactly the right size. If you use the dry option, you
+ * can safely set `dest` to NULL. It is advised to set x and y to 0.
+ * 
+ * The format for the returned U16x4 is as follows:
+ * - Starting X (your x value)
+ * - Starting Y (your y value)
+ * - Finishing X (Your x value + the width of the text box)
+ * - Finishing Y (Your y value + the height of the text box)
  */
 U16x4 SR_PrintToCanvas(
 	SR_FontAtlas *font,
