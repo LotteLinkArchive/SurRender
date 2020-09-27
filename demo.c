@@ -5,6 +5,7 @@
 #include "libs/holyh/src/holy.h"
 #include <pthread.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <time.h>
 
 // Demo specification
@@ -66,6 +67,12 @@ void prio_unlock_high(prio_lock_t *prio_lock)
 	pthread_mutex_unlock(&prio_lock->cv_mutex);
 }
 
+// Time value time difference
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+	return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
+
 // Allows for basic communication of important data between the demo thread and the main thread
 typedef struct {
 	INAT threads_created;
@@ -75,7 +82,8 @@ typedef struct {
 } demo_thread_state_t;
 
 // This is the thread all SurRender calculations are performed on for accurate performance measurements
-X0 *DemoThread(X0 *state) {
+X0 *DemoThread(X0 *state)
+{
 	demo_thread_state_t *convstate = (demo_thread_state_t *)state;
 	printf("SurRender performing calculations on Thread ID %d\n", convstate->threads_created);
 
@@ -129,6 +137,11 @@ static demo_thread_state_t state = {
 // This is the thread where all of the SDL2 work is done (the main thread), because SDL2 is slow
 INAT main(X0)
 {
+	// Per frame timing
+	struct timeval t0;
+	struct timeval t1;
+	float elapsed;
+
 	// Return status code (0 = success)
 	INAT status = 0;
 
@@ -210,6 +223,7 @@ INAT main(X0)
 		goto sdl_freesurf;
 	}
 event_loop:
+	gettimeofday(&t0, 0);
 	while (SDL_PollEvent(&ev)) {
 		if (ev.type == SDL_QUIT) {
 			status = 0;
@@ -263,9 +277,10 @@ event_loop:
 		status = state.demo_status - 1;
 		goto sdl_freesurf;
 	}
+	gettimeofday(&t1, 0);
 
 	// Wait (60 FPS target)
-	SDL_Delay(17);
+	SDL_Delay(abs((int)(17.0f - timedifference_msec(t0, t1))));
 
 	// Repeat event loop
 	goto event_loop;
