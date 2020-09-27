@@ -269,15 +269,8 @@ event_loop:
 			state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
 	prio_unlock_high(state.sr_render_mutex);
 
-	if (SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect) < 0) {
-		status = 11;
-		goto sdl_freesurf;
-	}
-
-	if (SDL_UpdateWindowSurface(win) < 0) {
-		status = 12;
-		goto sdl_freesurf;
-	}
+	SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect);
+	SDL_UpdateWindowSurface(win);
 
 	if (state.demo_status != 0) {
 		status = state.demo_status - 1;
