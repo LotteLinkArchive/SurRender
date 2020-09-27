@@ -5,6 +5,7 @@
 #include "libs/holyh/src/holy.h"
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 
 // Allows for basic communication of important data between the demo thread and the main thread
 typedef struct {
@@ -21,8 +22,23 @@ sr_event_loop:
 	// Check if the main thread has just exited, and clean up if it has
 	if (convstate->demo_status == 0xFF) goto sr_finish_loop;
 
+	#ifndef SR_DEMO_NO_FPS_COUNTER
+	static U32 frames = 0;
+	static time_t laf = 0;
+	static time_t cur = 0;
+
+	frames++;
+	cur = time(NULL);
+	if (((cur & 1) == 0) && (laf != cur)) {
+		printf("FPS: %u AT %lld\n", frames >> 1, (U64)cur);
+		
+		laf = cur;
+		frames = 0;
+	}
+	#else
 	// Required to convince GCC not to optimize out this area of code. FFS.
 	asm volatile("" : : : "memory");
+	#endif
 
 	// Repeat the event loop
 	goto sr_event_loop;
