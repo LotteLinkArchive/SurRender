@@ -23,15 +23,15 @@ sr_event_loop:
 	if (convstate->demo_status == 0xFF) goto sr_finish_loop;
 
 	#ifndef SR_DEMO_NO_FPS_COUNTER
-	static U32 frames = 0;
+	static U64 frames = 0;
 	static time_t laf = 0;
 	static time_t cur = 0;
 
 	frames++;
 	cur = time(NULL);
 	if (((cur & 1) == 0) && (laf != cur)) {
-		printf("FPS: %u AT %lld\n", frames >> 1, (U64)cur);
-		
+		printf("FPS: %llu AT %lld\n", frames >> 1, (U64)cur);
+
 		laf = cur;
 		frames = 0;
 	}
