@@ -4,7 +4,7 @@
 #include "canvas.h"
 #include "colours.h"
 
-// Load a Radix memory blob as an image and convert it into a canvas
+// Load a memory region as an image and convert it into a canvas
 SR_Canvas SR_ImageMemToCanvas(X0 *data, SX length);
 
 // Load an image file into a new canvas (Uses stb_image.h)
