@@ -32,6 +32,7 @@ git pull --recurse-submodules
 git submodule update --init --recursive --remote --merge
 aclocal
 autoconf
+libtoolize
 automake --add-missing
 ./configure
 make CFLAGS='-g -Ofast -march=native -mtune=native' clean all
