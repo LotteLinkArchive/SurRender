@@ -27,32 +27,33 @@ typedef union {
 } SR_RGBADoublePixel;
 
 enum SR_BlendingModes {
-	// XOR all RGB values
+	/* XOR all RGB values */
 	SR_BLEND_XOR,
-	// Add RGB values together with clamping
+	/* Add RGB values together with clamping */
 	SR_BLEND_ADDITIVE,
-	// Rounded overlay approach (fastest)
+	/* Rounded overlay approach (fastest) */
 	SR_BLEND_OVERLAY,
-	// Replace base alpha with inverted top alpha
+	/* Replace base alpha with inverted top alpha */
 	SR_BLEND_INVERT_DROP,
-	// Replace base alpha with top alpha
+	/* Replace base alpha with top alpha */
 	SR_BLEND_DROP,
-	// Replace entire top pixel with bottom pixel
+	/* Replace entire top pixel with bottom pixel */
 	SR_BLEND_REPLACE,
-	// Directly XOR the RGB channels without mutating the alpha
+	/* Directly XOR the RGB channels without mutating the alpha */
 	SR_BLEND_DIRECT_XOR,
-	// Directly XOR EVERYTHING (RGBA) without mutating the alpha
+	/* Directly XOR EVERYTHING (RGBA) without mutating the alpha */
 	SR_BLEND_DIRECT_XOR_ALL,
-	// Like additive blending, but doesn't change base alpha and doesn't
-	// multiply values. Can overflow. Use it to paint colour onto black.
+	/* Like additive blending, but doesn't change base alpha and doesn't
+	 * multiply values. Can overflow. Use it to paint colour onto black.
+	 */
 	SR_BLEND_ADDITIVE_PAINT,
-	// Depending on the alpha value of the top layer, invert the base colours
+	/* Depending on the alpha value of the top layer, invert the base colours */
 	SR_BLEND_INVERTED_DRAW,
-	// Keep the bottom's alpha but use the top's RGB values
+	/* Keep the bottom's alpha but use the top's RGB values */
 	SR_BLEND_PAINT
 };
 
-// Create an RGBA colour value.
+/* Create an RGBA colour value. */
 inline	__attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	U8 red,
 	U8 green,
@@ -68,9 +69,9 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	return temp;
 }
 
-// Blend RGBA values
-// Use mode provided by SR_BlendingModes
-// Usually, you'll want to set alpha_modifier to 255.
+/* Blend RGBA values */
+/* Use mode provided by SR_BlendingModes */
+/* Usually, you'll want to set alpha_modifier to 255. */
 inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	SR_RGBAPixel pixel_base,
 	SR_RGBAPixel pixel_top,
@@ -97,8 +98,8 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 
 srbl_nomul:
 	switch (mode) {
-	case SR_BLEND_DIRECT_XOR: // Mul skipped by goto srbl_nomul
-	case SR_BLEND_XOR: // Mul version
+	case SR_BLEND_DIRECT_XOR: /* Mul skipped by goto srbl_nomul */
+	case SR_BLEND_XOR: /* Mul version */
 		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
 
 		break;

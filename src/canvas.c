@@ -34,19 +34,19 @@ U1 SR_ResizeCanvas(
 	U16 width,
 	U16 height)
 {
-	// It is impossible to create a 0-width/0-height canvas.
+	/* It is impossible to create a 0-width/0-height canvas. */
 	if (	!width  ||
 		!height ||
 		canvas->pixels ||
 		canvas->hflags & 0x0B) return false;
 
-	// @direct
+	/* @direct */
 	canvas->width  = canvas->rwidth  = canvas->cwidth  = width;
 	canvas->height = canvas->rheight = canvas->cheight = height;
 
 	SR_GenCanvLUT(canvas);
 
-	// Not strictly neccessary, but rodger put it here anyway, so whatever.
+	/* Not strictly neccessary, but rodger put it here anyway, so whatever. */
 	canvas->ratio = (R32)width / height;
 
 	/* FYI: We can actually use realloc here if we assume that canvas->pixels
@@ -56,7 +56,7 @@ U1 SR_ResizeCanvas(
 	 */
 	canvas->pixels = realloc(canvas->pixels, (U32)canvas->rwidth * (U32)canvas->rheight * sizeof(SR_RGBAPixel));
 
-	// Return the allocation state.
+	/* Return the allocation state. */
 	return BOOLIFY(canvas->pixels);
 }
 
@@ -65,7 +65,7 @@ X0 SR_TileTo(
 	U16 width,
 	U16 height)
 {
-	// @direct
+	/* @direct */
 	canvas->width = width;
 	canvas->height = height;
 }
@@ -86,26 +86,26 @@ X0 SR_ZeroFill(SR_Canvas *canvas)
 		return;
 	}
 
-	// Fill the canvas with zeros, resulting in RGBA(0, 0, 0, 0).
-	// To fill with something like RGBA(0, 0, 0, 255), see shapes.h.
+	/* Fill the canvas with zeros, resulting in RGBA(0, 0, 0, 0).
+	 * To fill with something like RGBA(0, 0, 0, 255), see shapes.h.
+	 */
 	memset(canvas->pixels, 0, SR_CanvasCalcSize(canvas));
 }
 
 SR_Canvas SR_NewCanvas(U16 width, U16 height)
 {
 	SR_Canvas temp = {};
-	temp.pixels = NULL; // Just for realloc's sake. Can NULL be non-zero?
 
-	// As long as we set pixels to NULL, ResizeCanvas can be used here too.
+	/* As long as we set pixels to NULL, ResizeCanvas can be used here too. */
 	SR_ResizeCanvas(&temp, width, height);
 
 	return temp;
 }
 
-// SR_DestroyCanvas is super important for any mallocated canvases. Use it.
+/* SR_DestroyCanvas is super important for any mallocated canvases. Use it. */
 U8 SR_DestroyCanvas(SR_Canvas *canvas)
 {
-	// Just in case we need to free anything else
+	/* Just in case we need to free anything else */
 	if      (canvas->hflags & 0x02)  return 1;
 	else if (canvas->references > 0) return 2;
 	else if (!canvas->pixels)        return 3;
@@ -116,7 +116,7 @@ U8 SR_DestroyCanvas(SR_Canvas *canvas)
 		return 0;
 	}
 
-	// If it is a source canvas
+	/* If it is a source canvas */
 	free(canvas->pixels);
 	canvas->pixels = NULL;
 
@@ -130,10 +130,10 @@ SR_Canvas SR_CopyCanvas(
 	U16 new_width,
 	U16 new_height)
 {
-	// Create the destination canvas
+	/* Create the destination canvas */
 	SR_Canvas new = SR_NewCanvas(new_width, new_height);
 
-	// If it isn't valid, just return the metadata and pray it doesn't get used
+	/* If it isn't valid, just return the metadata and pray it doesn't get used */
 	if (!new.pixels) goto srcc_finish;
 
 	if (	copy_start_x == 0 &&
@@ -142,13 +142,13 @@ SR_Canvas SR_CopyCanvas(
 		new.height   == canvas->height &&
 		!canvas->xclip &&
 		!canvas->yclip ) {
-		// Super fast memcpy when possible, hopefully.
+		/* Super fast memcpy when possible, hopefully. */
 		memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
 
-		goto srcc_finish; // Just jump to finish here, saves ident level
+		goto srcc_finish; /* Just jump to finish here, saves ident level */
 	}
 
-	// Slower copying, but not much slower - used for cropping/panning
+	/* Slower copying, but not much slower - used for cropping/panning */
 	U16 x, y;
 	for (x = 0; x < new.width; x++)
 	for (y = 0; y < new.height; y++)
@@ -176,7 +176,7 @@ SR_Canvas SR_RefCanv(
 		src = (SR_Canvas *)src->refsrc;
 	}
 
-	// @direct
+	/* @direct */
 	SR_Canvas temp = {
 		.hflags  = absorb_host ? 0x00 : 0x01,
 		.width   = width,
@@ -210,7 +210,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	U16 x, y;
 	for (x = 0; x < src_canvas->width; x++)
 	for (y = 0; y < src_canvas->height; y++) {
-		// Uses the function for blending individual RGBA values.
+		/* Uses the function for blending individual RGBA values. */
 		SR_CanvasSetPixel(dest_canvas, x + paste_start_x, y + paste_start_y, SR_RGBABlender(
 			SR_CanvasGetPixel(dest_canvas, x + paste_start_x, y + paste_start_y),
 			SR_CanvasGetPixel(src_canvas, x, y),
@@ -218,7 +218,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	}
 }
 
-// Private
+/* Private */
 X0 SR_BilinearCanvasScale(
 	SR_Canvas *src,
 	SR_Canvas *dest)
@@ -239,7 +239,7 @@ X0 SR_BilinearCanvasScale(
 		I32 gxi = (int)gx;
 		I32 gyi = (int)gy;
 
-		// TODO: Clean this up, preferably stop using SR_RGBAtoWhole, it's slow
+		/* TODO: Clean this up, preferably stop using SR_RGBAtoWhole, it's slow */
 
 		U32 c00 = SR_CanvasGetPixel(src, gxi    , gyi    ).whole;
 		U32 c10 = SR_CanvasGetPixel(src, gxi + 1, gyi    ).whole;
@@ -265,7 +265,7 @@ X0 SR_BilinearCanvasScale(
 	#undef blerp
 }
 
-// Private
+/* Private */
 X0 SR_NearestNeighborCanvasScale(
 	SR_Canvas *src,
 	SR_Canvas *dest)
@@ -303,10 +303,11 @@ X0 SR_CanvasScale(
 
 SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 {
-	// TODO: Test this for bugs
-	// TODO: Find some way to clean up the repetition here
+	/* TODO: Test this for bugs
+	 * TODO: Find some way to clean up the repetition here
+	 */
 
-	// Static declaration prevents a dangling pointer
+	/* Static declaration prevents a dangling pointer */
 	SR_BBox bbox = {};
 	U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
@@ -315,8 +316,8 @@ SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 		if (SR_CanvasPixelCNZ(src, x, y))
 			{ firstX = x, firstY = y; goto srnzbbx_first_pixel_done; }
 	
-	goto srnzbbx_empty; // No data found in image - commit die
-srnzbbx_first_pixel_done: // Exit loop
+	goto srnzbbx_empty; /* No data found in image - commit die */
+srnzbbx_first_pixel_done: /* Exit loop */
 	for (y = src->height - 1; y > 0; y--)
 	for (x = src->width - 1; x > 0; x--)
 		if (SR_CanvasPixelCNZ(src, x, y))
@@ -340,11 +341,11 @@ srnzbbx_found_first:
 			goto srnzbbx_bounded;
 		}
 
-	goto srnzbbx_no_end_in_sight; // No last poI32 found - is this possible?
+	goto srnzbbx_no_end_in_sight; /* No last poI32 found - is this possible? */
 srnzbbx_no_end_in_sight:
 	bbox.named.ex = src->width - 1; bbox.named.ey = src->height - 1;
 srnzbbx_bounded:
-	return bbox; // Return the box (er, I mean RETURN THE SLAB)
+	return bbox; /* Return the box (er, I mean RETURN THE SLAB) */
 srnzbbx_empty:
 	/* We can return a null pointer if we believe the canvas is empty, making
 	 * it easier to check the state of a canvas.
@@ -376,7 +377,7 @@ SR_OffsetCanvas SR_CanvasShear(
 	final.offset_x = mode ? 0 : -skew_amount;
 	final.offset_y = mode ? -skew_amount : 0;
 
-	// TODO: Find some way to clean up the repetition here
+	/* TODO: Find some way to clean up the repetition here */
 
 	U16 x, y;
 	I32 mshift;
@@ -403,7 +404,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	U1 safety_padding,
 	U1 autocrop)
 {
-	// Declare everything here
+	/* Declare everything here */
 	SR_Canvas temp;
 	U16 w, h, boundary, xC, yC, nx, ny;
 	I32 x, y, nxM, nyM, half_w, half_h;
@@ -411,10 +412,10 @@ SR_OffsetCanvas SR_CanvasRotate(
 	SR_RGBAPixel pixel, pixbuf;
 	SR_OffsetCanvas final;
 
-	// There's no poI32 in considering unique values above 359. 360 -> 0
+	/* There's no poI32 in considering unique values above 359. 360 -> 0 */
 	degrees = fmod(degrees, 360);
 
-	// For simplicity's sake
+	/* For simplicity's sake */
 	w = src->width;
 	h = src->height;
 
@@ -422,31 +423,31 @@ SR_OffsetCanvas SR_CanvasRotate(
 	final.offset_y = 0;
 
 	if (safety_padding) {
-		// Create additional padding in case rotated data goes off-canvas
-		boundary = MAX(w, h) << 1; // Double the largest side length
+		/* Create additional padding in case rotated data goes off-canvas */
+		boundary = MAX(w, h) << 1; /* Double the largest side length */
 		final.canvas = SR_NewCanvas(boundary, boundary);
 		final.offset_x = -(int)(boundary >> 2);
 		final.offset_y = -(int)(boundary >> 2);
 	} else {
 		final.canvas = SR_NewCanvas(w, h);
 	}
-	// Prevent garbage data seeping in
+	/* Prevent garbage data seeping in */
 	SR_ZeroFill(&final.canvas);
 
-	// Rotation not 0, 90, 180 or 270 degrees? Use inaccurate method instead
+	/* Rotation not 0, 90, 180 or 270 degrees? Use inaccurate method instead */
 	if (fmod(degrees, 90) != .0) goto srcvrot_mismatch;
 
-	// Trying to rotate 0 degrees? Just copy the canvas, I guess.
+	/* Trying to rotate 0 degrees? Just copy the canvas, I guess. */
 	if (!((U16)degrees % 360)) {
 		SR_MergeCanvasIntoCanvas(
 			&final.canvas,
 			src,
-			-final.offset_x, // Still need to use the offset incase padding
+			-final.offset_x, /* Still need to use the offset incase padding */
 			-final.offset_y,
 			255,
-			SR_BLEND_REPLACE); // Fastest and safest, also no background alpha
+			SR_BLEND_REPLACE); /* Fastest and safest, also no background alpha */
 
-		goto srcvrot_finished; // Jump to the finishing/cleanup line
+		goto srcvrot_finished; /* Jump to the finishing/cleanup line */
 	}
 
 	/* TODO: Mismatching width and height causes accurate rotation bug.
@@ -455,8 +456,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	 */
 	if (w != h) goto srcvrot_mismatch;
 
-	// This is the accurate rotation system, but it only works on degrees
-	// where x % 90 == 0
+	/* This is the accurate rotation system, but it only works on degrees where x % 90 == 0 */
 	for (xC = 0; xC < w; xC++)
 	for (yC = 0; yC < h; yC++) {
 		pixbuf = SR_CanvasGetPixel(src, xC, yC);
@@ -478,7 +478,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 
 		SR_CanvasSetPixel(
 			&final.canvas,
-			nx - final.offset_x, // Correct for offset
+			nx - final.offset_x, /* Correct for offset */
 			ny - final.offset_y,
 			pixbuf);
 	}
@@ -486,7 +486,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	goto srcvrot_finished;
 
 srcvrot_mismatch:
-	// Convert to radians and then modulo by 2*pi
+	/* Convert to radians and then modulo by 2pi */
 	degrees = fmod(degrees * 0.017453292519943295, 6.28318530718);
 
 	the_sin = -sin(degrees);
@@ -500,16 +500,16 @@ srcvrot_mismatch:
 		nyM = (y * the_cos - x * the_sin + half_h) - final.offset_y;
 		pixel = SR_CanvasGetPixel(src, x + half_w, y + half_h);
 
-		// Set target AND a single nearby pixel to de-alias
+		/* Set target AND a single nearby pixel to de-alias */
 		SR_CanvasSetPixel(&final.canvas, nxM	, nyM	, pixel);
 		SR_CanvasSetPixel(&final.canvas, nxM - 1, nyM	, pixel);
 	}
 
 srcvrot_finished:
 	if (autocrop) {
-		// If autocropping is enabled, auto-crop padded images. This is slow,
-		// but speeds up merging a fair bit. Use if you only intend to rotate
-		// once.
+		/* If autocropping is enabled, auto-crop padded images. This is slow,
+		 * but speeds up merging a fair bit. Use if you only intend to rotate once.
+		 */
 		SR_BBox bbox = SR_NZBoundingBox(&final.canvas);
 		if (bbox.whole) {
 			temp = SR_RefCanv(
@@ -532,9 +532,9 @@ srcvrot_finished:
 
 X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical)
 {
-	// Flipping canvases honestly doesn't need a new canvas to be allocated,
-	// so we can do it in-place just fine for extra speed and less memory
-	// usage.
+	/* Flipping canvases honestly doesn't need a new canvas to be allocated,
+	 * so we can do it in-place just fine for extra speed and less memory usage.
+	 */
 	U16 x, y, wmax, hmax, xdest, ydest;
 	SR_RGBAPixel temp, pixel;
 

@@ -44,7 +44,7 @@ typedef struct SR_FontAtlas {
 	U16 tabspaces;
 } SR_FontAtlas;
 
-// Create a font atlas with default values for a given font map.
+/* Create a font atlas with default values for a given font map. */
 SR_FontAtlas SR_MakeFontAtlas(
 	SR_Canvas *font,
 	U16 charwidth,

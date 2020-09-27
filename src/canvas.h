@@ -3,7 +3,7 @@
 #include "glbl.h"
 #include "colours.h"
 
-// Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead!
+/* Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead! */
 #ifndef SR_MAX_CANVAS_SIZE
 #define SR_MAX_CANVAS_SIZE 4095
 #endif
@@ -12,15 +12,15 @@
  * ratio and a pointer to an array of pixel values.
  */
 typedef struct SR_Canvas {
-	// General public properties
+	/* General public properties */
 	U16 width;
 	U16 height;
 	R32 ratio;
 
-	// Pointer to an array of pixels
+	/* Pointer to an array of pixels */
 	SR_RGBAPixel *pixels;
 	
-	// Coordinates to clip off, starting from 0, 0 (allow full canvas)
+	/* Coordinates to clip off, starting from 0, 0 (allow full canvas) */
 	U16 xclip;
 	U16 yclip;
 
@@ -35,17 +35,19 @@ typedef struct SR_Canvas {
 	 */
 	U8 hflags;
 
-	// The "Real data" width and height, used for preventing segfaults due to invalid access positions
+	/* The "Real data" width and height, used for preventing segfaults due to invalid access positions */
 	U16 rwidth;
 	U16 rheight;
 
-	// The clipping width and height, used for ignoring segments of the source data, useful for reference canvases
+	/* The clipping width and height, used for ignoring segments of the source data, useful for reference
+	 * canvases
+	 */
 	U16 cwidth;
 	U16 cheight;
 
-	// The amount of references a canvas has. A canvas cannot be destroyed if its reference count is above 0.
+	/* The amount of references a canvas has. A canvas cannot be destroyed if its reference count is above 0. */
 	U32 references;
-	X0 *refsrc; // Keep track of the referenced source so we can decrement the reference counter on it.
+	X0 *refsrc; /* Keep track of the referenced source so we can decrement the reference counter on it. */
 } SR_Canvas;
 
 /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -60,7 +62,7 @@ typedef struct SR_OffsetCanvas {
 	SR_Canvas canvas;
 } SR_OffsetCanvas;
 
-// Bounding box
+/* Bounding box */
 typedef union {
 	struct {
 		U16 sx;
@@ -72,17 +74,17 @@ typedef union {
 	U16x4 parts;
 } SR_BBox;
 
-// All supported scaling modes for canvases
+/* All supported scaling modes for canvases */
 enum SR_ScaleModes {
 	SR_SCALE_NEARESTN,
 	SR_SCALE_BILINEAR
 };
 
-// Returns an appropriate HFLAG if tex is power of 2
+/* Returns an appropriate HFLAG if tex is power of 2 */
 #define SR_CPow2FDtc(w, h, flag) \
 ((((w) & ((w) - 1)) || ((h) & ((h) - 1))) ? 0 : (flag))
 
-// Generate the modulo LUT for a canvas. This should not be used by normal people.
+/* Generate the modulo LUT for a canvas. This should not be used by normal people. */
 X0 SR_GenCanvLUT(SR_Canvas *canvas);
 
 /* Make a canvas larger or smaller. Preserves the contents, but not
@@ -102,41 +104,41 @@ X0 SR_TileTo(
 	U16 width,
 	U16 height);
 
-// A canvas may contain garbage data when initially created. This will zero fill it for you, if needed.
+/* A canvas may contain garbage data when initially created. This will zero fill it for you, if needed. */
 X0 SR_ZeroFill(SR_Canvas *canvas);
 
-// Create a new canvas of the given size
+/* Create a new canvas of the given size */
 SR_Canvas SR_NewCanvas(U16 width, U16 height);
 
-// Get the height and width of a canvas
+/* Get the height and width of a canvas */
 #define SR_CanvasGetWidth(canvas) ((canvas)->width)
 #define SR_CanvasGetHeight(canvas) ((canvas)->height)
 
-// Calculate the "real" size (in memory) of a canvas - not really recommended to use this yourself.
+/* Calculate the "real" size (in memory) of a canvas - not really recommended to use this yourself. */
 #define SR_CanvasCalcSize(canvas) ((U32)(\
 	(U32)((canvas)->rwidth)  *\
 	(U32)((canvas)->rheight) *\
 	sizeof(SR_RGBAPixel)\
 ))
 
-// Calculate the "real" position of a pixel in the canvas - not really recommended to use this yourself.
+/* Calculate the "real" position of a pixel in the canvas - not really recommended to use this yourself. */
 U32 SR_CanvasCalcPosition(
 	SR_Canvas *canvas,
 	U32 x,
 	U32 y);
 
-// Check if a pixel is out of bounds
+/* Check if a pixel is out of bounds */
 #define SR_CanvasCheckOutOfBounds(canvas, x, y)   \
 (((((canvas)->xclip) + (x)) >= (canvas)->width || \
 (((canvas)->yclip) + (y)) >= (canvas)->height) ? true : false)
 
-// Modulo LUT
+/* Modulo LUT */
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 extern U16 modlut[SR_MXCS_P1][SR_MXCS_P1];
 extern U1  modlut_complete   [SR_MXCS_P1];
 #undef SR_MXCS_P1
 
-// Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates.
+/* Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates. */
 #define SR_CanvasCalcPosition(canvas, x, y) (\
 	((canvas)->rwidth * (modlut[(canvas)->rheight][\
 			(modlut[(canvas)->cheight][(y) & SR_MAX_CANVAS_SIZE] + (canvas)->yclip) & SR_MAX_CANVAS_SIZE])\
@@ -145,14 +147,14 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 			(modlut[(canvas)->cwidth ][(x) & SR_MAX_CANVAS_SIZE] + (canvas)->xclip) & SR_MAX_CANVAS_SIZE])\
 )
 
-// Set the value of a pixel in the canvas
+/* Set the value of a pixel in the canvas */
 #define SR_CanvasSetPixel(canvas, x, y, pixel) (canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))] =\
 (pixel)
 
-// Get a pixel in the canvas
+/* Get a pixel in the canvas */
 #define SR_CanvasGetPixel(canvas, x, y) ((canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))])
 
-// Check if a pixel is non-zero, hopefully
+/* Check if a pixel is non-zero, hopefully */
 #define SR_CanvasPixelCNZ(canvas, x, y) \
 (SR_CanvasGetPixel((canvas), (x), (y)).whole != 0)
 

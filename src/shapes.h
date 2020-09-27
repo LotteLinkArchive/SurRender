@@ -4,7 +4,7 @@
 #include "canvas.h"
 #include "colours.h"
 
-//line drawing function
+/*line drawing function */
 X0 SR_DrawLine(
 	SR_Canvas *canvas,
 	SR_RGBAPixel colour,
@@ -13,7 +13,7 @@ X0 SR_DrawLine(
 	I32 x1,
 	I32 y1);
 
-//triangle drawing function
+/*triangle drawing function */
 X0 SR_DrawTriOutline(
 	SR_Canvas *canvas,
 	SR_RGBAPixel colour,
@@ -34,7 +34,7 @@ X0 SR_DrawTri(
 	I32 x2,
 	I32 y2);
 
-//get pain wrecked
+/*get pain wrecked */
 X0 SR_DrawRectOutline(
 	SR_Canvas *canvas,
 	SR_RGBAPixel colour,
@@ -51,7 +51,7 @@ X0 SR_DrawRect(
 	U16 w,
 	U16 h);
 
-//round
+/*round */
 X0 SR_DrawCircOutline(
 	SR_Canvas *canvas,
 	SR_RGBAPixel colour,
