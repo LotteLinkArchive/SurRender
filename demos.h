@@ -11,6 +11,8 @@ SR_CanvasScale(&brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN); \
 SR_DestroyCanvas(&brick_tileset); \
 brick_tileset = brick_tileset_res; \
 static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!"; \
+afonta.rescalewidth  = afonta.charwidth  * 3; \
+afonta.rescaleheight = afonta.charheight * 2; \
 U16x4 bbox = SR_PrintToCanvas(&afonta, NULL, hstri, sizeof(hstri) / 2, 0, 0, 0, 0, true); \
 SR_Canvas text_demo = SR_NewCanvas(bbox[2], bbox[3]); \
 SR_ZeroFill(&text_demo); \
