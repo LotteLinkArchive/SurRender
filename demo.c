@@ -30,7 +30,7 @@ sr_event_loop:
 	frames++;
 	cur = time(NULL);
 	if (((cur & 1) == 0) && (laf != cur)) {
-		printf("FPS: %llu AT %lld\n", frames >> 1, (U64)cur);
+		printf("FPS: %llu AT %lld\n", frames >> 1, (I64)cur);
 
 		laf = cur;
 		frames = 0;
