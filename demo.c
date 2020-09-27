@@ -16,12 +16,62 @@
 #define SR_DEMO_CLRF
 #endif
 
+// Lock priorities
+typedef struct prio_lock {
+	pthread_cond_t cond;
+	pthread_mutex_t cv_mutex; /* Condition variable mutex */
+	pthread_mutex_t cs_mutex; /* Critical section mutex */
+	unsigned long high_waiters;
+} prio_lock_t;
+
+#define PRIO_LOCK_INITIALIZER { PTHREAD_COND_INITIALIZER, PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER }
+
+void prio_lock_low(prio_lock_t *prio_lock)
+{
+	pthread_mutex_lock(&prio_lock->cv_mutex);
+	while (prio_lock->high_waiters || pthread_mutex_trylock(&prio_lock->cs_mutex))
+	{
+		pthread_cond_wait(&prio_lock->cond, &prio_lock->cv_mutex);
+	}
+	pthread_mutex_unlock(&prio_lock->cv_mutex);
+}
+
+void prio_unlock_low(prio_lock_t *prio_lock)
+{
+	pthread_mutex_unlock(&prio_lock->cs_mutex);
+
+	pthread_mutex_lock(&prio_lock->cv_mutex);
+	if (!prio_lock->high_waiters)
+		pthread_cond_signal(&prio_lock->cond);
+	pthread_mutex_unlock(&prio_lock->cv_mutex);
+}
+
+void prio_lock_high(prio_lock_t *prio_lock)
+{
+	pthread_mutex_lock(&prio_lock->cv_mutex);
+	prio_lock->high_waiters++;
+	pthread_mutex_unlock(&prio_lock->cv_mutex);
+
+	pthread_mutex_lock(&prio_lock->cs_mutex);
+}
+
+void prio_unlock_high(prio_lock_t *prio_lock)
+{
+	pthread_mutex_unlock(&prio_lock->cs_mutex);
+
+	pthread_mutex_lock(&prio_lock->cv_mutex);
+	prio_lock->high_waiters--;
+	if (!prio_lock->high_waiters)
+		pthread_cond_signal(&prio_lock->cond);
+	pthread_mutex_unlock(&prio_lock->cv_mutex);
+}
+
 // Allows for basic communication of important data between the demo thread and the main thread
 typedef struct {
 	INAT threads_created;
 	INAT demo_status;
 	SR_Canvas primary_canvas;
-	pthread_mutex_t sr_render_mutex;
+	prio_lock_t *sr_render_mutex;
 } demo_thread_state_t;
 
 // This is the thread all SurRender calculations are performed on for accurate performance measurements
@@ -29,16 +79,16 @@ X0 *DemoThread(X0 *state) {
 	demo_thread_state_t *convstate = (demo_thread_state_t *)state;
 	printf("SurRender performing calculations on Thread ID %d\n", convstate->threads_created);
 
-	pthread_mutex_lock(&convstate->sr_render_mutex);
+	prio_lock_low(convstate->sr_render_mutex);
 	SR_DEMO_INIT
-	pthread_mutex_unlock(&convstate->sr_render_mutex);
+	prio_unlock_low(convstate->sr_render_mutex);
 sr_event_loop:
 	// Check if the main thread has just exited, and clean up if it has
 	if (convstate->demo_status == 0xFF) goto sr_finish_loop;
 
-	pthread_mutex_lock(&convstate->sr_render_mutex);
+	prio_lock_low(convstate->sr_render_mutex);
 	SR_DEMO_LOOP
-	pthread_mutex_unlock(&convstate->sr_render_mutex);
+	prio_unlock_low(convstate->sr_render_mutex);
 
 	#ifndef SR_DEMO_NO_FPS_COUNTER
 	static U64 frames = 0;
@@ -61,9 +111,9 @@ sr_event_loop:
 	// Repeat the event loop
 	goto sr_event_loop;
 sr_finish_loop:
-	pthread_mutex_lock(&convstate->sr_render_mutex);
+	prio_lock_low(convstate->sr_render_mutex);
 	SR_DEMO_CLRF
-	pthread_mutex_unlock(&convstate->sr_render_mutex);
+	prio_unlock_low(convstate->sr_render_mutex);
 
 	if (convstate->demo_status == 0x00)
 		convstate->demo_status = 0x01;
@@ -86,10 +136,8 @@ INAT main(X0)
 	pthread_t SR_Thread;
 
 	// Render mutex initialization
-	if (pthread_mutex_init(&state.sr_render_mutex, NULL)) {
-		status = 0x33;
-		goto srdm_main_thread_exit;
-	}
+	prio_lock_t mmutex = PRIO_LOCK_INITIALIZER;
+	state.sr_render_mutex = &mmutex;
 
 	// Initialize the primary canvas in the global state
 	state.primary_canvas = SR_NewCanvas(640, 480);
@@ -97,7 +145,7 @@ INAT main(X0)
 	// Fail if the primary canvas is not valid
 	if (!SR_CanvasIsValid(&state.primary_canvas)) {
 		status = 0xFF;
-		goto pt_destroy_mutex;
+		goto srdm_main_thread_exit;
 	}
 
 	void *buffercanvas = malloc(state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
@@ -196,10 +244,10 @@ event_loop:
 	}
 
 	// Blit between canvas surface and window surface (SLOW)
-	pthread_mutex_lock(&state.sr_render_mutex);
+	prio_lock_high(state.sr_render_mutex);
 	memcpy(buffercanvas, state.primary_canvas.pixels,
 		state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
-	pthread_mutex_unlock(&state.sr_render_mutex);
+	prio_unlock_high(state.sr_render_mutex);
 	if (SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect) < 0) {
 		status = 0x07;
 		goto sdl_freesurf;
@@ -237,8 +285,6 @@ sr_destroybufcanv:
 	free(buffercanvas);
 sr_destroycanvas:
 	SR_DestroyCanvas(&state.primary_canvas);
-pt_destroy_mutex:
-	pthread_mutex_destroy(&state.sr_render_mutex);
 srdm_main_thread_exit:
 	pthread_exit(NULL);
 	return status;
