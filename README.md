@@ -29,6 +29,7 @@ cd SurRender*
 
 # Update and build the project
 git pull --recurse-submodules
+git submodule update --init --recursive --remote --merge
 aclocal
 autoconf
 automake --add-missing
