@@ -29,50 +29,17 @@ enum SR_SelectModes {
 };
 
 // Modify a point in a selection
-inline  X0 SR_SelectSetPoint(
+X0 SR_SelectSetPoint(
 	SR_Select *selection,
 	U16 x,
 	U16 y,
-	I8 mode)
-{
-	if (!selection->bitfield) return;
-	
-	U16 position = x + selection->width * y;
-	U16 byte = position >> 3;
-	U8 bit = 0x80 >> (position & 0x07);
-	
-	switch (mode) {
-	default:
-	case SR_SMODE_SET:
-		selection->bitfield[byte] |= bit;
-		
-		break;
-	case SR_SMODE_RESET:
-		bit = ~bit;
-		selection->bitfield[byte] &= bit;
-		
-		break;
-	case SR_SMODE_XOR:
-		selection->bitfield[byte] ^= bit;
-		
-		break;
-	}
-}
+	I8 mode);
 
 // checque if a bit is sett
-inline  U1 SR_SelectGetPoint(
+U1 SR_SelectGetPoint(
 	SR_Select *selection,
 	U16 x,
-	U16 y)
-{
-	if (!selection->bitfield) return false;
-	
-	U16 position = x + selection->width * y;
-	U16 byte = position >> 3;
-	U8 bit = 0x80 >> (position & 0x07);
-	
-	return (selection->bitfield[byte] & bit);
-}
+	U16 y);
 
 // select yonder line
 X0 SR_SelectLine(

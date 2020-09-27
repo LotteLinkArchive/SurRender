@@ -3,6 +3,50 @@
 #include "colours.h"
 #include "selections.h"
 
+X0 SR_SelectSetPoint(
+	SR_Select *selection,
+	U16 x,
+	U16 y,
+	I8 mode)
+{
+	if (!selection->bitfield) return;
+	
+	U16 position = x + selection->width * y;
+	U16 byte = position >> 3;
+	U8 bit = 0x80 >> (position & 0x07);
+	
+	switch (mode) {
+	default:
+	case SR_SMODE_SET:
+		selection->bitfield[byte] |= bit;
+		
+		break;
+	case SR_SMODE_RESET:
+		bit = ~bit;
+		selection->bitfield[byte] &= bit;
+		
+		break;
+	case SR_SMODE_XOR:
+		selection->bitfield[byte] ^= bit;
+		
+		break;
+	}
+}
+
+U1 SR_SelectGetPoint(
+	SR_Select *selection,
+	U16 x,
+	U16 y)
+{
+	if (!selection->bitfield) return false;
+	
+	U16 position = x + selection->width * y;
+	U16 byte = position >> 3;
+	U8 bit = 0x80 >> (position & 0x07);
+	
+	return (selection->bitfield[byte] & bit);
+}
+
 SR_Select SR_NewSelect(U16 width, U16 height)
 {
 	SR_Select temp = {
