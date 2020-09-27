@@ -103,20 +103,24 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 }
 
 // SR_DestroyCanvas is super important for any mallocated canvases. Use it.
-X0 SR_DestroyCanvas(SR_Canvas *canvas)
+U8 SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	// Just in case we need to free anything else
-	if      (canvas->hflags & 0x02 || canvas->references > 0 || !canvas->pixels) return;
-	else if (canvas->hflags & 0x01 ) {
+	if      (canvas->hflags & 0x02)  return 1;
+	else if (canvas->references > 0) return 2;
+	else if (!canvas->pixels)        return 3;
+	else if (canvas->hflags & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
 		canvas->pixels = NULL;
 
-		return;
+		return 0;
 	}
 
 	// If it is a source canvas
 	free(canvas->pixels);
 	canvas->pixels = NULL;
+
+	return 0;
 }
 
 SR_Canvas SR_CopyCanvas(
