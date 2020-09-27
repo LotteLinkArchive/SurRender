@@ -109,7 +109,6 @@ srbl_nomul:
 		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
 
 		break;
-	default:
 	case SR_BLEND_ADDITIVE_PAINT:
 	case SR_BLEND_ADDITIVE:
 		final.whole = (
