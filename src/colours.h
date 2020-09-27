@@ -39,6 +39,12 @@ enum SR_BlendingModes {
 	SR_BLEND_DROP,
 	/* Replace entire top pixel with bottom pixel */
 	SR_BLEND_REPLACE,
+	/* Replace entire top pixel with button pixel but use the alpha modifier of RGBABlender mutiplied by the
+	 * alpha of the top pixel.
+	 * 
+	 * This is very useful for rendering fonts into a temporary canvas quickly.
+	 */
+	SR_BLEND_REPLACE_WALPHA_MOD,
 	/* Directly XOR the RGB channels without mutating the alpha */
 	SR_BLEND_DIRECT_XOR,
 	/* Directly XOR EVERYTHING (RGBA) without mutating the alpha */
@@ -126,6 +132,10 @@ srbl_nomul:
 		break;
 	case SR_BLEND_REPLACE:
 		final.whole = pixel_top.whole;
+
+		break;
+	case SR_BLEND_REPLACE_WALPHA_MOD:
+		final.whole = (pixel_top.whole & 0x00FFFFFF) | (((alpha_modifier * pixel_top.chn.alpha) >> 8) << 24);
 
 		break;
 	case SR_BLEND_DIRECT_XOR_ALL:

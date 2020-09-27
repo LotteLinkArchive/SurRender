@@ -9,7 +9,13 @@ SR_Canvas brick_tileset = SR_ImageFileToCanvas("./assets/BRICKS.BMP"); \
 SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192); \
 SR_CanvasScale(&brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN); \
 SR_DestroyCanvas(&brick_tileset); \
-brick_tileset = brick_tileset_res;
+brick_tileset = brick_tileset_res; \
+static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!"; \
+U16x4 bbox = SR_PrintToCanvas(&afonta, NULL, hstri, sizeof(hstri) / 2, 0, 0, 0, 0, true); \
+SR_Canvas text_demo = SR_NewCanvas(bbox[2], bbox[3]); \
+SR_ZeroFill(&text_demo); \
+afonta.colour = SR_CreateRGBA(255, 255, 255, 127); \
+SR_PrintToCanvas(&afonta, &text_demo, hstri, sizeof(hstri) / 2, 0, 0, 0, SR_BLEND_REPLACE_WALPHA_MOD, false);
 #define SR_DEMO_LOOP \
 static U16 cheese_timer = 0; \
 cheese_timer++; \
@@ -23,11 +29,10 @@ SR_DrawRectOutline( \
 	(((cheese_timer >> 3) & 3) << 5) + 23, \
 	(((cheese_timer >> 5) % 6) << 5) + 23, \
 	33, 33); \
-static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!"; \
-afonta.colour = SR_CreateRGBA(255, 255, 255, 127); \
-SR_PrintToCanvas(&afonta, &SR_PCANVAS, hstri, sizeof(hstri) / 2, 128, 128, 0, SR_BLEND_ADDITIVE, false);
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 128, 128, 255, SR_BLEND_ADDITIVE);
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&brick_tileset); \
-SR_DestroyCanvas(&afont);
+SR_DestroyCanvas(&afont); \
+SR_DestroyCanvas(&text_demo);
 #endif
 #endif
