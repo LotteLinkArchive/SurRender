@@ -1,5 +1,6 @@
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
-#include "../src/surrender.h"
+#include "src/surrender.h"
 #include <complex.h>
 #include <time.h>
 #include <stdlib.h>
@@ -30,6 +31,19 @@ static __inline__ unsigned long long rdtsc(void)
 
 #endif
 
+/* Compile flags for various test features
+# FLAG_DOKI: DDLC
+# FLAG_PIX_TIX: No clue lol
+# FLAG_FRACTAL: Fractal :)
+# FLAG_RAND_LINES: random lines
+# FLAG_RAND_TRIS: random triangles
+# FLAG_SQUISH: gooba
+# FLAG_PUCK: pucku (broken)
+# FLAG_ROT: Rotation test (broken)
+# FLAG_ATLAS: texture atlas test (broken)
+*/
+#define FLAG_ATLAS
+
 int main(void)
 {
     SR_Canvas canvy;
@@ -50,7 +64,18 @@ int main(void)
        canvas allocation has failed or not for now */
     canvy = SR_NewCanvas(640, 480);
 
-    SR_Canvas afont = SR_ImageFileToCanvas("./demo/images/AFONT.PNG");
+    SR_Canvas afont = SR_ImageFileToCanvas("./assets/AFONT.PNG");
+
+    if (!(win = SDL_CreateWindow(
+        "SurRender your mysteries to zoidberg!",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        canvy.width,
+        canvy.height,
+        SDL_WINDOW_RESIZABLE))) {
+        status = 2;
+        goto sdl_quit;
+    }
 
     if (!SR_CanvasIsValid(&canvy) || !SR_CanvasIsValid(&afont)) {
         status = 3;
@@ -72,9 +97,9 @@ int main(void)
 
     /* Define variables for test here */
 #ifdef FLAG_DOKI
-    SR_Canvas ball = SR_ImageFileToCanvas("./demo/images/TILEROTTEX.BMP");
-    SR_Canvas logo = SR_ImageFileToCanvas("./demo/images/DDLC.BMP");
-    SR_Canvas monkas = SR_ImageFileToCanvas("./demo/images/MENU_HELL.BMP");
+    SR_Canvas ball = SR_ImageFileToCanvas("./assets/TILEROTTEX.BMP");
+    SR_Canvas logo = SR_ImageFileToCanvas("./assets/DDLC.BMP");
+    SR_Canvas monkas = SR_ImageFileToCanvas("./assets/MENU_HELL.BMP");
 #endif
 
 #if defined(FLAG_PUCK) || defined(FLAG_SQUISH)
@@ -82,7 +107,7 @@ int main(void)
 #endif
 
 #ifdef FLAG_PUCK
-    SR_Canvas imagetest = SR_ImageFileToCanvas("./demo/images/PUCK.BMP");
+    SR_Canvas imagetest = SR_ImageFileToCanvas("./assets/PUCK.BMP");
     SR_OffsetCanvas rotcanvas;
 #endif
     
@@ -111,29 +136,18 @@ int main(void)
 #endif
 
 #ifdef FLAG_SQUISH
-    SR_Canvas pokesquish = SR_ImageFileToCanvas("./demo/images/GOODRA.BMP");
+    SR_Canvas pokesquish = SR_ImageFileToCanvas("./assets/GOODRA.BMP");
     SR_OffsetCanvas squish;
 #endif
 
 #ifdef FLAG_ATLAS
-    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./demo/images/BRICKS.BMP");
+    SR_Canvas brick_tileset = SR_ImageFileToCanvas("./assets/BRICKS.BMP");
     SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192);
     SR_CanvasScale(
         &brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN);
     SR_DestroyCanvas(&brick_tileset);
     brick_tileset = brick_tileset_res;
 #endif
-
-    if (!(win = SDL_CreateWindow(
-        "SurRender your mysteries to zoidberg!",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        canvy.width,
-        canvy.height,
-        SDL_WINDOW_RESIZABLE))) {
-        status = 2;
-        goto sdl_quit;
-    }
 
     if (!(canvysurf = SDL_CreateRGBSurfaceFrom(
         canvy.pixels,
@@ -196,6 +210,7 @@ event_loop:
         0, 0,
         255, SR_BLEND_REPLACE);
     mod++;
+    SR_DestroyCanvas(&temp);
 
     SR_MergeCanvasIntoCanvas(
         &canvy, &logo,
@@ -322,6 +337,7 @@ event_loop:
         &canvy, &the,
         0, 0,
         255, SR_BLEND_REPLACE);
+    SR_DestroyCanvas(&the);
 
     // draw the atlas itself in the top left corner
     SR_MergeCanvasIntoCanvas(
@@ -339,7 +355,7 @@ event_loop:
     static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!";
     afonta.colour = SR_CreateRGBA(255, 255, 255, 127);
     SR_PrintToCanvas(
-        &afonta, &canvy, &hstri, sizeof(hstri) / 2, 128, 128, 0,
+        &afonta, &canvy, hstri, sizeof(hstri) / 2, 128, 128, 0,
         SR_BLEND_ADDITIVE);
 #endif
 
@@ -352,7 +368,7 @@ event_loop:
     frames++;
     cur = time(NULL);
     if (((cur & 1) == 0) && (laf != cur)) {
-        printf("FPS: %u AT %ld\n", frames >> 1, cur);
+        printf("FPS: %u AT %lld\n", frames >> 1, (long long int)cur);
         laf = cur;
         frames = 0;
     }
@@ -380,14 +396,9 @@ sdl_freesurf:
     SDL_FreeSurface(canvysurf);
 sr_destroycanvas:
     SR_DestroyCanvas(&canvy);
-sr_testcleanup:
-    #ifdef FLAG_ATLAS
-        SR_DestroyCanvas(&brick_tileset);
-    #endif
 sdl_destroywin:
     SDL_DestroyWindow(win);
 sdl_quit:
     SDL_Quit();
-retstatus:
     return status;
 }

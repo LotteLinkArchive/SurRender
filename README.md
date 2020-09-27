@@ -29,11 +29,40 @@ cd SurRender*
 
 # Update and build the project
 git pull --recurse-submodules
-make clean; make -j8
+aclocal
+autoconf
+automake --add-missing
+./configure
+make CFLAGS='-g -Ofast -march=native -mtune=native' clean all
 
 # Run the demo
-./demo/a.out
+./surdemo
+
+# Install SurRender?
+make install
 ```
+
+### Using SurRender as a Git submodule
+
+You can add SurRender to your Git repository as a submodule like so...
+```
+git submodule add https://git.lotte.link/naphtha/SurRender <destination_folder>
+```
+*Note: When you add the SurRender submodule, keep in mind that SurRender has its own submodules, which you will need to recursively update/pull/initialize too!*
+
+This will effectively clone SurRender into `<destination_folder>` without breaking anything. Once you've done this, you will need to rewrite the build script of your application to depend on SurRender/automatically initialize and compile it.
+
+Alternatively, you can install `libsurrender.so` to your system via `make install` and link your program against it. Then, you only need to use the header files in the submodule for your application.
+
+The following guides may come in handy:
+* https://devconnected.com/how-to-add-and-update-git-submodules/
+* https://www.gnu.org/software/libtool/manual/html_node/Using-Automake.html
+* https://autotools.io/index.html
+* https://opensource.com/article/19/7/introduction-gnu-autotools
+* https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install
+* https://www.gnu.org/software/automake/manual/html_node/Libtool-Libraries.html#Libtool-Libraries
+* https://www.gnu.org/software/automake/manual/html_node/A-Library.html
+* https://autotools.io/whosafraid.html
 
 ## Current Dependencies
 
@@ -45,7 +74,7 @@ In order to use SurRender, you'll need a few dependencies.
 
 ### SurRender itself
 
-* `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender)**
+* `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender as a Git submodule)**
 * [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH) **(bundled with SurRender as a Git submodule)**
 
 ## Contributor Advice
@@ -56,11 +85,13 @@ When contributing to the project, keep these ideas in mind:
 * Your code should be easy to use, but not in such a way that performance is crippled.
 * Remember that this project is intended to be used by actual humans, for actual projects. Make sure your contributions are generally secure, easy to understand, fast and have a generally positive effect on the project.
 
-Here's a [generally useful document](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)  outlining how your code should be formatted, although we don't follow all of the points outlined there (for example, we use 4-space indentation, not 8-space. Our code would probably look just fine with 8-space indentation, but 4-space just looks better to me. It's personal preference. Don't start wars over it.)
+Here's a [generally useful document](https://www.kernel.org/doc/html/v4.10/process/coding-style.html)  outlining how your code should be formatted, although we don't follow all of the points outlined there.
 
 If your code doesn't quite follow these guidelines but you'd still like to make a pull request, that's fine! We'll take a look at what you've written and help you fix parts of it for you if needed.
 
-We also don't just need help programming - we also need people to test for bugs, assess what could be made easier to use, and so on.
+We also don't **only** need help programming - we also need people to test for bugs, assess what could be made easier to use, and so on.
+
+Also, when you submit any code changes, please make sure you are conforming to the types defined by [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH), e.g use CHR instead of char, U8 instead of uint8_t, etc.
 
 ## Bugs, feature requests and general issues
 
