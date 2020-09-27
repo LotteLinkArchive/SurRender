@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 
 // Demo specification
 #define SR_PCANVAS (convstate->primary_canvas)
