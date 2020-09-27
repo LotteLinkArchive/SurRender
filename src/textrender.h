@@ -61,7 +61,7 @@ SR_FontAtlas SR_MakeFontAtlas(
  * For example, a 64 byte string is 32 16-bit characters, thus a length of
  * 32 characters.
  */
-X0 SR_PrintToCanvas(
+U16x4 SR_PrintToCanvas(
 	SR_FontAtlas *font,
 	SR_Canvas    *dest,
 	U16 *text,
@@ -69,5 +69,6 @@ X0 SR_PrintToCanvas(
 	U16 x,
 	U16 y,
 	U16 breakpoint,
-	U8  blendmode);
+	U8  blendmode,
+	U1  dry);
 #endif

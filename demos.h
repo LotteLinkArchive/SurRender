@@ -25,7 +25,7 @@ SR_DrawRectOutline( \
 	33, 33); \
 static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!"; \
 afonta.colour = SR_CreateRGBA(255, 255, 255, 127); \
-SR_PrintToCanvas(&afonta, &SR_PCANVAS, hstri, sizeof(hstri) / 2, 128, 128, 0, SR_BLEND_ADDITIVE);
+SR_PrintToCanvas(&afonta, &SR_PCANVAS, hstri, sizeof(hstri) / 2, 128, 128, 0, SR_BLEND_ADDITIVE, false);
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&brick_tileset); \
 SR_DestroyCanvas(&afont);
