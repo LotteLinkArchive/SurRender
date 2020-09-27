@@ -158,8 +158,14 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 
 /* Destroy the in-memory representation of the canvas
  * (Must create a new canvas or resize the current one in order to access)
+ * 
+ * Returned status codes:
+ * 0 - Success
+ * 1 - Canvas is indestructible
+ * 2 - Canvas is referenced by another canvas
+ * 3 - Canvas is a null pointer (already destroyed?)
  */
-X0 SR_DestroyCanvas(SR_Canvas *canvas);
+U8 SR_DestroyCanvas(SR_Canvas *canvas);
 
 /* Check if the canvas has been successfully allocated. You must ALWAYS
  * check if a canvas is valid before you use it.
