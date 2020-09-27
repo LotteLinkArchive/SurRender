@@ -107,7 +107,7 @@ X0 *DemoThread(X0 *state)
 
 		#ifndef SR_DEMO_NO_FPS_COUNTER
 		if ((cur = time(NULL)) >= laf + 2) {
-			printf("FPS: %llu AT %lld\n", frames, (I64)cur);
+			printf("FPS: %llu AT %lld\n", frames >> 1, (I64)cur);
 
 			laf = cur;
 			frames = 0;
