@@ -7,20 +7,38 @@
 #include <unistd.h>
 #include <time.h>
 
+// Demo specification
+#define SR_PCANVAS (convstate->primary_canvas)
+#include <demos.h>
+#ifndef SR_DEMO_PROG
+#define SR_DEMO_INIT
+#define SR_DEMO_LOOP
+#define SR_DEMO_CLRF
+#endif
+
 // Allows for basic communication of important data between the demo thread and the main thread
 typedef struct {
 	INAT threads_created;
 	INAT demo_status;
 	SR_Canvas primary_canvas;
+	pthread_mutex_t sr_render_mutex;
 } demo_thread_state_t;
 
 // This is the thread all SurRender calculations are performed on for accurate performance measurements
 X0 *DemoThread(X0 *state) {
 	demo_thread_state_t *convstate = (demo_thread_state_t *)state;
 	printf("SurRender performing calculations on Thread ID %d\n", convstate->threads_created);
+
+	pthread_mutex_lock(&convstate->sr_render_mutex);
+	SR_DEMO_INIT
+	pthread_mutex_unlock(&convstate->sr_render_mutex);
 sr_event_loop:
 	// Check if the main thread has just exited, and clean up if it has
 	if (convstate->demo_status == 0xFF) goto sr_finish_loop;
+
+	pthread_mutex_lock(&convstate->sr_render_mutex);
+	SR_DEMO_LOOP
+	pthread_mutex_unlock(&convstate->sr_render_mutex);
 
 	#ifndef SR_DEMO_NO_FPS_COUNTER
 	static U64 frames = 0;
@@ -43,6 +61,10 @@ sr_event_loop:
 	// Repeat the event loop
 	goto sr_event_loop;
 sr_finish_loop:
+	pthread_mutex_lock(&convstate->sr_render_mutex);
+	SR_DEMO_CLRF
+	pthread_mutex_unlock(&convstate->sr_render_mutex);
+
 	if (convstate->demo_status == 0x00)
 		convstate->demo_status = 0x01;
 	pthread_exit(NULL);
@@ -63,19 +85,31 @@ INAT main(X0)
 	// Information about the SurRender calculation thread
 	pthread_t SR_Thread;
 
+	// Render mutex initialization
+	if (pthread_mutex_init(&state.sr_render_mutex, NULL)) {
+		status = 0x33;
+		goto srdm_main_thread_exit;
+	}
+
 	// Initialize the primary canvas in the global state
 	state.primary_canvas = SR_NewCanvas(640, 480);
 
 	// Fail if the primary canvas is not valid
 	if (!SR_CanvasIsValid(&state.primary_canvas)) {
 		status = 0xFF;
-		goto srdm_main_thread_exit;
+		goto pt_destroy_mutex;
+	}
+
+	void *buffercanvas = malloc(state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
+	if (!buffercanvas) {
+		status = 0x33;
+		goto sr_destroycanvas;
 	}
 
 	// Finally, if the canvas is valid, we can start doing SurRender stuff safely. Start the thread!
 	if (pthread_create(&SR_Thread, NULL, DemoThread, (X0 *)&state)) {
 		status = 0xAD;
-		goto srdm_main_thread_exit;
+		goto sr_destroybufcanv;
 	} else state.threads_created++;
 
 	// Begin SDL initialization
@@ -84,7 +118,7 @@ INAT main(X0)
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		status = 0x01;
-		goto srdm_main_thread_exit;
+		goto sr_destroythrd;
 	}
 
 	// Create the primary SDL window
@@ -104,7 +138,7 @@ INAT main(X0)
 	float sdl_sr_aspect_ratio;
 
 	if (!(sdl_srcanv_surf = SDL_CreateRGBSurfaceFrom(
-		state.primary_canvas.pixels, // Pointer to SurRender canvas' pixels
+		buffercanvas, // Use the buffer canvas
 		state.primary_canvas.width,
 		state.primary_canvas.height,
 		32, // C. Depth
@@ -162,6 +196,10 @@ event_loop:
 	}
 
 	// Blit between canvas surface and window surface (SLOW)
+	pthread_mutex_lock(&state.sr_render_mutex);
+	memcpy(buffercanvas, state.primary_canvas.pixels,
+		state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
+	pthread_mutex_unlock(&state.sr_render_mutex);
 	if (SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect) < 0) {
 		status = 0x07;
 		goto sdl_freesurf;
@@ -189,15 +227,18 @@ sdl_destroywin:
 	SDL_DestroyWindow(win);
 sdl_quit:
 	SDL_Quit();
-sr_destroycanvas:
+sr_destroythrd:
 	// Nicely ask the SurRender thread to exit
 	if (state.demo_status == 0x00)
 		state.demo_status = 0xFF;
 
 	pthread_join(SR_Thread, NULL);
-
-	// Then destroy its canvas
+sr_destroybufcanv:
+	free(buffercanvas);
+sr_destroycanvas:
 	SR_DestroyCanvas(&state.primary_canvas);
+pt_destroy_mutex:
+	pthread_mutex_destroy(&state.sr_render_mutex);
 srdm_main_thread_exit:
 	pthread_exit(NULL);
 	return status;
