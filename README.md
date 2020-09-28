@@ -20,7 +20,7 @@ Right now, SurRender is not very useful. 2D functions are partially completed, b
 
 ## Environment
 
-If you'd like to contribute, you will need to set up the build environment. To do this...
+If you'd like to contribute (or just use SurRender at all), you will need to set up the build environment. To do this...
 
 ```sh
 # Clone the project AND THE SUBMODULES
