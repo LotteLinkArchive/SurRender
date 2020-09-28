@@ -1,4 +1,4 @@
-#define SR_DEMO_PROG 0
+#define SR_DEMO_PROG 2
 
 #ifdef SR_DEMO_PROG
 #if SR_DEMO_PROG == 0 // Atlas
@@ -53,5 +53,23 @@ SR_DrawRectOutline(&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), spx, spy, rotc
 SR_DestroyCanvas(&(rotcanvas.canvas));
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&imagetest);
+#elif SR_DEMO_PROG == 2 // Doki
+#define SR_DEMO_INIT \
+SR_Canvas ball = SR_ImageFileToCanvas("./assets/TILEROTTEX.BMP"); \
+SR_Canvas logo = SR_ImageFileToCanvas("./assets/DDLC.BMP"); \
+SR_Canvas monkas = SR_ImageFileToCanvas("./assets/MENU_HELL.BMP");
+#define SR_DEMO_LOOP \
+static int mod = 0; \
+SR_Canvas temp = SR_RefCanv(&ball, mod, mod, SR_PCANVAS.width, SR_PCANVAS.height, false); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &temp, 0, 0, 255, SR_BLEND_REPLACE); \
+mod++; \
+SR_DestroyCanvas(&temp); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &logo, 32, 32, 255, SR_BLEND_ADDITIVE); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &monkas, SR_PCANVAS.width - monkas.width, SR_PCANVAS.height - monkas.height, \
+	255, SR_BLEND_ADDITIVE);
+#define SR_DEMO_CLRF \
+SR_DestroyCanvas(&ball); \
+SR_DestroyCanvas(&logo); \
+SR_DestroyCanvas(&monkas);
 #endif
 #endif
