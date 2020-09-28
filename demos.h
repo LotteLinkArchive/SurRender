@@ -36,5 +36,22 @@ SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 128, 128, 255, SR_BLEND_ADDITI
 SR_DestroyCanvas(&brick_tileset); \
 SR_DestroyCanvas(&afont); \
 SR_DestroyCanvas(&text_demo);
+#elif SR_DEMO_PROG == 1 // Puck
+#define SR_DEMO_INIT \
+SR_Canvas imagetest = SR_ImageFileToCanvas("./assets/PUCK.BMP"); \
+SR_OffsetCanvas rotcanvas; \
+float speeen = 0.0;
+#define SR_DEMO_LOOP \
+speeen += 1; \
+rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1); \
+unsigned short spx = 128 + rotcanvas.offset_x; \
+unsigned short spy = 128 + rotcanvas.offset_y; \
+SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(255, 255, 255, 255), 0, 0, SR_PCANVAS.width, SR_PCANVAS.height); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &(rotcanvas.canvas), spx, spy, 255, SR_BLEND_ADDITIVE); \
+SR_DrawRectOutline(&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), spx, spy, rotcanvas.canvas.width, \
+	rotcanvas.canvas.height); \
+SR_DestroyCanvas(&(rotcanvas.canvas));
+#define SR_DEMO_CLRF \
+SR_DestroyCanvas(&imagetest);
 #endif
 #endif
