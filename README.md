@@ -116,3 +116,7 @@ Also, when you submit any code changes, please make sure you are conforming to t
 ## Bugs, feature requests and general issues
 
 Please post any bugs and feature requests under the [issues tab](https://git.lotte.link/naphtha/SurRender/issues). We'll help you when we can, and investigate as many bugs as possible. We're also always looking for feature suggestions and ideas on how things could be changed.
+
+## Documentation
+
+The project currently lacks official documentation, but we may add some information and guidance to the Gitea Wiki section. For now, read the comments in the header files. They are VERY verbose, and there are a lot of them. It should be fairly easy to understand the majority of the library's interface(s).
