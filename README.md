@@ -22,25 +22,43 @@ Right now, SurRender is not very useful. 2D functions are partially completed, b
 
 If you'd like to contribute, you will need to set up the build environment. To do this...
 
-```
+```sh
 # Clone the project AND THE SUBMODULES
 git clone --recurse-submodules -j8 https://git.lotte.link/naphtha/SurRender.git
 cd SurRender*
 
-# Update and build the project
-git pull --recurse-submodules
-git submodule update --init --recursive --remote --merge
+# Set up the build environment
+# Re-run this step if you suddenly start having issues with autotools after a pull
+git submodule update --init --recursive
 aclocal
 autoconf
 libtoolize
 automake --add-missing
-./configure
-make CFLAGS='-g -Ofast -march=native -mtune=native' clean all
 
-# Run the demo
+# Update the project and its submodules (This is a VERY GOOD IDEA)
+git pull --recurse-submodules
+
+# IF, AND ONLY IF, YOU GET A WARNING ABOUT DIVERGENT BRANCHES, RUN THIS
+git config pull.rebase false
+
+# Run the configure script in order to get an appropriate Makefile
+./configure
+
+# Perform a clean-build of the project (Fastest output build)
+# For best results, use the latest version of GCC available.
+make CFLAGS='-Ofast -march=native -mtune=native' clean all
+
+# ALTERNATIVELY: Perform a clean-build of the project (Small, compatible and fast build)
+make CFLAGS='-Os -march=core2 -mtune=generic' clean all
+
+# ALTERNATIVELY: Perform a clean-build of the project (Debug build)
+make CFLAGS='-g -Og' clean all
+
+# Run the demo, if you'd like
 ./surdemo
 
 # Install SurRender?
+# TODO: Explain this step more!
 make install
 ```
 
