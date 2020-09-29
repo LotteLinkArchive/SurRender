@@ -27,16 +27,16 @@ typedef union {
 } SR_RGBADoublePixel;
 
 enum SR_BlendingModes {
-	/* Directly XOR the RGB channels without mutating the alpha */
-	SR_BLEND_DIRECT_XOR,
-	/* XOR all RGB values after multiplying them */
-	SR_BLEND_XOR,
+	/* Add RGB values together with clamping and multiplication */
+	SR_BLEND_ADDITIVE,
 	/* Like additive blending, but doesn't change base alpha and doesn't
 	 * multiply values. Can overflow. Use it to paint colour onto black.
 	 */
 	SR_BLEND_ADDITIVE_PAINT,
-	/* Add RGB values together with clamping */
-	SR_BLEND_ADDITIVE,
+	/* XOR all RGB values after multiplying them */
+	SR_BLEND_XOR,
+	/* Directly XOR the RGB channels without mutating the alpha */
+	SR_BLEND_DIRECT_XOR,
 	/* Rounded overlay approach (fastest) */
 	SR_BLEND_OVERLAY,
 	/* Replace base alpha with inverted top alpha */
@@ -86,36 +86,41 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 {
 	SR_RGBAPixel final;
 
-	if (mode == SR_BLEND_ADDITIVE ||
-	    mode == SR_BLEND_XOR) goto srbl_nomul;
-
 	U8 alpha_mul, alpha_mul_neg;
-	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
-	alpha_mul_neg = ~alpha_mul;
+	union {
+		U8x8 vec;
+		U64 whole;
+	} buffer;
+	SR_RGBADoublePixel merge;
 
-	U16x8 buffer = {
-		alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
-		alpha_mul,     alpha_mul,     alpha_mul,     255};
-	SR_RGBADoublePixel merge = {.uparts.right = pixel_top.whole, .uparts.left = pixel_base.whole};
-
-	merge.splitvec = hcl_vector_convert(((
-		buffer * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8);
-	pixel_top.whole  = merge.uparts.right;
+	#define PREMULTIPLY \
+	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8; \
+	alpha_mul_neg = ~alpha_mul; \
+	buffer.whole = ( \
+		 0xFF000000FF000000 | \
+		(0x0000000000010101 * alpha_mul_neg) | \
+		(0x0001010100000000 * alpha_mul)); \
+	merge.uparts.right = pixel_top.whole; \
+	merge.uparts.left  = pixel_base.whole; \
+	merge.splitvec = hcl_vector_convert((( \
+		hcl_vector_convert(buffer.vec, U16x8) * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8); \
+	pixel_top.whole  = merge.uparts.right; \
 	pixel_base.whole = merge.uparts.left;
 
-srbl_nomul:
 	switch (mode) {
-	case SR_BLEND_DIRECT_XOR: /* Mul skipped by goto srbl_nomul */
-	case SR_BLEND_XOR: /* Mul version */
-		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
-
-		break;
-	case SR_BLEND_ADDITIVE_PAINT:
 	case SR_BLEND_ADDITIVE:
+		PREMULTIPLY
+	case SR_BLEND_ADDITIVE_PAINT:
 		final.whole = (
 			(pixel_base.whole & 0xFF000000) | (
 			(pixel_base.whole & 0x00FFFFFF) +
 			(pixel_top.whole  & 0x00FFFFFF)));
+
+		break;
+	case SR_BLEND_XOR:
+		PREMULTIPLY
+	case SR_BLEND_DIRECT_XOR:
+		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
 
 		break;
 	case SR_BLEND_OVERLAY:
