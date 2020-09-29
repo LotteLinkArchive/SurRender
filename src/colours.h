@@ -86,70 +86,75 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 {
 	SR_RGBAPixel final;
 
+	U32 alpha_mul;
 	SR_RGBADoublePixel buffer, merge;
+	merge.uparts.right = pixel_top.whole;
+	merge.uparts.left  = pixel_base.whole;
+
+	#define PREALPHA alpha_mul = (((U16)merge.srparts.right.chn.alpha * alpha_modifier) >> 8);
 
 	#define PREMULTIPLY \
-	buffer.whole = 0xFF00000000000000 | (0x0001010100010101 * (((U16)pixel_top.chn.alpha * alpha_modifier) >> 8)); \
+	PREALPHA \
+	buffer.whole = 0xFF00000000000000 | (0x0001010100010101 * alpha_mul); \
 	buffer.uparts.left = ~buffer.uparts.left; \
-	merge.uparts.right = pixel_top.whole; \
-	merge.uparts.left  = pixel_base.whole; \
 	merge.splitvec = hcl_vector_convert((( \
 		hcl_vector_convert(buffer.splitvec, U16x8)  * \
-		hcl_vector_convert(merge.splitvec , U16x8)) + 255) >> 8, U8x8); \
-	pixel_top.whole  = merge.uparts.right; \
-	pixel_base.whole = merge.uparts.left;
+		hcl_vector_convert(merge.splitvec , U16x8)) + 255) >> 8, U8x8);
 
 	switch (mode) {
 	case SR_BLEND_ADDITIVE:
 		PREMULTIPLY
 	case SR_BLEND_ADDITIVE_PAINT:
-		final.whole = (
-			(pixel_base.whole & 0xFF000000) | (
-			(pixel_base.whole & 0x00FFFFFF) +
-			(pixel_top.whole  & 0x00FFFFFF)));
-
+		final.whole  = merge.uparts.left & 0xFF000000;
+		merge.whole &= 0x00FFFFFF00FFFFFF;
+		final.whole |= merge.uparts.left + merge.uparts.right;
+		
 		break;
 	case SR_BLEND_XOR:
 		PREMULTIPLY
 	case SR_BLEND_DIRECT_XOR:
-		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
+		final.whole = merge.uparts.left ^ (merge.uparts.right & 0x00FFFFFF);
 
 		break;
 	case SR_BLEND_OVERLAY:
-		if (((U16)alpha_modifier * pixel_top.chn.alpha) >= 255)
-			final.whole  = (pixel_top.whole  & 0x00FFFFFF) | (pixel_base.whole & 0xFF000000);
-		else 	final.whole  = pixel_base.whole;
+		PREALPHA
+		buffer.uparts.left  = (merge.uparts.right & 0x00FFFFFF) | (merge.uparts.left & 0xFF000000);
+		buffer.uparts.right = merge.uparts.left;
+		final.whole = alpha_mul >= 1 ? buffer.uparts.left : buffer.uparts.right;
 
 		break;
 	case SR_BLEND_INVERT_DROP:
+		merge.uparts.right = ~merge.uparts.right;
 	case SR_BLEND_DROP:
-		final.whole = (pixel_base.whole & 0x00FFFFFF) | (
-			(mode == SR_BLEND_INVERT_DROP ? 0xFFFFFFFF : 0x00000000) ^ (pixel_top.whole  & 0xFF000000));
+		final.whole = (merge.uparts.left & 0x00FFFFFF) | (merge.uparts.right & 0xFF000000);
 
 		break;
 	case SR_BLEND_REPLACE:
-		final.whole = pixel_top.whole;
+		final.whole = merge.uparts.right;
 
 		break;
 	case SR_BLEND_REPLACE_WALPHA_MOD:
-		final.whole = (pixel_top.whole & 0x00FFFFFF) | (((alpha_modifier * pixel_top.chn.alpha) >> 8) << 24);
+		PREALPHA
+		final.whole = (merge.uparts.right & 0x00FFFFFF) | (alpha_mul << 24);
 
 		break;
 	case SR_BLEND_DIRECT_XOR_ALL:
-		final.whole = pixel_base.whole ^ pixel_top.whole;
+		final.whole = merge.uparts.left ^ merge.uparts.right;
 
 		break;
 	case SR_BLEND_INVERTED_DRAW:
-		final.whole = pixel_base.whole - ((((U16)pixel_top.chn.alpha * alpha_modifier) >> 8) * 0x00010101);
+		PREALPHA
+		final.whole = merge.uparts.left - (alpha_mul * 0x00010101);
 
 		break;
 	case SR_BLEND_PAINT:
-		final.whole = (pixel_base.whole & 0xFF000000) | (pixel_top.whole & 0x00FFFFFF);
+		final.whole = (merge.uparts.left & 0xFF000000) | (merge.uparts.right & 0x00FFFFFF);
 
 		break;
 	}
 
 	#undef PREMULTIPLY
+	#undef PREALPHA
 
 	return final;
 }
