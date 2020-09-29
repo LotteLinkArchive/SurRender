@@ -29,7 +29,7 @@ typedef union {
 enum SR_BlendingModes {
 	/* Directly XOR the RGB channels without mutating the alpha */
 	SR_BLEND_DIRECT_XOR,
-	/* XOR all RGB values */
+	/* XOR all RGB values after multiplying them */
 	SR_BLEND_XOR,
 	/* Like additive blending, but doesn't change base alpha and doesn't
 	 * multiply values. Can overflow. Use it to paint colour onto black.
@@ -86,7 +86,8 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 {
 	SR_RGBAPixel final;
 
-	if (mode > SR_BLEND_ADDITIVE) goto srbl_nomul;
+	if (mode == SR_BLEND_ADDITIVE ||
+	    mode == SR_BLEND_XOR) goto srbl_nomul;
 
 	U8 alpha_mul, alpha_mul_neg;
 	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
