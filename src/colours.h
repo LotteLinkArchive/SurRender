@@ -75,9 +75,7 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	return temp;
 }
 
-/* Blend RGBA values */
-/* Use mode provided by SR_BlendingModes */
-/* Usually, you'll want to set alpha_modifier to 255. */
+/* Blend singular RGBA values as fast as possible */
 inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	SR_RGBAPixel pixel_base,
 	SR_RGBAPixel pixel_top,
