@@ -91,7 +91,7 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	merge.uparts.right = pixel_top.whole;
 	merge.uparts.left  = pixel_base.whole;
 
-	#define PREALPHA alpha_mul = (((U16)merge.srparts.right.chn.alpha * alpha_modifier) >> 8);
+	#define PREALPHA alpha_mul = ((((U16)merge.srparts.right.chn.alpha * alpha_modifier) + 255) >> 8);
 
 	#define PREMULTIPLY \
 	PREALPHA \
