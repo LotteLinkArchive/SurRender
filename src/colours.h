@@ -27,8 +27,14 @@ typedef union {
 } SR_RGBADoublePixel;
 
 enum SR_BlendingModes {
+	/* Directly XOR the RGB channels without mutating the alpha */
+	SR_BLEND_DIRECT_XOR,
 	/* XOR all RGB values */
 	SR_BLEND_XOR,
+	/* Like additive blending, but doesn't change base alpha and doesn't
+	 * multiply values. Can overflow. Use it to paint colour onto black.
+	 */
+	SR_BLEND_ADDITIVE_PAINT,
 	/* Add RGB values together with clamping */
 	SR_BLEND_ADDITIVE,
 	/* Rounded overlay approach (fastest) */
@@ -45,14 +51,8 @@ enum SR_BlendingModes {
 	 * This is very useful for rendering fonts into a temporary canvas quickly.
 	 */
 	SR_BLEND_REPLACE_WALPHA_MOD,
-	/* Directly XOR the RGB channels without mutating the alpha */
-	SR_BLEND_DIRECT_XOR,
 	/* Directly XOR EVERYTHING (RGBA) without mutating the alpha */
 	SR_BLEND_DIRECT_XOR_ALL,
-	/* Like additive blending, but doesn't change base alpha and doesn't
-	 * multiply values. Can overflow. Use it to paint colour onto black.
-	 */
-	SR_BLEND_ADDITIVE_PAINT,
 	/* Depending on the alpha value of the top layer, invert the base colours */
 	SR_BLEND_INVERTED_DRAW,
 	/* Keep the bottom's alpha but use the top's RGB values */
