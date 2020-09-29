@@ -86,24 +86,16 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 {
 	SR_RGBAPixel final;
 
-	U8 alpha_mul, alpha_mul_neg;
-	union {
-		U8x8 vec;
-		U64 whole;
-	} buffer;
-	SR_RGBADoublePixel merge;
+	SR_RGBADoublePixel buffer, merge;
 
 	#define PREMULTIPLY \
-	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8; \
-	alpha_mul_neg = ~alpha_mul; \
-	buffer.whole = ( \
-		 0xFF000000FF000000 | \
-		(0x0000000000010101 * alpha_mul_neg) | \
-		(0x0001010100000000 * alpha_mul)); \
+	buffer.whole = 0xFF00000000000000 | (0x0001010100010101 * (((U16)pixel_top.chn.alpha * alpha_modifier) >> 8)); \
+	buffer.uparts.left = ~buffer.uparts.left; \
 	merge.uparts.right = pixel_top.whole; \
 	merge.uparts.left  = pixel_base.whole; \
 	merge.splitvec = hcl_vector_convert((( \
-		hcl_vector_convert(buffer.vec, U16x8) * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8); \
+		hcl_vector_convert(buffer.splitvec, U16x8)  * \
+		hcl_vector_convert(merge.splitvec , U16x8)) + 255) >> 8, U8x8); \
 	pixel_top.whole  = merge.uparts.right; \
 	pixel_base.whole = merge.uparts.left;
 
@@ -156,6 +148,8 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 
 		break;
 	}
+
+	#undef PREMULTIPLY
 
 	return final;
 }
