@@ -223,12 +223,14 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * |-------------------------------------/ |-------------------------------------/ sU16x16x2
 	 * C1                                      C2 ...
 	 * 
-	 * S T E P S
-	 *  > Load 16 base pixels into Pixel Buffer A's sU32x16 union type.
-	 *  > Load 16 top  pixels into Pixel Buffer B's sU32x16 union type.
-	 *  > 
+	 * S T O R A G E   S T E P S
+	 *  > Load 8 base pixels into Pixel Buffer A's sU32x16 union type.
+	 *  > Load 8 top  pixels into Pixel Buffer B's sU32x16 union type.
+     *    * Only 8 pixels are loaded in each case because we may need to extend the width of
+     *      each channel from 8 bits to 16 bits!
+	 *  
 	 */
-	union {
+	typedef union {
 		U8x64  sU8x64;
 		U16x32 sU16x32;
 		U64x8  sU64x8;
@@ -241,17 +243,41 @@ X0 SR_MergeCanvasIntoCanvas(
 			U16x16 c1;
 			U16x16 c2;
 		} sU16x16x2;
-	} pixbuf;
+	} pixbuf_t;
 
+	/*
 	U16 x, y;
 	for (x = 0; x < src_canvas->width; x++)
 	for (y = 0; y < src_canvas->height; y++) {
-		/* Uses the function for blending individual RGBA values. */
 		SR_CanvasSetPixel(dest_canvas, x + paste_start_x, y + paste_start_y, SR_RGBABlender(
 			SR_CanvasGetPixel(dest_canvas, x + paste_start_x, y + paste_start_y),
 			SR_CanvasGetPixel(src_canvas, x, y),
 			alpha_modifier, mode));
 	}
+	*/
+
+	U16 x, y, dposx, dposy, srcposx, srcposy;
+	pixbuf_t srcbuf, destbuf;
+	#define CLUMPS (sizeof(srcbuf.sU8x32x2.c1) / 4)
+	for (x = 0; x < src_canvas->width / CLUMPS; x++)
+	for (y = 0; y < src_canvas->height; y++) {
+		srcposx = x * CLUMPS;
+		dposx = srcposx + paste_start_x;
+		dposy = y + paste_start_y;
+		memcpy(
+			&srcbuf.sU8x32x2.c1,
+			&src_canvas->pixels[SR_CanvasCalcPosition(src_canvas, x, y)],
+			sizeof(srcbuf.sU8x32x2.c1));
+		memcpy(
+			&srcbuf.sU8x32x2.c2,
+			&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, x + dposx, y + dposy)],
+			sizeof(srcbuf.sU8x32x2.c2));
+		memcpy(
+			&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, x + dposx, y + dposy)],
+			&srcbuf.sU8x32x2.c1,
+			sizeof(srcbuf.sU8x32x2.c1));
+	}
+	#undef CLUMPS
 }
 
 /* Private */
