@@ -281,20 +281,30 @@ X0 SR_MergeCanvasIntoCanvas(
 				&dest_canvas->pixels[idt], /* base */
 				sizeof(pixbuf_t));
 			
+			#define PREALPHA\
+			destbuf.sU32x16 = ((\
+				((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8\
+			) * 0x00010101);
+
+			#define PREMULTIPLY\
+			PREALPHA\
+			srcAbuf.sU8x64 &=  destbuf.sU8x64;\
+			srcBbuf.sU8x64 &= ~destbuf.sU8x64;
+
 			switch (mode) {
+			case SR_BLEND_XOR:
+				PREMULTIPLY
+			case SR_BLEND_DIRECT_XOR:
+				destbuf.sU32x16 = srcBbuf.sU32x16 ^ (srcAbuf.sU32x16 & 0x00FFFFFF);
+
+				break;
 			case SR_BLEND_OVERLAY:
 			case SR_BLEND_ADDITIVE:
-				/* alpha_mul */
-				destbuf.sU32x16 = ((
-					((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8
-				) * 0x00010101);
-				
-				srcAbuf.sU8x64 &= destbuf.sU8x64;
-
-				/* alpha_mul_neg */
-				srcBbuf.sU8x64 &= ~destbuf.sU8x64;
-
+				PREMULTIPLY
+			case SR_BLEND_ADDITIVE_PAINT:
 				destbuf.sU32x16 = srcBbuf.sU32x16 & 0xFF000000;
+
+				srcAbuf.sU32x16 &= 0x00FFFFFF;
 				srcBbuf.sU32x16 &= 0x00FFFFFF;
 				destbuf.sU8x64 |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
 
@@ -303,11 +313,37 @@ X0 SR_MergeCanvasIntoCanvas(
 				destbuf = srcAbuf;
 
 				break;
+			case SR_BLEND_INVERT_DROP:
+				srcAbuf.sU64x8 = ~srcAbuf.sU64x8; 
+			case SR_BLEND_DROP:
+				destbuf.sU32x16 = (srcBbuf.sU32x16 & 0x00FFFFFF) | (srcAbuf.sU32x16 & 0xFF000000);
+
+				break;
+			case SR_BLEND_REPLACE_WALPHA_MOD:
+				PREALPHA
+				destbuf.sU32x16 = (srcAbuf.sU32x16 & 0x00FFFFFF) | ((destbuf.sU32x16 & 0xFF) << 24);
+
+				break;
+			case SR_BLEND_DIRECT_XOR_ALL:
+				destbuf.sU64x8 = srcAbuf.sU64x8 ^ srcBbuf.sU64x8;
+
+				break;
+			case SR_BLEND_INVERTED_DRAW:
+				PREALPHA
+				destbuf.sU8x64 = srcBbuf.sU8x64 - destbuf.sU8x64;
+
+				break;
+			case SR_BLEND_PAINT:
+				destbuf.sU32x16 = (srcBbuf.sU32x16 & 0xFF000000) | (srcAbuf.sU32x16 & 0x00FFFFFF);
+
+				break;
 			default:
 				memset(&destbuf, 0, sizeof(pixbuf_t));
 
 				break;
 			}
+
+			#undef PREMULTIPLY
 
 			/* Copy the final product clump into the destination canvas.
 			 * TODO: Avoid using memcpy? Align bytes? Do something about fstate, somehow? */
