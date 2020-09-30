@@ -207,8 +207,8 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode)
 {
-	/* Alpha Blending with AVX-512 x86_64 Processor Instructions
-	 * ---------------------------------------------------------
+	/* Canvas Blending/Merging with AVX-512 x86_64 Processor Instructions
+	 * ------------------------------------------------------------------
 	 * 
 	 * Z M M   R E G I S T E R   F O R M A T
 	 * .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... sU8x64
@@ -223,6 +223,8 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * |-------------------------------------/ |-------------------------------------/ sU16x16x2
 	 * C1                                      C2 ...
 	 * 
+	 * Intended to use AVX-512 to blend 16 pixels simultaneously. On some machines, it may have
+	 * to fallback to using standard AVX or even previous SSE instructions.
 	 */
 	typedef union {
 		U8x64  sU8x64;
