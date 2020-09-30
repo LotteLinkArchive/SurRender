@@ -256,26 +256,47 @@ X0 SR_MergeCanvasIntoCanvas(
 	}
 	*/
 
-	U16 x, y, dposx, dposy, srcposx, srcposy;
-	pixbuf_t srcbuf, destbuf;
-	#define CLUMPS (sizeof(srcbuf.sU8x32x2.c1) / 4)
-	for (x = 0; x < src_canvas->width / CLUMPS; x++)
-	for (y = 0; y < src_canvas->height; y++) {
+	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate;
+	pixbuf_t srcAbuf, srcBbuf, destbuf;
+	#define CLUMPS (sizeof(pixbuf_t) / 4)
+	emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
+	fsub = (emax * CLUMPS) - src_canvas->width;
+	for (x = 0; x < emax; x++) {
 		srcposx = x * CLUMPS;
-		dposx = srcposx + paste_start_x;
-		dposy = y + paste_start_y;
-		memcpy(
-			&srcbuf.sU8x32x2.c1,
-			&src_canvas->pixels[SR_CanvasCalcPosition(src_canvas, x, y)],
-			sizeof(srcbuf.sU8x32x2.c1));
-		memcpy(
-			&srcbuf.sU8x32x2.c2,
-			&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, x + dposx, y + dposy)],
-			sizeof(srcbuf.sU8x32x2.c2));
-		memcpy(
-			&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, x + dposx, y + dposy)],
-			&srcbuf.sU8x32x2.c1,
-			sizeof(srcbuf.sU8x32x2.c1));
+		dposx   = srcposx + paste_start_x;
+		fstate  = x + 1 == emax ? sizeof(pixbuf_t) - fsub : sizeof(pixbuf_t);
+		for (y = 0; y < src_canvas->height; y++) {
+			dposy = y + paste_start_y;
+			memcpy(
+				&srcAbuf.sU8x64,
+				&src_canvas->pixels[SR_CanvasCalcPosition(src_canvas, srcposx, y)],
+				sizeof(pixbuf_t));
+			memcpy(
+				&srcBbuf.sU8x64,
+				&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, dposx, dposy)],
+				sizeof(pixbuf_t));
+			
+			switch (mode) {
+			case SR_BLEND_OVERLAY:
+			case SR_BLEND_ADDITIVE:
+
+
+				break;
+			case SR_BLEND_REPLACE:
+				destbuf.sU8x64 = srcAbuf.sU8x64;
+
+				break;
+			default:
+				memset(&destbuf.sU8x64, 0, sizeof(pixbuf_t));
+
+				break;
+			}
+
+			memcpy(
+				&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, dposx, dposy)],
+				&destbuf.sU8x64,
+				fstate);
+		}
 	}
 	#undef CLUMPS
 }
