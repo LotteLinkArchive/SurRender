@@ -139,13 +139,12 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 #undef SR_MXCS_P1
 
 /* Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates. */
-#define SR_CanvasCalcPosition(canvas, x, y) (\
-	((canvas)->rwidth * (modlut[(canvas)->rheight][\
-			(modlut[(canvas)->cheight][(y) & SR_MAX_CANVAS_SIZE] + (canvas)->yclip) & SR_MAX_CANVAS_SIZE])\
-	) + (\
-		modlut[(canvas)->rwidth ][\
-			(modlut[(canvas)->cwidth ][(x) & SR_MAX_CANVAS_SIZE] + (canvas)->xclip) & SR_MAX_CANVAS_SIZE])\
-)
+#define SR_AxisPositionCRCTRM(a, b, c, d) (modlut[(a)][\
+	(modlut[(b)][(c) & SR_MAX_CANVAS_SIZE] + (d)) & SR_MAX_CANVAS_SIZE])
+#define SR_CombnAxisPosCalcXY(canvas, x, y) ((canvas)->rwidth * y) + x
+#define SR_CanvasCalcPosition(canvas, x, y) SR_CombnAxisPosCalcXY((canvas), \
+	SR_AxisPositionCRCTRM((canvas)->rwidth, (canvas)->cwidth, (x), (canvas)->xclip), \
+	SR_AxisPositionCRCTRM((canvas)->rheight, (canvas)->cheight, (y), (canvas)->yclip))
 
 /* Set the value of a pixel in the canvas */
 #define SR_CanvasSetPixel(canvas, x, y, pixel) (canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))] =\

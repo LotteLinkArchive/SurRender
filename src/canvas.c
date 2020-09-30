@@ -223,12 +223,6 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * |-------------------------------------/ |-------------------------------------/ sU16x16x2
 	 * C1                                      C2 ...
 	 * 
-	 * S T O R A G E   S T E P S
-	 *  > Load 8 base pixels into Pixel Buffer A's sU32x16 union type.
-	 *  > Load 8 top  pixels into Pixel Buffer B's sU32x16 union type.
-     *    * Only 8 pixels are loaded in each case because we may need to extend the width of
-     *      each channel from 8 bits to 16 bits!
-	 *  
 	 */
 	typedef union {
 		U8x64  sU8x64;
@@ -245,60 +239,87 @@ X0 SR_MergeCanvasIntoCanvas(
 		} sU16x16x2;
 	} pixbuf_t;
 
-	/*
-	U16 x, y;
-	for (x = 0; x < src_canvas->width; x++)
-	for (y = 0; y < src_canvas->height; y++) {
-		SR_CanvasSetPixel(dest_canvas, x + paste_start_x, y + paste_start_y, SR_RGBABlender(
-			SR_CanvasGetPixel(dest_canvas, x + paste_start_x, y + paste_start_y),
-			SR_CanvasGetPixel(src_canvas, x, y),
-			alpha_modifier, mode));
-	}
-	*/
-
-	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate;
+	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate, isx, isy, idx, idy;
+	U32 ist, idt;
 	pixbuf_t srcAbuf, srcBbuf, destbuf;
-	#define CLUMPS (sizeof(pixbuf_t) / 4)
+
+	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
+	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
+
+	/* emax represents the total number of clumps in each row of the source canvas */
 	emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
-	fsub = (emax * CLUMPS) - src_canvas->width;
+
+	/* fsub represnts the number of extra pixels in each clumped row, e.g a 125 pixel row with 16-pixel clumps
+	 * would have 3 extra pixels that should not be overwritten */
+	fsub = ((emax * CLUMPS) - src_canvas->width) * sizeof(SR_RGBAPixel);
+
 	for (x = 0; x < emax; x++) {
+		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
+		 * pointless calculations */
 		srcposx = x * CLUMPS;
 		dposx   = srcposx + paste_start_x;
 		fstate  = x + 1 == emax ? sizeof(pixbuf_t) - fsub : sizeof(pixbuf_t);
+		isx     = SR_AxisPositionCRCTRM(src_canvas->rwidth , src_canvas->cwidth , srcposx, src_canvas->xclip );
+		idx     = SR_AxisPositionCRCTRM(dest_canvas->rwidth, dest_canvas->cwidth, dposx  , dest_canvas->xclip);
+
 		for (y = 0; y < src_canvas->height; y++) {
+			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
+			 * positions now, however. */
 			dposy = y + paste_start_y;
-			memcpy(
-				&srcAbuf.sU8x64,
-				&src_canvas->pixels[SR_CanvasCalcPosition(src_canvas, srcposx, y)],
+			isy = SR_AxisPositionCRCTRM(
+				src_canvas->rheight , src_canvas->cheight , y    , src_canvas->yclip );
+			idy = SR_AxisPositionCRCTRM(
+				dest_canvas->rheight, dest_canvas->cheight, dposy, dest_canvas->yclip);
+			ist = SR_CombnAxisPosCalcXY(src_canvas , isx, isy);
+			idt = SR_CombnAxisPosCalcXY(dest_canvas, idx, idy);
+
+			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
+			memcpy(	&srcAbuf,
+				&src_canvas->pixels[ist],  /* top */
 				sizeof(pixbuf_t));
-			memcpy(
-				&srcBbuf.sU8x64,
-				&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, dposx, dposy)],
+			memcpy(	&srcBbuf,
+				&dest_canvas->pixels[idt], /* base */
 				sizeof(pixbuf_t));
 			
 			switch (mode) {
 			case SR_BLEND_OVERLAY:
 			case SR_BLEND_ADDITIVE:
+				/* alpha_mul */
+				destbuf.sU32x16 = ((
+					((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8
+				) * 0x00010101);
+				
+				srcAbuf.sU8x64 &= destbuf.sU8x64;
 
+				/* alpha_mul_neg */
+				srcBbuf.sU8x64 &= ~destbuf.sU8x64;
+
+				destbuf.sU32x16 = srcBbuf.sU32x16 & 0xFF000000;
+				srcBbuf.sU32x16 &= 0x00FFFFFF;
+				destbuf.sU8x64 |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
 
 				break;
 			case SR_BLEND_REPLACE:
-				destbuf.sU8x64 = srcAbuf.sU8x64;
+				destbuf = srcAbuf;
 
 				break;
 			default:
-				memset(&destbuf.sU8x64, 0, sizeof(pixbuf_t));
+				memset(&destbuf, 0, sizeof(pixbuf_t));
 
 				break;
 			}
 
-			memcpy(
-				&dest_canvas->pixels[SR_CanvasCalcPosition(dest_canvas, dposx, dposy)],
-				&destbuf.sU8x64,
+			/* Copy the final product clump into the destination canvas.
+			 * TODO: Avoid using memcpy? Align bytes? Do something about fstate, somehow? */
+			memcpy(	&dest_canvas->pixels[idt],
+				&destbuf,
 				fstate);
 		}
 	}
+
 	#undef CLUMPS
+
+	return;
 }
 
 /* Private */
