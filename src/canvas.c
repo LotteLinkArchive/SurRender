@@ -286,6 +286,7 @@ X0 SR_MergeCanvasIntoCanvas(
 				((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8\
 			) * 0x00010101);
 
+			/* TODO: Fix premultiply, because it isn't actually multiplying! */
 			#define PREMULTIPLY\
 			PREALPHA\
 			srcAbuf.sU8x64 &=  destbuf.sU8x64;\
@@ -299,6 +300,7 @@ X0 SR_MergeCanvasIntoCanvas(
 
 				break;
 			case SR_BLEND_OVERLAY:
+				/* TODO: Implement actual overlay mode? */
 			case SR_BLEND_ADDITIVE:
 				PREMULTIPLY
 			case SR_BLEND_ADDITIVE_PAINT:
