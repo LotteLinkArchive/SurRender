@@ -51,6 +51,9 @@ make CFLAGS='-Ofast -march=native -mtune=native' clean all
 # ALTERNATIVELY: Perform a clean-build of the project (Small, compatible and fast build)
 make CFLAGS='-Os -march=core2 -mtune=generic' clean all
 
+# ALTERNATIVELY: Perform a clean-build of the project (Extremely fast, intended for Zen2+, Uses Clang)
+make CFLAGS='-Ofast -march=znver2 -mtune=znver2 -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mavx2' CC='clang' clean all
+
 # ALTERNATIVELY: Perform a clean-build of the project (Debug build)
 make CFLAGS='-g -Og' clean all
 
@@ -61,6 +64,12 @@ make CFLAGS='-g -Og' clean all
 # TODO: Explain this step more!
 make install
 ```
+
+**Note**: It is recommended to use [Clang](https://clang.llvm.org/) rather  than [GCC](https://gcc.gnu.org/), primarly because it seems like Clang is far better at optimizing vector-related code (of which SurRender uses quite heavily) than GCC is. You will see bigger benefits depending on how many vector instructions your processor supports. Although SurRender has not been tested on an ARM processor, ARM NEON looks like it could offer some extremely large performance benefits for SurRender.
+
+**Note**: In order to use Clang, simply install it and feed `CC='clang'` into `./configure` or `make` as an argument, as demonstrated above.
+
+**Note**: If you're wondering why Clang is better for vector operations, take a look at an assembly output example [like this](https://godbolt.org/z/4f6eP6). It just seems like Clang is better at handling non-intrinsic (cross-platform) vector operations in many cases. GCC seems to produce massive amounts of wasted cycles seemingly by accident. GCC especially seems to struggle when performing an arithmetic operation between a vector and a scalar value (Even a literal scalar value). Clang usually handles this with ease, however. They both struggle horribly with examples [like this one](https://godbolt.org/z/We65fn), to the point where neither of them produces particularly efficient code. Things get a lot better if you use vector sizes that are natively supported. If you don't, both compilers still do a pretty good job, but can have accidental breakdowns in certain edge cases.
 
 ### Using SurRender as a Git submodule
 
