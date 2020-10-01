@@ -341,10 +341,6 @@ X0 SR_MergeCanvasIntoCanvas(
 				destbuf.sU32x16 = (srcBbuf.sU32x16 & 0xFF000000) | (srcAbuf.sU32x16 & 0x00FFFFFF);
 
 				break;
-			default:
-				memset(&destbuf, 0, sizeof(pixbuf_t));
-
-				break;
 			}
 
 			#undef PREMULTIPLY
