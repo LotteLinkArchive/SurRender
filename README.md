@@ -140,6 +140,6 @@ At the time of writing, SurRender performed at the following speeds on the follo
 
 | Processor | Memory | Demo | Framerate | Percentage of 60 Hz V. Sync | Compiler |
 | - | - | - | - | - | - |
-| [AMD Ryzen 5 3600 6-Core Processor](http://www.cpu-world.com/CPUs/Zen/AMD-Ryzen%205%203600.html) @ 3.6 GHz | *2x* [CMK32GX4M2D3000C16](https://www.corsair.com/us/en/Categories/Products/Memory/VENGEANCE%C2%AE-LPX-32GB-%282-x-16GB%29-DDR4-DRAM-3000MHz-C16-Memory-Kit---Black/p/CMK32GX4M2D3000C16) @ 3000 MT/s | [Atlas](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 6225 fps | 10375% | Clang |
-| *Ditto* | *Ditto* | [Puck](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 410 fps | 683% | Clang |
-| *Ditto* | *Ditto* | [Doki](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 3340 fps | 5566% | Clang |
+| [AMD Ryzen 5 3600 6-Core Processor](http://www.cpu-world.com/CPUs/Zen/AMD-Ryzen%205%203600.html) @ 3.6 GHz | *2x* [CMK32GX4M2D3000C16](https://www.corsair.com/us/en/Categories/Products/Memory/VENGEANCE%C2%AE-LPX-32GB-%282-x-16GB%29-DDR4-DRAM-3000MHz-C16-Memory-Kit---Black/p/CMK32GX4M2D3000C16) @ 3000 MT/s | [Atlas](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 6225 fps | 10375% | Clang 10.0.0 |
+| *Ditto* | *Ditto* | [Puck](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 410 fps | 683% | *Ditto* |
+| *Ditto* | *Ditto* | [Doki](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 3340 fps | 5566% | *Ditto* |
