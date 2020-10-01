@@ -132,6 +132,8 @@ Please post any bugs and feature requests under the [issues tab](https://git.lot
 
 The project currently lacks official documentation, but we may add some information and guidance to the Gitea Wiki section. For now, read the comments in the header files. They are VERY verbose, and there are a lot of them. It should be fairly easy to understand the majority of the library's interface(s).
 
+**Note:** If you're looking for a place to start, I would reccomend [canvas.h](https://git.lotte.link/naphtha/SurRender/src/branch/master/src/canvas.h). You should also take a look at some of the demo code [here](https://git.lotte.link/naphtha/SurRender/src/branch/master/demo.c).
+
 ## Performance
 
 At the time of writing, SurRender performed at the following speeds on the following hardware...
