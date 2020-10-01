@@ -71,6 +71,8 @@ make install
 
 **Note**: If you're wondering why Clang is better for vector operations, take a look at an assembly output example [like this](https://godbolt.org/z/4f6eP6). It just seems like Clang is better at handling non-intrinsic (cross-platform) vector operations in many cases. GCC seems to produce massive amounts of wasted cycles seemingly by accident. GCC especially seems to struggle when performing an arithmetic operation between a vector and a scalar value (Even a literal scalar value). Clang usually handles this with ease, however. They both struggle horribly with examples [like this one](https://godbolt.org/z/We65fn), to the point where neither of them produces particularly efficient code. Things get a lot better if you use vector sizes that are natively supported. If you don't, both compilers still do a pretty good job, but can have accidental breakdowns in certain edge cases.
 
+**Note:** See [this Godbolt demonstration](https://godbolt.org/z/ehbYo3) to see the difference between GCC's implementation of the `SR_MergeCanvasIntoCanvas` function and Clang's implementation of it. You will find the results quite eye-opening! Clang's generated code is faster in almost every section except for the final call to `memcpy`, which probably could've been inlined.
+
 ### Using SurRender as a Git submodule
 
 You can add SurRender to your Git repository as a submodule like so...
@@ -129,3 +131,13 @@ Please post any bugs and feature requests under the [issues tab](https://git.lot
 ## Documentation
 
 The project currently lacks official documentation, but we may add some information and guidance to the Gitea Wiki section. For now, read the comments in the header files. They are VERY verbose, and there are a lot of them. It should be fairly easy to understand the majority of the library's interface(s).
+
+## Performance
+
+At the time of writing, SurRender performed at the following speeds on the following hardware...
+
+| Processor | Memory | Demo | Framerate | Percentage of 60 Hz V. Sync | Compiler |
+| - | - | - | - | - | - |
+| [AMD Ryzen 5 3600 6-Core Processor](http://www.cpu-world.com/CPUs/Zen/AMD-Ryzen%205%203600.html) @ 3.6 GHz | *2x* [CMK32GX4M2D3000C16](https://www.corsair.com/us/en/Categories/Products/Memory/VENGEANCE%C2%AE-LPX-32GB-%282-x-16GB%29-DDR4-DRAM-3000MHz-C16-Memory-Kit---Black/p/CMK32GX4M2D3000C16) @ 3000 MT/s | [Atlas](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 6225 fps | 10375% | Clang |
+| *Ditto* | *Ditto* | [Puck](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 410 fps | 683% | Clang |
+| *Ditto* | *Ditto* | [Doki](https://git.lotte.link/naphtha/SurRender/src/commit/630ae6c72bb77aff29d450f003776f4f1449b697/demos.h) | 3340 fps | 5566% | Clang |
