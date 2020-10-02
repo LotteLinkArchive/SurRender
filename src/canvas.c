@@ -1,11 +1,58 @@
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
+#pragma intrinsic( memset, memcpy, memcmp )
 
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
 __extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
 #undef SR_MXCS_P1
+
+/* Private vector types, particularly used for alpha blending */
+typedef union {
+	U8x64  sU8x64;
+	U16x32 sU16x32;
+	U64x8  sU64x8;
+	U32x16 sU32x16;
+	struct {
+		U8x32  c1;
+		U8x32  c2;
+	} sU8x32x2;
+	struct {
+		U16x16 c1;
+		U16x16 c2;
+	} sU16x16x2;
+} pixbuf_t;
+
+typedef union {
+	U8x128 sU8x128;
+	U16x64 sU16x64;
+	U32x32 sU32x32;
+	struct {
+		U16x32 c1;
+		U16x32 c2;
+	} sU16x32x2;
+	struct {
+		pixbuf_t c1;
+		pixbuf_t c2;
+	} spixbuf_tx2;
+} bigpixbuf_t;
+
+typedef union {
+	U16x128 sU16x128;
+	struct {
+		U16x64 c1;
+		U16x64 c2;
+	} sU16x64x2;
+	struct {
+		U8x128 c1;
+		U8x128 c2;
+	} sU8x128x2;
+	struct {
+		bigpixbuf_t c1;
+		bigpixbuf_t c2;
+	} sbigpixbuf_tx2;
+} largepixbuf_t;
 
 X0 SR_FillModLUT(U16 moperand)
 {
@@ -226,24 +273,11 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * Intended to use AVX-512 to blend 16 pixels simultaneously. On some machines, it may have
 	 * to fallback to using standard AVX or even previous SSE instructions.
 	 */
-	typedef union {
-		U8x64  sU8x64;
-		U16x32 sU16x32;
-		U64x8  sU64x8;
-		U32x16 sU32x16;
-		struct {
-			U8x32  c1;
-			U8x32  c2;
-		} sU8x32x2;
-		struct {
-			U16x16 c1;
-			U16x16 c2;
-		} sU16x16x2;
-	} pixbuf_t;
 
 	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate, isx, isy, idx, idy;
 	U32 ist, idt;
 	pixbuf_t srcAbuf, srcBbuf, destbuf;
+	largepixbuf_t blendbufA, blendbufB;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
@@ -288,11 +322,15 @@ X0 SR_MergeCanvasIntoCanvas(
 				((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8\
 			) * 0x00010101);
 
-			/* TODO: Fix premultiply, because it isn't actually multiplying! */
 			#define PREMULTIPLY\
 			PREALPHA\
-			srcAbuf.sU8x64 &=  destbuf.sU8x64;\
-			srcBbuf.sU8x64 &= ~destbuf.sU8x64;
+			blendbufA.sU16x64x2.c1 = hcl_vector_convert( srcAbuf.sU8x64, U16x64);\
+			blendbufA.sU16x64x2.c2 = hcl_vector_convert( srcBbuf.sU8x64, U16x64);\
+			blendbufB.sU16x64x2.c1 = hcl_vector_convert( destbuf.sU8x64, U16x64);\
+			blendbufB.sU16x64x2.c2 = hcl_vector_convert(~destbuf.sU8x64, U16x64);\
+			blendbufA.sU16x128     = ((blendbufA.sU16x128 * blendbufB.sU16x128) + 0xFF) >> 8;\
+			srcAbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c1, U8x64);\
+			srcBbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c2, U8x64);
 
 			switch (mode) {
 			case SR_BLEND_XOR:
