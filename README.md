@@ -18,7 +18,9 @@ Many features are currently unfinished. We keep track of all of these unfinished
 
 Right now, SurRender is not very useful. 2D functions are partially completed, but 2D scenes and 3D scenes are completely missing. 2D ought to be fairly easy to implement, but 3D will be immensely difficult, and will require lots of help. We plan to allow for the use of multiple 3D rendering techniques, including both software rendering and OpenGL.
 
-## Environment
+## Compiling & Environment
+
+**Warning:** Before compiling, ensure you have everything listed in the "Dependencies" section of this document.
 
 If you'd like to contribute (or just use SurRender at all), you will need to set up the build environment. To do this...
 
@@ -107,6 +109,14 @@ In order to use SurRender, you'll need a few dependencies.
 
 * `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender as a Git submodule)**
 * [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH) **(bundled with SurRender as a Git submodule)**
+
+### Building
+
+* gcc *OR* clang
+* make
+* autotools
+* libtoolize
+* git
 
 ## Contributor Advice
 
