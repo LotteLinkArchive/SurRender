@@ -9,7 +9,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-// Demo specification
+/* Demo specification */
 #define SR_PCANVAS (convstate->primary_canvas)
 #include <demos.h>
 #ifndef SR_DEMO_PROG
@@ -18,7 +18,7 @@
 #define SR_DEMO_CLRF
 #endif
 
-// Lock priorities
+/* Lock priorities */
 typedef struct prio_lock {
 	pthread_cond_t cond;
 	pthread_mutex_t cv_mutex; /* Condition variable mutex */
@@ -68,13 +68,13 @@ void prio_unlock_high(prio_lock_t *prio_lock)
 	pthread_mutex_unlock(&prio_lock->cv_mutex);
 }
 
-// Time value time difference
+/* Time value time difference */
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
 	return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
 }
 
-// Allows for basic communication of important data between the demo thread and the main thread
+/* Allows for basic communication of important data between the demo thread and the main thread */
 typedef struct {
 	INAT threads_created;
 	INAT demo_status;
@@ -82,108 +82,116 @@ typedef struct {
 	prio_lock_t *sr_render_mutex;
 } demo_thread_state_t;
 
-// This is the thread all SurRender calculations are performed on for accurate performance measurements
+/* This is the thread all SurRender calculations are performed on for accurate performance measurements */
 X0 *DemoThread(X0 *state)
 {
 	demo_thread_state_t *convstate = (demo_thread_state_t *)state;
 	printf("SurRender performing calculations on Thread ID %d\n", convstate->threads_created);
 
+	#ifndef SR_DEMO_NO_FPS_COUNTER
+	U64 frames;
+	time_t laf, cur;
+
+	frames = 0;
+	laf = cur = time(NULL);
+	#endif
+
 	prio_lock_low(convstate->sr_render_mutex);
 	SR_DEMO_INIT
 	prio_unlock_low(convstate->sr_render_mutex);
-sr_event_loop:
-	// Check if the main thread has just exited, and clean up if it has
-	if (convstate->demo_status == 0xFF) goto sr_finish_loop;
 
-	prio_lock_low(convstate->sr_render_mutex);
-	SR_DEMO_LOOP
-	prio_unlock_low(convstate->sr_render_mutex);
+	while (convstate->demo_status != 255) {
+		prio_lock_low(convstate->sr_render_mutex);
+		SR_DEMO_LOOP
+		prio_unlock_low(convstate->sr_render_mutex);
 
-	#ifndef SR_DEMO_NO_FPS_COUNTER
-	static U64 frames = 0;
-	static time_t laf = 0;
-	static time_t cur = 0;
+		#ifndef SR_DEMO_NO_FPS_COUNTER
+		if ((cur = time(NULL)) >= laf + 2) {
+			printf("FPS: %llu AT %lld\n", frames >> 1, (I64)cur);
 
-	frames++;
-	cur = time(NULL);
-	if (((cur & 1) == 0) && (laf != cur)) {
-		printf("FPS: %llu AT %lld\n", frames >> 1, (I64)cur);
-
-		laf = cur;
-		frames = 0;
+			laf = cur;
+			frames = 0;
+		} else {
+			frames++;
+		}
+		#endif
 	}
-	#else
-	// Required to convince GCC not to optimize out this area of code. FFS.
-	asm volatile("" : : : "memory");
-	#endif
 
-	// Repeat the event loop
-	goto sr_event_loop;
-sr_finish_loop:
 	prio_lock_low(convstate->sr_render_mutex);
 	SR_DEMO_CLRF
 	prio_unlock_low(convstate->sr_render_mutex);
 
-	if (convstate->demo_status == 0x00)
-		convstate->demo_status = 0x01;
+	if (convstate->demo_status == 0)
+		convstate->demo_status = 1;
 	pthread_exit(NULL);
 }
 
-// Global demo state
-static demo_thread_state_t state = {
-	.threads_created = 0,
-	.demo_status     = 0
-};
+/* Global demo state */
+static demo_thread_state_t state;
 
-// This is the thread where all of the SDL2 work is done (the main thread), because SDL2 is slow
+/* This is the thread where all of the SDL2 work is done (the main thread), because SDL2 is slow */
 INAT main(X0)
 {
-	// Per frame timing
-	struct timeval t0;
-	struct timeval t1;
+	/* Per frame timing */
+	struct timeval t0, t1;
 	float elapsed;
 
-	// Return status code (0 = success)
-	INAT status = 0;
+	/* Create the initial canvas surface for use with SDL2, as well as declaring the window surface */
+	SDL_Surface *sdl_srcanv_surf, *sdl_window_surf;
 
-	// Information about the SurRender calculation thread
-	pthread_t SR_Thread;
-
-	// Render mutex initialization
-	prio_lock_t mmutex = PRIO_LOCK_INITIALIZER;
-	state.sr_render_mutex = &mmutex;
-
-	// Initialize the primary canvas in the global state
-	state.primary_canvas = SR_NewCanvas(640, 480);
-
-	// Fail if the primary canvas is not valid
-	if (!SR_CanvasIsValid(&state.primary_canvas)) {
-		status = 0xFF;
-		goto srdm_main_thread_exit;
-	}
-
-	void *buffercanvas = malloc(state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
-	if (!buffercanvas) {
-		status = 0x33;
-		goto sr_destroycanvas;
-	}
-
-	// Finally, if the canvas is valid, we can start doing SurRender stuff safely. Start the thread!
-	if (pthread_create(&SR_Thread, NULL, DemoThread, (X0 *)&state)) {
-		status = 0xAD;
-		goto sr_destroybufcanv;
-	} else state.threads_created++;
-
-	// Begin SDL initialization
+	/* Destination rectangle for blitting - changes whenever the window is resized */
+	SDL_Rect destrect;
 	SDL_Window *win;
 	SDL_Event ev;
 
+	float sdl_sr_aspect_ratio;
+
+	/* Return status code (0 = success) */
+	INAT status = 0;
+
+	void *buffercanvas;
+
+	/* Information about the SurRender calculation thread */
+	pthread_t SR_Thread;
+
+	/* Render mutex initialization */
+	prio_lock_t mmutex = PRIO_LOCK_INITIALIZER;
+
+	/* Initialize the primary canvas along with the global state */
+	state.primary_canvas  = SR_NewCanvas(640, 480);
+	state.sr_render_mutex = &mmutex;
+	state.threads_created = 0;
+	state.demo_status     = 0;
+
+	/* Fail if the primary canvas is not valid */
+	if (!SR_CanvasIsValid(&state.primary_canvas)) {
+		status = 1;
+		goto srdm_main_thread_exit;
+	}
+
+	if (!(buffercanvas = malloc(
+		  state.primary_canvas.rwidth 
+		* state.primary_canvas.rheight
+		* sizeof(SR_RGBAPixel)))) {
+		status = 2;
+		goto sr_destroycanvas;
+	}
+
+	/* Finally, if the canvas is valid, we can start doing SurRender stuff safely. Start the thread! */
+	if (pthread_create(&SR_Thread, NULL, DemoThread, (X0 *)&state)) {
+		status = 3;
+		goto sr_destroybufcanv;
+	}
+
+	state.threads_created++;
+
+	/* Begin SDL initialization */
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		status = 0x01;
+		status = 4;
 		goto sr_destroythrd;
 	}
 
-	// Create the primary SDL window
+	/* Create the primary SDL window */
 	if (!(win = SDL_CreateWindow(
 		"SurRender Demonstration and Testing Program",
 		SDL_WINDOWPOS_CENTERED,
@@ -191,38 +199,44 @@ INAT main(X0)
 		state.primary_canvas.width,
 		state.primary_canvas.height,
 		SDL_WINDOW_RESIZABLE))) {
-		status = 0x02;
+		status = 5;
 		goto sdl_quit;
 	}
 
-	// Create the initial canvas surface for use with SDL2, as well as declaring the window surface
-	SDL_Surface *sdl_srcanv_surf, *sdl_window_surf;
-	float sdl_sr_aspect_ratio;
-
 	if (!(sdl_srcanv_surf = SDL_CreateRGBSurfaceFrom(
-		buffercanvas, // Use the buffer canvas
+		buffercanvas, /* Use the buffer canvas */
 		state.primary_canvas.width,
 		state.primary_canvas.height,
-		32, // C. Depth
+		32, /* Color Depth */
 		state.primary_canvas.width * sizeof(SR_RGBAPixel),
-		0x000000FF, // Channel masks
+		0x000000FF, /* Channel masks (RGBA in this case) */
 		0x0000FF00,
 		0x00FF0000,
 		0xFF000000))) {
-		status = 0x04;
+		status = 6;
 		goto sdl_destroywin;
 	}
 
-	// Destination rectangle for blitting - changes whenever the window is resized
-	SDL_Rect destrect;
-	destrect.x = 0, destrect.y = 0,
-	destrect.w = state.primary_canvas.width, destrect.h = state.primary_canvas.height;
+	/* RODGER: Clear the destination rectangle */
+	destrect.x = 0;
+	destrect.y = 0;
+	destrect.w = state.primary_canvas.width;
+	destrect.h = state.primary_canvas.height;
 
-	// Get the window surface for blitting
-	if (!(sdl_window_surf = SDL_GetWindowSurface(win))) {
-		status = 0x05;
-		goto sdl_freesurf;
+	#define REFRESH_SDL_WINDOW_SURF(status_a, status_b)\
+	/* RODGER: Refresh the window surface handle  */\
+	if (!(sdl_window_surf = SDL_GetWindowSurface(win))) {\
+		status = status_a;\
+		goto sdl_freesurf;\
+	}\
+	\
+	/* Clear the window surface */\
+	if (SDL_FillRect(sdl_window_surf, NULL, SDL_MapRGB(sdl_window_surf->format, 0, 0, 0)) < 0) {\
+		status = status_b;\
+		goto sdl_freesurf;\
 	}
+
+	REFRESH_SDL_WINDOW_SURF(7, 8)
 event_loop:
 	gettimeofday(&t0, 0);
 	while (SDL_PollEvent(&ev)) {
@@ -233,74 +247,65 @@ event_loop:
 
 		if (ev.type == SDL_WINDOWEVENT)
 		if (ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-			// Perform fitting whenever the resolution changes
-			if (!(sdl_window_surf = SDL_GetWindowSurface(win))) {
-				status = 5;
-				goto sdl_freesurf;
-			}
+			REFRESH_SDL_WINDOW_SURF(9, 10)
 
+			/* Perform fitting whenever the resolution changes */
 			if ((float)ev.window.data1 / ev.window.data2 >= state.primary_canvas.ratio)
 				sdl_sr_aspect_ratio = (float)ev.window.data2 / state.primary_canvas.height;
 			else
 				sdl_sr_aspect_ratio = (float)ev.window.data1 / state.primary_canvas.width;
 
-			destrect.w = state.primary_canvas.width  * sdl_sr_aspect_ratio,
+			destrect.w = state.primary_canvas.width  * sdl_sr_aspect_ratio;
 			destrect.h = state.primary_canvas.height * sdl_sr_aspect_ratio;
 
-			destrect.x = (ev.window.data1 - destrect.w) * 0.5f,
+			destrect.x = (ev.window.data1 - destrect.w) * 0.5f;
 			destrect.y = (ev.window.data2 - destrect.h) * 0.5f;
 		}
 	}
 
-	// Fill the window surface with zeros
-	if (SDL_FillRect(sdl_window_surf, NULL, SDL_MapRGB(sdl_window_surf->format, 0, 0, 0)) < 0) {
-		status = 0x06;
-		goto sdl_freesurf;
-	}
-
-	// Blit between canvas surface and window surface (SLOW)
+	/* Blit between canvas surface and window surface (SLOW) */
 	prio_lock_high(state.sr_render_mutex);
-	memcpy(buffercanvas, state.primary_canvas.pixels,
-		state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
+		memcpy(buffercanvas, state.primary_canvas.pixels,
+			state.primary_canvas.rwidth * state.primary_canvas.rheight * sizeof(SR_RGBAPixel));
 	prio_unlock_high(state.sr_render_mutex);
-	if (SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect) < 0) {
-		status = 0x07;
-		goto sdl_freesurf;
-	}
 
-	// Update the window surface
-	if (SDL_UpdateWindowSurface(win) < 0) {
-		status = 0x08;
-		goto sdl_freesurf;
-	}
+	SDL_BlitScaled(sdl_srcanv_surf, NULL, sdl_window_surf, &destrect);
+	SDL_UpdateWindowSurface(win);
 
-	if (state.demo_status != 0x00) {
+	if (state.demo_status != 0) {
 		status = state.demo_status - 1;
 		goto sdl_freesurf;
 	}
 	gettimeofday(&t1, 0);
 
-	// Wait (60 FPS target)
-	SDL_Delay(abs((int)(17.0f - timedifference_msec(t0, t1))));
+	/* Wait (60 FPS target) */
+	SDL_Delay(abs((int)(20.0f - timedifference_msec(t0, t1))));
 
-	// Repeat event loop
+	/* Repeat event loop */
 	goto event_loop;
+
 sdl_freesurf:
 	SDL_FreeSurface(sdl_srcanv_surf);
+
 sdl_destroywin:
 	SDL_DestroyWindow(win);
+
 sdl_quit:
 	SDL_Quit();
+
 sr_destroythrd:
-	// Nicely ask the SurRender thread to exit
-	if (state.demo_status == 0x00)
-		state.demo_status = 0xFF;
+	/* Nicely ask the SurRender thread to exit */
+	if (state.demo_status == 0)
+		state.demo_status = 255;
 
 	pthread_join(SR_Thread, NULL);
+
 sr_destroybufcanv:
 	free(buffercanvas);
+
 sr_destroycanvas:
 	SR_DestroyCanvas(&state.primary_canvas);
+
 srdm_main_thread_exit:
 	pthread_exit(NULL);
 	return status;

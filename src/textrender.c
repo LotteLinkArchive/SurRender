@@ -21,7 +21,7 @@ SR_FontAtlas SR_MakeFontAtlas(
 	return temp;
 }
 
-X0 SR_PrintToCanvas(
+U16x4 SR_PrintToCanvas(
 	SR_FontAtlas *font,
 	SR_Canvas    *dest,
 	U16 *text,
@@ -29,9 +29,12 @@ X0 SR_PrintToCanvas(
 	U16 x,
 	U16 y,
 	U16 breakpoint,
-	U8  blendmode)
+	U8  blendmode,
+	U1  dry)
 {
 	U16 rootx = x;
+	U16 rooty = y;
+	U16 maxx = 0;
 
 	while (--length) {
 		U16 ucsc = *text++;
@@ -43,8 +46,9 @@ X0 SR_PrintToCanvas(
 			x =  rootx;
 		} 
 
-		if (ucsc == 0x000a || ucsc == 0x0009) continue;
-		if (ucsc == 0x0000) break;
+		if      (ucsc == 0x000a || ucsc == 0x0009) continue;
+		else if (ucsc == 0x0000)                   break;
+		else if (dry)                              goto sr_ptc_avoidwork;
 
 		SR_Canvas character = SR_RefCanvTile(
 			font->font,
@@ -67,10 +71,6 @@ X0 SR_PrintToCanvas(
 
 			if (!SR_CanvasIsValid(&temp)) break;
 
-			character = SR_CopyCanvas(&character, 0, 0, font->charwidth, font->charheight);
-
-			if (!SR_CanvasIsValid(&character)) break;
-
 			SR_CanvasScale(&character, &temp, font->rescalemode);
 			SR_DestroyCanvas(&character);
 
@@ -81,7 +81,13 @@ X0 SR_PrintToCanvas(
 			dest, &character, x, y, font->colour.chn.alpha, blendmode);
 
 		SR_DestroyCanvas(&character);
+sr_ptc_avoidwork:
 
 		x += font->rescalewidth + font->hpadding;
+		maxx = MAX(maxx, x);
 	}
+	y += font->rescaleheight;
+
+	U16x4  bbox = {rootx, rooty, maxx + rootx, y + rooty}; 
+	return bbox;
 }

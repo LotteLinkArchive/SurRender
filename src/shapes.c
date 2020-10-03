@@ -3,8 +3,8 @@
 #include "colours.h"
 #include "shapes.h"
 
-//copy pasted from:
-//https://gist.github.com/bert/1085538#file-plot_line-c-L9
+/*copy pasted from: */
+/*https://gist.github.com/bert/1085538#file-plot_line-c-L9 */
 X0 SR_DrawLine(
 	SR_Canvas *canvas,
 	SR_RGBAPixel colour,

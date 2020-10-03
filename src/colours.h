@@ -27,32 +27,39 @@ typedef union {
 } SR_RGBADoublePixel;
 
 enum SR_BlendingModes {
-	// XOR all RGB values
-	SR_BLEND_XOR,
-	// Add RGB values together with clamping
+	/* Add RGB values together with clamping and multiplication */
 	SR_BLEND_ADDITIVE,
-	// Rounded overlay approach (fastest)
-	SR_BLEND_OVERLAY,
-	// Replace base alpha with inverted top alpha
-	SR_BLEND_INVERT_DROP,
-	// Replace base alpha with top alpha
-	SR_BLEND_DROP,
-	// Replace entire top pixel with bottom pixel
-	SR_BLEND_REPLACE,
-	// Directly XOR the RGB channels without mutating the alpha
-	SR_BLEND_DIRECT_XOR,
-	// Directly XOR EVERYTHING (RGBA) without mutating the alpha
-	SR_BLEND_DIRECT_XOR_ALL,
-	// Like additive blending, but doesn't change base alpha and doesn't
-	// multiply values. Can overflow. Use it to paint colour onto black.
+	/* Like additive blending, but doesn't change base alpha and doesn't
+	 * multiply values. Can overflow. Use it to paint colour onto black.
+	 */
 	SR_BLEND_ADDITIVE_PAINT,
-	// Depending on the alpha value of the top layer, invert the base colours
+	/* XOR all RGB values after multiplying them */
+	SR_BLEND_XOR,
+	/* Directly XOR the RGB channels without mutating the alpha */
+	SR_BLEND_DIRECT_XOR,
+	/* Rounded overlay approach (fastest) */
+	SR_BLEND_OVERLAY,
+	/* Replace base alpha with inverted top alpha */
+	SR_BLEND_INVERT_DROP,
+	/* Replace base alpha with top alpha */
+	SR_BLEND_DROP,
+	/* Replace entire top pixel with bottom pixel */
+	SR_BLEND_REPLACE,
+	/* Replace entire top pixel with button pixel but use the alpha modifier of RGBABlender mutiplied by the
+	 * alpha of the top pixel.
+	 * 
+	 * This is very useful for rendering fonts into a temporary canvas quickly.
+	 */
+	SR_BLEND_REPLACE_WALPHA_MOD,
+	/* Directly XOR EVERYTHING (RGBA) without mutating the alpha */
+	SR_BLEND_DIRECT_XOR_ALL,
+	/* Depending on the alpha value of the top layer, invert the base colours */
 	SR_BLEND_INVERTED_DRAW,
-	// Keep the bottom's alpha but use the top's RGB values
+	/* Keep the bottom's alpha but use the top's RGB values */
 	SR_BLEND_PAINT
 };
 
-// Create an RGBA colour value.
+/* Create an RGBA colour value. */
 inline	__attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	U8 red,
 	U8 green,
@@ -68,9 +75,7 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_CreateRGBA(
 	return temp;
 }
 
-// Blend RGBA values
-// Use mode provided by SR_BlendingModes
-// Usually, you'll want to set alpha_modifier to 255.
+/* Blend singular RGBA values as fast as possible */
 inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	SR_RGBAPixel pixel_base,
 	SR_RGBAPixel pixel_top,
@@ -79,67 +84,74 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 {
 	SR_RGBAPixel final;
 
-	if (mode > SR_BLEND_ADDITIVE) goto srbl_nomul;
+	U32 alpha_mul;
+	SR_RGBADoublePixel buffer, merge;
+	merge.uparts.right = pixel_top.whole;
+	merge.uparts.left  = pixel_base.whole;
 
-	U8 alpha_mul, alpha_mul_neg;
-	alpha_mul     = ((U16)pixel_top.chn.alpha * alpha_modifier) >> 8;
-	alpha_mul_neg = ~alpha_mul;
+	#define PREALPHA alpha_mul = ((((U16)merge.srparts.right.chn.alpha * alpha_modifier) + 255) >> 8);
 
-	U16x8 buffer = {
-		alpha_mul_neg, alpha_mul_neg, alpha_mul_neg, 255,
-		alpha_mul,     alpha_mul,     alpha_mul,     255};
-	SR_RGBADoublePixel merge = {.uparts.right = pixel_top.whole, .uparts.left = pixel_base.whole};
+	#define PREMULTIPLY \
+	PREALPHA \
+	buffer.whole = (0xFF00000000000000 | (0x0001010100010101 * alpha_mul)) ^ 0x00000000FFFFFFFF; \
+	merge.splitvec = hcl_vector_convert((( \
+		hcl_vector_convert(buffer.splitvec, U16x8)  * \
+		hcl_vector_convert(merge.splitvec , U16x8)) + 255) >> 8, U8x8);
 
-	merge.splitvec = hcl_vector_convert(((
-		buffer * hcl_vector_convert(merge.splitvec, U16x8)) + 255) >> 8, U8x8);
-	pixel_top.whole  = merge.uparts.right;
-	pixel_base.whole = merge.uparts.left;
-
-srbl_nomul:
 	switch (mode) {
-	case SR_BLEND_DIRECT_XOR: // Mul skipped by goto srbl_nomul
-	case SR_BLEND_XOR: // Mul version
-		final.whole = pixel_base.whole ^ (pixel_top.whole & 0x00FFFFFF);
-
-		break;
-	default:
-	case SR_BLEND_ADDITIVE_PAINT:
 	case SR_BLEND_ADDITIVE:
-		final.whole = (
-			(pixel_base.whole & 0xFF000000) | (
-			(pixel_base.whole & 0x00FFFFFF) +
-			(pixel_top.whole  & 0x00FFFFFF)));
+		PREMULTIPLY
+	case SR_BLEND_ADDITIVE_PAINT:
+		final.whole  = merge.uparts.left & 0xFF000000;
+		merge.whole &= 0x00FFFFFF00FFFFFF;
+		final.whole |= merge.uparts.left + merge.uparts.right;
+		
+		break;
+	case SR_BLEND_XOR:
+		PREMULTIPLY
+	case SR_BLEND_DIRECT_XOR:
+		final.whole = merge.uparts.left ^ (merge.uparts.right & 0x00FFFFFF);
 
 		break;
 	case SR_BLEND_OVERLAY:
-		if (((U16)alpha_modifier * pixel_top.chn.alpha) >= 255)
-			final.whole  = (pixel_top.whole  & 0x00FFFFFF) | (pixel_base.whole & 0xFF000000);
-		else 	final.whole  = pixel_base.whole;
+		PREALPHA
+		buffer.uparts.left  = (merge.uparts.right & 0x00FFFFFF) | (merge.uparts.left & 0xFF000000);
+		buffer.uparts.right = merge.uparts.left;
+		final.whole = alpha_mul >= 1 ? buffer.uparts.left : buffer.uparts.right;
 
 		break;
 	case SR_BLEND_INVERT_DROP:
+		merge.uparts.right = ~merge.uparts.right;
 	case SR_BLEND_DROP:
-		final.whole = (pixel_base.whole & 0x00FFFFFF) | (
-			(mode == SR_BLEND_INVERT_DROP ? 0xFFFFFFFF : 0x00000000) ^ (pixel_top.whole  & 0xFF000000));
+		final.whole = (merge.uparts.left & 0x00FFFFFF) | (merge.uparts.right & 0xFF000000);
 
 		break;
 	case SR_BLEND_REPLACE:
-		final.whole = pixel_top.whole;
+		final.whole = merge.uparts.right;
+
+		break;
+	case SR_BLEND_REPLACE_WALPHA_MOD:
+		PREALPHA
+		final.whole = (merge.uparts.right & 0x00FFFFFF) | (alpha_mul << 24);
 
 		break;
 	case SR_BLEND_DIRECT_XOR_ALL:
-		final.whole = pixel_base.whole ^ pixel_top.whole;
+		final.whole = merge.uparts.left ^ merge.uparts.right;
 
 		break;
 	case SR_BLEND_INVERTED_DRAW:
-		final.whole = pixel_base.whole - ((((U16)pixel_top.chn.alpha * alpha_modifier) >> 8) * 0x00010101);
+		PREALPHA
+		final.whole = merge.uparts.left - (alpha_mul * 0x00010101);
 
 		break;
 	case SR_BLEND_PAINT:
-		final.whole = (pixel_base.whole & 0xFF000000) | (pixel_top.whole & 0x00FFFFFF);
+		final.whole = (merge.uparts.left & 0xFF000000) | (merge.uparts.right & 0x00FFFFFF);
 
 		break;
 	}
+
+	#undef PREMULTIPLY
+	#undef PREALPHA
 
 	return final;
 }

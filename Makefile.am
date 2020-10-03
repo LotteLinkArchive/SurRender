@@ -1,4 +1,5 @@
 AUTOMAKE_OPTIONS = foreign
+ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libsurrender.la
 libsurrender_la_SOURCES = src/2dscene.c src/canvas.c src/image.c src/selections.c src/shapes.c src/textrender.c

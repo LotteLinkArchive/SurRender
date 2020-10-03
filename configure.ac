@@ -45,5 +45,6 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([atexit floor getcwd memmove memset mkdir pow setlocale sqrt strchr strdup strrchr strstr strtol])
 
+AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
