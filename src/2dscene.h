@@ -12,13 +12,15 @@ typedef struct {
 	X0    *udata;
 	R32x3  pos;
 
-	/* Pointer to an array of pointers to canvases. Each index in the array leads to a pointer to a frame to use
-	 * for animating the 2D object. Index 0 is a pointer to the pointer for the first frame.
-	 */
-	SR_Canvas **sprites;
-	/* TODO: Replace this with a separate object */
+	/* This is the atlas used to get the correct tile texture for this 2D object. */
+	SR_AtlasCanvas atlas;
+	
+	/* The position of the tile in the atlas to use for this 2D object. */
+	U16 tilex;
+	U16 tiley;
 
-	/* Index in the sprite canvas array to use (0 for static sprites) */
-	SX drwindex;
+	/* The visual width and height of the 2D object. The object's texture will be tiled to this size. */
+	U32 width;
+	U32 height;
 } SR_2DObject;
 #endif

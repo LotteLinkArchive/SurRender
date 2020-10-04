@@ -62,6 +62,15 @@ typedef struct SR_OffsetCanvas {
 	SR_Canvas canvas;
 } SR_OffsetCanvas;
 
+/* An Atlas Canvas is a canvas supplied with a tile width and tile height to make it easier to retrieve tiles in a
+ * texture atlas.
+ */
+typedef struct SR_AtlasCanvas {
+	U16 twidth;
+	U16 theight;
+	SR_Canvas *canvas;
+} SR_AtlasCanvas;
+
 /* Bounding box */
 typedef union {
 	struct {
