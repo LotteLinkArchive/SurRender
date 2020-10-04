@@ -553,8 +553,6 @@ SR_OffsetCanvas SR_CanvasShear(
 	final.offset_x = mode ? 0 : -skew_amount;
 	final.offset_y = mode ? -skew_amount : 0;
 
-	/* TODO: Find some way to clean up the repetition here */
-
 	U16 x, y;
 	I32 mshift;
 
