@@ -12,8 +12,8 @@ typedef struct {
 	X0    *udata;
 	R32x3  pos;
 
-	/* This is the atlas used to get the correct tile texture for this 2D object. */
-	SR_AtlasCanvas atlas;
+	/* This is a pointer to the atlas used to get the correct tile texture for this 2D object. */
+	SR_AtlasCanvas *atlas;
 	
 	/* The position of the tile in the atlas to use for this 2D object. */
 	U16 tilex;
