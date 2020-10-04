@@ -586,7 +586,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	SR_RGBAPixel pixel, pixbuf;
 	SR_OffsetCanvas final;
 
-	/* There's no poI32 in considering unique values above 359. 360 -> 0 */
+	/* There's no point in considering unique values above 359. 360 -> 0 */
 	degrees = fmod(degrees, 360);
 
 	/* For simplicity's sake */
