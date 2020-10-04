@@ -16,6 +16,7 @@ typedef struct {
 	 * for animating the 2D object. Index 0 is a pointer to the pointer for the first frame.
 	 */
 	SR_Canvas **sprites;
+	/* TODO: Replace this with a separate object */
 
 	/* Index in the sprite canvas array to use (0 for static sprites) */
 	SX drwindex;
