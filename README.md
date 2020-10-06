@@ -1,4 +1,4 @@
-# SurRender ![Licensed under GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange) ![Written in C](https://img.shields.io/badge/language-C-lightgrey)
+# SurRender ![Licensed under LGPL-3.0](https://img.shields.io/badge/license-LGPL--3.0-orange) ![Written in C](https://img.shields.io/badge/language-C-lightgrey)
 
 <img src="https://git.lotte.link/naphtha/SurRender/raw/branch/master/images/logo.png" align="right"
      title="SurRender Logo" width="240">
