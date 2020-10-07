@@ -96,7 +96,7 @@ inline	__attribute__((always_inline)) SR_RGBAPixel SR_RGBABlender(
 	buffer.whole = (0xFF00000000000000 | (0x0001010100010101 * alpha_mul)) ^ 0x00000000FFFFFFFF; \
 	merge.splitvec = hcl_vector_convert((( \
 		hcl_vector_convert(buffer.splitvec, U16x8)  * \
-		hcl_vector_convert(merge.splitvec , U16x8)) + 255) >> 8, U8x8);
+		hcl_vector_convert(merge.splitvec , U16x8)) + (U16)255) >> 8, U8x8);
 
 	switch (mode) {
 	case SR_BLEND_ADDITIVE:

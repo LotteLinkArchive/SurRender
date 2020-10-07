@@ -1,4 +1,4 @@
-# SurRender ![Licensed under GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-orange) ![Written in C](https://img.shields.io/badge/language-C-lightgrey)
+# SurRender ![Licensed under LGPL-3.0](https://img.shields.io/badge/license-LGPL--3.0-orange) ![Written in C](https://img.shields.io/badge/language-C-lightgrey)
 
 <img src="https://git.lotte.link/naphtha/SurRender/raw/branch/master/images/logo.png" align="right"
      title="SurRender Logo" width="240">
@@ -117,6 +117,8 @@ In order to use SurRender, you'll need a few dependencies.
 * autotools
 * libtoolize
 * git
+
+**Warning**: This has only been tested on Clang 10.0.0+ and GCC 10.2.1+. Be careful what compiler version you use - many old versions lack the necessary vector extensions (and are generally very buggy). For example, if you're using a GNU/Linux distro that isn't particularly good (e.g Ubuntu), you are very likely going to be stuck with stone-age versions of Clang and GCC. At the time of writing, Ubuntu 18.04 provides only Clang version 3.8.1-24 in its respositories, which is incredibly old, and will not compile SurRender. Please use a GNU/Linux distro that isn't terrible, namely one that provides actual up-to-date packages. Try Artix, OpenSUSE, Fedora, Gentoo and anything else that isn't completely terrible.
 
 ## Contributor Advice
 

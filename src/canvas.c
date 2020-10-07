@@ -519,15 +519,13 @@ srnzbbx_found_first:
 			goto srnzbbx_bounded;
 		}
 
-	goto srnzbbx_no_end_in_sight; /* No last poI32 found - is this possible? */
+	goto srnzbbx_no_end_in_sight; /* No last point found - is this possible? */
 srnzbbx_no_end_in_sight:
 	bbox.named.ex = src->width - 1; bbox.named.ey = src->height - 1;
 srnzbbx_bounded:
 	return bbox; /* Return the box (er, I mean RETURN THE SLAB) */
 srnzbbx_empty:
-	/* We can return a null pointer if we believe the canvas is empty, making
-	 * it easier to check the state of a canvas.
-	 */
+	/* We can return a 0-size box if we believe there is nothing here. */
 	bbox.whole = 0;
 	goto srnzbbx_bounded;
 }
@@ -554,8 +552,6 @@ SR_OffsetCanvas SR_CanvasShear(
 
 	final.offset_x = mode ? 0 : -skew_amount;
 	final.offset_y = mode ? -skew_amount : 0;
-
-	/* TODO: Find some way to clean up the repetition here */
 
 	U16 x, y;
 	I32 mshift;
@@ -590,7 +586,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	SR_RGBAPixel pixel, pixbuf;
 	SR_OffsetCanvas final;
 
-	/* There's no poI32 in considering unique values above 359. 360 -> 0 */
+	/* There's no point in considering unique values above 359. 360 -> 0 */
 	degrees = fmod(degrees, 360);
 
 	/* For simplicity's sake */
