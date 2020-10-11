@@ -396,8 +396,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	return;
 }
 
-/* Private */
-X0 SR_BilinearCanvasScale(
+static X0 SR_BilinearCanvasScale(
 	SR_Canvas *src,
 	SR_Canvas *dest)
 {
@@ -443,8 +442,7 @@ X0 SR_BilinearCanvasScale(
 	#undef blerp
 }
 
-/* Private */
-X0 SR_NearestNeighborCanvasScale(
+static X0 SR_NearestNeighborCanvasScale(
 	SR_Canvas *src,
 	SR_Canvas *dest)
 {
