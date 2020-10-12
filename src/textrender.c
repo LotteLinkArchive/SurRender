@@ -41,12 +41,12 @@ U16x4 SR_PrintToCanvas(
 
 		if (ucsc == 0x0009) x += (font->rescalewidth * font->tabspaces) + (font->hpadding * font->tabspaces);
 
-		if (ucsc == 0x000a || (breakpoint != 0 && ((x - rootx) > (breakpoint - font->rescalewidth)))) {
+		if (ucsc == 0x000A || (breakpoint != 0 && ((x - rootx) > (breakpoint - font->rescalewidth)))) {
 			y += font->rescaleheight + font->vpadding;
 			x =  rootx;
 		} 
 
-		if      (ucsc == 0x000a || ucsc == 0x0009) continue;
+		if      (ucsc == 0x000A || ucsc == 0x0009) continue;
 		else if (ucsc == 0x0000)                   break;
 		else if (dry)                              goto sr_ptc_avoidwork;
 
