@@ -348,7 +348,7 @@ X0 SR_MergeCanvasIntoCanvas(
 
 				srcAbuf.sU32x16 &= 0x00FFFFFF;
 				srcBbuf.sU32x16 &= 0x00FFFFFF;
-				destbuf.sU8x64 |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
+				destbuf.sU8x64  |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
 
 				break;
 			case SR_BLEND_REPLACE:
