@@ -6,12 +6,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../libs/stb/stb_image.h"
 
-U8 * LD_Blob_STBI(X0 *data, SX length, I32 *x, I32 *y, I32 *n)
+static U8 * LD_Blob_STBI(X0 *data, SX length, I32 *x, I32 *y, I32 *n)
 {
 	return stbi_load_from_memory(data, length, x, y, n, 4);
 }
 
-SR_Canvas LD_STBICanv(U8 *image, I32 *x, I32 *y)
+static SR_Canvas LD_STBICanv(U8 *image, I32 *x, I32 *y)
 {
 	SR_Canvas temp = {
 		.pixels   = (SR_RGBAPixel *) image,
