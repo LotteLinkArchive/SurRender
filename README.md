@@ -47,17 +47,17 @@ git config pull.rebase false
 ./configure
 
 # Perform a clean-build of the project (Fastest output build)
-# For best results, use the latest version of GCC available.
-make CFLAGS='-Ofast -march=native -mtune=native' clean all
+# For best results, use the latest version of Clang available.
+make CFLAGS='-Ofast -march=native -mtune=native' CC='clang' clean all
 
 # ALTERNATIVELY: Perform a clean-build of the project (Small, compatible and fast build)
-make CFLAGS='-Os -march=core2 -mtune=generic' clean all
+make CFLAGS='-Os -march=core2 -mtune=generic' CC='clang' clean all
 
-# ALTERNATIVELY: Perform a clean-build of the project (Extremely fast, intended for Zen2+, Uses Clang)
+# ALTERNATIVELY: Perform a clean-build of the project (Extremely fast, intended for Zen2+)
 make CFLAGS='-Ofast -march=znver2 -mtune=znver2 -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mavx2' CC='clang' clean all
 
 # ALTERNATIVELY: Perform a clean-build of the project (Debug build)
-make CFLAGS='-g -Og' clean all
+make CFLAGS='-g -Og' CC='clang' clean all
 
 # Run the demo, if you'd like
 ./surdemo
