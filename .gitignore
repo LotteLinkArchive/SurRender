@@ -108,3 +108,4 @@ Makefile
 libtool
 .libs/
 surdemo
+img2srtex
