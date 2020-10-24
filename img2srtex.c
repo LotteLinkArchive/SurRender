@@ -39,10 +39,10 @@ I32 main(I32 argc, CHR *argv[])
 
 cexit:
 	if (!status) goto cexitntx;
-	printf(	"Software failure. (Guru Meditation #%08X)\n\n"
+	printf(	"Software failure. (Guru Meditation #%08X.%08X)\n\n"
 		"Usage: %s [INPUT_IMAGE_PATH](.jpg/.jpeg/.png/.bmp/...) [OUTPUT_TEXTURE](.srt)\n"
 		"Example: %s catpicture.png cattexture.srt\n"
-		, status, argv[0], argv[0]);
+		, status, (U32)&status, argv[0], argv[0]);
 cexitntx:
 	if (idata) free(idata);
 
