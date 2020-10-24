@@ -127,7 +127,7 @@ X0 *DemoThread(X0 *state)
 }
 
 /* Global demo state */
-static demo_thread_state_t state;
+static demo_thread_state_t state = {};
 
 /* This is the thread where all of the SDL2 work is done (the main thread), because SDL2 is slow */
 INAT main(X0)
@@ -158,16 +158,14 @@ INAT main(X0)
 	prio_lock_t mmutex = PRIO_LOCK_INITIALIZER;
 
 	/* Initialize the primary canvas along with the global state */
-	state.primary_canvas  = SR_NewCanvas(640, 480);
-	state.sr_render_mutex = &mmutex;
-	state.threads_created = 0;
-	state.demo_status     = 0;
-
-	/* Fail if the primary canvas is not valid */
-	if (!SR_CanvasIsValid(&state.primary_canvas)) {
+	if (SR_NewCanvas(&state.primary_canvas, 640, 480) != SR_NO_ERROR) {
 		status = 1;
 		goto srdm_main_thread_exit;
 	}
+
+	state.sr_render_mutex = &mmutex;
+	state.threads_created = 0;
+	state.demo_status     = 0;
 
 	if (!(buffercanvas = malloc(
 		  state.primary_canvas.rwidth 

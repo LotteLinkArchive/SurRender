@@ -67,9 +67,8 @@ U16x4 SR_PrintToCanvas(
 
 		if ((font->rescalewidth  != font->charwidth) ||
 			(font->rescaleheight != font->charheight)) {
-			SR_Canvas temp = SR_NewCanvas(font->rescalewidth, font->rescaleheight);
-
-			if (!SR_CanvasIsValid(&temp)) break;
+			SR_Canvas temp = {};
+			if (SR_NewCanvas(&temp, font->rescalewidth, font->rescaleheight) != SR_NO_ERROR) break;
 
 			SR_CanvasScale(&character, &temp, font->rescalemode);
 			SR_DestroyCanvas(&character);

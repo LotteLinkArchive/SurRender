@@ -118,14 +118,12 @@ X0 SR_ZeroFill(SR_Canvas *canvas)
 	memset(canvas->pixels, 0, SR_CanvasCalcSize(canvas));
 }
 
-SR_Canvas SR_NewCanvas(U16 width, U16 height)
+STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height)
 {
-	SR_Canvas temp = {};
+	memset(target, 0, sizeof(SR_Canvas));
 
 	/* As long as we set pixels to NULL, ResizeCanvas can be used here too. */
-	SR_ResizeCanvas(&temp, width, height);
-
-	return temp;
+	return SR_ResizeCanvas(target, width, height);
 }
 
 /* SR_DestroyCanvas is super important for any mallocated canvases. Use it. */
@@ -165,7 +163,8 @@ SR_Canvas SR_CopyCanvas(
 	U16 new_height)
 {
 	/* Create the destination canvas */
-	SR_Canvas new = SR_NewCanvas(new_width, new_height);
+	SR_Canvas new = {};
+	SR_NewCanvas(&new, new_width, new_height);
 
 	/* If it isn't valid, just return the metadata and pray it doesn't get used */
 	if (!new.pixels) goto srcc_finish;
@@ -525,10 +524,10 @@ SR_OffsetCanvas SR_CanvasShear(
 	skew = (R32)skew_amount / (R32)mcenter;
 	skew_amount = abs(skew_amount);
 
-	SR_OffsetCanvas final;
+	SR_OffsetCanvas final = {};
 
-	if (mode) final.canvas = SR_NewCanvas(w, h + (skew_amount << 1));
-	else final.canvas = SR_NewCanvas(w + (skew_amount << 1), h);
+	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1));
+	else SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h);
 	SR_ZeroFill(&(final.canvas));
 
 	final.offset_x = mode ? 0 : -skew_amount;
@@ -565,7 +564,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	I32 x, y, nxM, nyM, half_w, half_h;
 	R32 the_sin, the_cos;
 	SR_RGBAPixel pixel, pixbuf;
-	SR_OffsetCanvas final;
+	SR_OffsetCanvas final = {};
 
 	/* There's no point in considering unique values above 359. 360 -> 0 */
 	degrees = fmod(degrees, 360);
@@ -580,11 +579,11 @@ SR_OffsetCanvas SR_CanvasRotate(
 	if (safety_padding) {
 		/* Create additional padding in case rotated data goes off-canvas */
 		boundary = MAX(w, h) << 1; /* Double the largest side length */
-		final.canvas = SR_NewCanvas(boundary, boundary);
+		SR_NewCanvas(&final.canvas, boundary, boundary);
 		final.offset_x = -(int)(boundary >> 2);
 		final.offset_y = -(int)(boundary >> 2);
 	} else {
-		final.canvas = SR_NewCanvas(w, h);
+		SR_NewCanvas(&final.canvas, w, h);
 	}
 	/* Prevent garbage data seeping in */
 	SR_ZeroFill(&final.canvas);
