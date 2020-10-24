@@ -1,11 +1,11 @@
-#define SR_DEMO_PROG 0
+#define SR_DEMO_PROG 2
 
 #ifdef SR_DEMO_PROG
 #if SR_DEMO_PROG == 0 // Atlas
 #define SR_DEMO_INIT \
-SR_Canvas afont = SR_ImageFileToCanvas("./assets/AFONT.PNG"); \
+SR_Canvas afont = SR_TexFileCanvSoftFail("./assets/AFONT.PNG.SRT"); \
 SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10); \
-SR_Canvas brick_tileset = SR_ImageFileToCanvas("./assets/BRICKS.BMP"); \
+SR_Canvas brick_tileset = SR_TexFileCanvSoftFail("./assets/BRICKS.BMP.SRT"); \
 SR_Canvas brick_tileset_res = SR_NewCanvas(192, 192); \
 SR_CanvasScale(&brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN); \
 SR_DestroyCanvas(&brick_tileset); \
@@ -38,7 +38,7 @@ SR_DestroyCanvas(&afont); \
 SR_DestroyCanvas(&text_demo);
 #elif SR_DEMO_PROG == 1 // Puck
 #define SR_DEMO_INIT \
-SR_Canvas imagetest = SR_ImageFileToCanvas("./assets/PUCK.BMP"); \
+SR_Canvas imagetest = SR_TexFileCanvSoftFail("./assets/PUCK.BMP.SRT"); \
 SR_OffsetCanvas rotcanvas; \
 float speeen = 0.0;
 #define SR_DEMO_LOOP \
@@ -55,9 +55,9 @@ SR_DestroyCanvas(&(rotcanvas.canvas));
 SR_DestroyCanvas(&imagetest);
 #elif SR_DEMO_PROG == 2 // Doki
 #define SR_DEMO_INIT \
-SR_Canvas ball = SR_ImageFileToCanvas("./assets/TILEROTTEX.BMP"); \
-SR_Canvas logo = SR_ImageFileToCanvas("./assets/DDLC.BMP"); \
-SR_Canvas monkas = SR_ImageFileToCanvas("./assets/MENU_HELL.BMP");
+SR_Canvas ball = SR_TexFileCanvSoftFail("./assets/TILEROTTEX.BMP.SRT"); \
+SR_Canvas logo = SR_TexFileCanvSoftFail("./assets/DDLC.BMP.SRT"); \
+SR_Canvas monkas = SR_TexFileCanvSoftFail("./assets/MENU_HELL.BMP.SRT");
 #define SR_DEMO_LOOP \
 static int mod = 0; \
 SR_Canvas temp = SR_RefCanv(&ball, mod, mod, SR_PCANVAS.width, SR_PCANVAS.height, false); \

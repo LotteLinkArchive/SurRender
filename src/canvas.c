@@ -1,6 +1,8 @@
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
+#include "errors.h"
+#include <sys/mman.h>
 #pragma intrinsic( memset, memcpy, memcmp )
 
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
@@ -14,44 +16,20 @@ typedef union {
 	U16x32 sU16x32;
 	U64x8  sU64x8;
 	U32x16 sU32x16;
-	struct {
-		U8x32  c1;
-		U8x32  c2;
-	} sU8x32x2;
-	struct {
-		U16x16 c1;
-		U16x16 c2;
-	} sU16x16x2;
 } pixbuf_t;
 
 typedef union {
 	U8x128 sU8x128;
 	U16x64 sU16x64;
 	U32x32 sU32x32;
-	struct {
-		U16x32 c1;
-		U16x32 c2;
-	} sU16x32x2;
-	struct {
-		pixbuf_t c1;
-		pixbuf_t c2;
-	} spixbuf_tx2;
 } bigpixbuf_t;
 
 typedef union {
 	U16x128 sU16x128;
-	struct {
+	__extension__ struct {
 		U16x64 c1;
 		U16x64 c2;
-	} sU16x64x2;
-	struct {
-		U8x128 c1;
-		U8x128 c2;
-	} sU8x128x2;
-	struct {
-		bigpixbuf_t c1;
-		bigpixbuf_t c2;
-	} sbigpixbuf_tx2;
+	} __attribute__ ((packed)) sU16x64x2;
 } largepixbuf_t;
 
 X0 SR_FillModLUT(U16 moperand)
@@ -76,7 +54,7 @@ X0 SR_GenCanvLUT(SR_Canvas *canvas)
 	SR_FillModLUT(canvas->rheight);
 }
 
-U1 SR_ResizeCanvas(
+STATUS SR_ResizeCanvas(
 	SR_Canvas *canvas,
 	U16 width,
 	U16 height)
@@ -85,7 +63,8 @@ U1 SR_ResizeCanvas(
 	if (	!width  ||
 		!height ||
 		canvas->pixels ||
-		canvas->hflags & 0x0B) return false;
+		canvas->hflags & 0x0B ||
+		canvas->b_addr) return SR_SPECIAL_TYPE_DENIED;
 
 	/* @direct */
 	canvas->width  = canvas->rwidth  = canvas->cwidth  = width;
@@ -104,7 +83,7 @@ U1 SR_ResizeCanvas(
 	canvas->pixels = realloc(canvas->pixels, (U32)canvas->rwidth * (U32)canvas->rheight * sizeof(SR_RGBAPixel));
 
 	/* Return the allocation state. */
-	return BOOLIFY(canvas->pixels);
+	return canvas->pixels ? SR_NO_ERROR : SR_MALLOC_FAILURE;
 }
 
 X0 SR_TileTo(
@@ -150,24 +129,32 @@ SR_Canvas SR_NewCanvas(U16 width, U16 height)
 }
 
 /* SR_DestroyCanvas is super important for any mallocated canvases. Use it. */
-U8 SR_DestroyCanvas(SR_Canvas *canvas)
+STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	/* Just in case we need to free anything else */
-	if      (canvas->hflags & 0x02)  return 1;
-	else if (canvas->references > 0) return 2;
-	else if (!canvas->pixels)        return 3;
+	if      (canvas->hflags & 0x02)  return SR_CANVAS_CONSTANT;
+	else if (canvas->references > 0) return SR_NONZERO_REFCOUNT;
+	else if (!canvas->pixels)        return SR_NULL_CANVAS;
 	else if (canvas->hflags & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
-		canvas->pixels = NULL;
+		canvas->pixels = canvas->b_addr = NULL;
 
-		return 0;
+		return SR_NO_ERROR;
 	}
 
 	/* If it is a source canvas */
-	free(canvas->pixels);
-	canvas->pixels = NULL;
+	X0 *freeadr = canvas->b_addr ? canvas->b_addr : canvas->pixels;
 
-	return 0;
+	if (canvas->hflags & 0x08) {
+		munmap(freeadr, canvas->munmap_size);
+		canvas->hflags ^= 0x08;
+	} else {
+		free(freeadr);
+	}
+
+	canvas->pixels = canvas->b_addr = NULL;
+
+	return SR_NO_ERROR;
 }
 
 SR_Canvas SR_CopyCanvas(
@@ -265,10 +252,6 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * 0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
 	 * |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ sU64x8
 	 * 0         1         2         3         4         5         6         7
-	 * |-------------------------------------/ |-------------------------------------/ sU8x32x2
-	 * C1                                      C2 ...
-	 * |-------------------------------------/ |-------------------------------------/ sU16x16x2
-	 * C1                                      C2 ...
 	 * 
 	 * Intended to use AVX-512 to blend 16 pixels simultaneously. On some machines, it may have
 	 * to fallback to using standard AVX or even previous SSE instructions.

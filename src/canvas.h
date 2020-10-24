@@ -2,6 +2,7 @@
 #define SURCV_HEADER_FILE
 #include "glbl.h"
 #include "colours.h"
+#include "errors.h"
 
 /* Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead! */
 #ifndef SR_MAX_CANVAS_SIZE
@@ -29,7 +30,7 @@ typedef struct SR_Canvas {
 	 *     X X | | | | | \- Canvas is a reference to another canvas' pixels
 	 *         | | | | \--- Canvas is indestructible
 	 *         | | | \----- Canvas is important             [UNIMPLEMENTED]
-	 *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+	 *         | | \------- Canvas is a memory-mapped file
 	 *         | \--------- Canvas Rsize is a power of two
 	 *         \----------- Canvas Csize is a power of two
 	 */
@@ -48,6 +49,12 @@ typedef struct SR_Canvas {
 	/* The amount of references a canvas has. A canvas cannot be destroyed if its reference count is above 0. */
 	U32 references;
 	X0 *refsrc; /* Keep track of the referenced source so we can decrement the reference counter on it. */
+
+	/* Base address to free. */
+	X0 *b_addr;
+	
+	/* Size to feed to munmap */
+	SX munmap_size;
 } SR_Canvas;
 
 /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -99,7 +106,7 @@ X0 SR_GenCanvLUT(SR_Canvas *canvas);
 /* Make a canvas larger or smaller. Preserves the contents, but not
  * accurately. May ruin the current contents of the canvas.
  */
-U1 SR_ResizeCanvas(
+STATUS SR_ResizeCanvas(
 	SR_Canvas *canvas,
 	U16 width,
 	U16 height);
@@ -175,7 +182,7 @@ extern U1  modlut_complete   [SR_MXCS_P1];
  * 2 - Canvas is referenced by another canvas
  * 3 - Canvas is a null pointer (already destroyed?)
  */
-U8 SR_DestroyCanvas(SR_Canvas *canvas);
+STATUS SR_DestroyCanvas(SR_Canvas *canvas);
 
 /* Check if the canvas has been successfully allocated. You must ALWAYS
  * check if a canvas is valid before you use it.
