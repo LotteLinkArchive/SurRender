@@ -123,7 +123,11 @@ X0 SR_TileTo(
 /* A canvas may contain garbage data when initially created. This will zero fill it for you, if needed. */
 X0 SR_ZeroFill(SR_Canvas *canvas);
 
-/* Create a new canvas of the given size */
+/* Create a new canvas of the given size. (Will initially be filled with garbage data, use SR_ZeroFill to correct this)
+ * 
+ * target -> Must be a blank, unused SR_Canvas variable. You can create it like this...
+ *  * SR_Canvas mycanvas = {};
+ */
 STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height);
 
 /* Get the height and width of a canvas */
