@@ -164,7 +164,7 @@ SR_Canvas SR_CopyCanvas(
 {
 	/* Create the destination canvas */
 	SR_Canvas new = {};
-	SR_NewCanvas(&new, new_width, new_height);
+	SR_NewCanvas(&new, new_width, new_height); /* @warn: couldfail */
 
 	/* If it isn't valid, just return the metadata and pray it doesn't get used */
 	if (!new.pixels) goto srcc_finish;
@@ -526,8 +526,8 @@ SR_OffsetCanvas SR_CanvasShear(
 
 	SR_OffsetCanvas final = {};
 
-	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1));
-	else SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h);
+	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1)); /* @warn: couldfail */
+	else SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h); /* @warn: couldfail */
 	SR_ZeroFill(&(final.canvas));
 
 	final.offset_x = mode ? 0 : -skew_amount;
@@ -579,11 +579,11 @@ SR_OffsetCanvas SR_CanvasRotate(
 	if (safety_padding) {
 		/* Create additional padding in case rotated data goes off-canvas */
 		boundary = MAX(w, h) << 1; /* Double the largest side length */
-		SR_NewCanvas(&final.canvas, boundary, boundary);
+		SR_NewCanvas(&final.canvas, boundary, boundary); /* @warn: couldfail */
 		final.offset_x = -(int)(boundary >> 2);
 		final.offset_y = -(int)(boundary >> 2);
 	} else {
-		SR_NewCanvas(&final.canvas, w, h);
+		SR_NewCanvas(&final.canvas, w, h); /* @warn: couldfail */
 	}
 	/* Prevent garbage data seeping in */
 	SR_ZeroFill(&final.canvas);
