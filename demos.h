@@ -1,4 +1,6 @@
+#ifndef SR_DEMO_PROG
 #define SR_DEMO_PROG 0
+#endif
 
 #ifdef SR_DEMO_PROG
 #if SR_DEMO_PROG == 0 // Atlas
