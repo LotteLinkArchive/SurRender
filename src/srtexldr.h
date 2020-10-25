@@ -33,6 +33,9 @@ STATUS SR_TexBlobToCanvas(
  * 
  * Size determines how many bytes in the range should be considered as part of the texture. Offset determines how many
  * bytes should be between the start of the texture and the start of the file given by the file descriptor.
+ * 
+ * NOTE: If you're feeding this function the output of fileno() on an open file, you can close the file as soon as this
+ * function returns. It's completely safe to do that.
  */
 STATUS SR_TexFDToCanvas(INAT fd, SX size, OX offset, SR_Canvas *target);
 
