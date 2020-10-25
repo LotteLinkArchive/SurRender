@@ -180,11 +180,9 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 /* Destroy the in-memory representation of the canvas
  * (Must create a new canvas or resize the current one in order to access)
  * 
- * Returned status codes:
- * 0 - Success
- * 1 - Canvas is indestructible
- * 2 - Canvas is referenced by another canvas
- * 3 - Canvas is a null pointer (already destroyed?)
+ * See errors.h for STATUS codes. SR_DestroyCanvaas errors are typically
+ * non-fatal (aka the program will not crash) but may be responsible for a
+ * memory leak (you should report them as warnings, not errors)
  */
 STATUS SR_DestroyCanvas(SR_Canvas *canvas);
 
