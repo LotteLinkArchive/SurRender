@@ -66,6 +66,36 @@ STATUS SR_TexBlobToCanvas(
 	return SR_NO_ERROR;
 }
 
+STATUS SR_TexFDToCanvas(I32 fd, SX size, OX offset, SR_Canvas *target)
+{
+	/* Zero-fill all of the target canvas values (Initialize everything to zero) */
+	memset(target, 0, sizeof(SR_Canvas));
+
+	/* Invalidate invalid sizes */
+	if (size < SRT_HEADER_WIDTH) return SR_INVALID_HEADER;
+
+	/* Map the file to memory */
+	X0 *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, offset);
+
+	/* If the map failed, return now. */
+	if (!mapped) return SR_MAP_FAILURE;
+
+	/* Try to create a canvas out of it */
+	STATUS decstat = SR_TexBlobToCanvas(mapped, size, target, false, NULL);
+
+	/* If it failed, remove the mapping and exit, returning the TexBlobToCanvas code */
+	if (decstat != SR_NO_ERROR) {
+		munmap(mapped, size);
+		return decstat;
+	}
+
+	/* Set the mmap flag on the canvas */
+	target->hflags |= 0x08;
+	target->munmap_size = size;
+
+	return SR_NO_ERROR;
+}
+
 STATUS SR_TexFileToCanvas(CHR *filename, SR_Canvas *target)
 {
 	/* Zero-fill all of the target canvas values (Initialize everything to zero) */
@@ -80,39 +110,16 @@ STATUS SR_TexFileToCanvas(CHR *filename, SR_Canvas *target)
 	SX size_boundary = ftell(fp);
 	rewind(fp);
 
-	/* Invalidate invalid sizes */
-	if (size_boundary < SRT_HEADER_WIDTH) {
-		fclose(fp);
-		return SR_INVALID_HEADER;
-	}
-
-	/* Map the file to memory and then close the file (this can be done without invalidating the memory map) */
-	X0 *mapped = mmap(NULL, size_boundary, PROT_READ | PROT_WRITE, MAP_PRIVATE, fileno(fp), 0);
+	STATUS decstat = SR_TexFDToCanvas(fileno(fp), size_boundary, 0, target);
 	fclose(fp);
 
-	/* If the map failed, return now. */
-	if (!mapped) return SR_MAP_FAILURE;
-
-	/* Try to create a canvas out of it */
-	STATUS decstat = SR_TexBlobToCanvas(mapped, size_boundary, target, false, NULL);
-
-	/* If it failed, remove the mapping and exit, returning the TexBlobToCanvas code */
-	if (decstat != SR_NO_ERROR) {
-		munmap(mapped, size_boundary);
-		return decstat;
-	}
-
-	/* Set the mmap flag on the canvas */
-	target->hflags |= 0x08;
-	target->munmap_size = size_boundary;
-
-	return SR_NO_ERROR;
+	return decstat;
 }
 
 SR_Canvas SR_TexFileCanvSoftFail(CHR *filename)
 {
 	/* Soft-failing functions like this should absolutely not be used. Please use SR_TexFileToCanvas instead. */
-	
+
 	SR_Canvas target = {};
 
 	STATUS isostat = SR_TexFileToCanvas(filename, &target);

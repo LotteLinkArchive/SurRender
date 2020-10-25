@@ -29,6 +29,13 @@ STATUS SR_TexBlobToCanvas(
 	U1 indestructible,
 	X0 *free_base_address);
 
+/* Maps a portion of a file to the target canvas. Takes in a *valid* file descriptor (undefined behaviour if invalid).
+ * 
+ * Size determines how many bytes in the range should be considered as part of the texture. Offset determines how many
+ * bytes should be between the start of the texture and the start of the file given by the file descriptor.
+ */
+STATUS SR_TexFDToCanvas(I32 fd, SX size, OX offset, SR_Canvas *target);
+
 /* Opens a texture file and maps it to the target canvas.
  *
  * This one is pretty simple. It does what it says on the tin. POSIX only.
