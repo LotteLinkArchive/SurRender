@@ -28,8 +28,8 @@ __extension__ struct SRTHeader {
 	/* The data length in bytes */
 	U32 data_length;
 
-	/* The amount of byte-large channels (as returned by STBI) */
-	U8  stbi_type;
+	/* Bytes per pixel */
+	U8  Bpp;
 
 	/* Amount of bytes between the end of the header and the start of the image body */
 	U8  offset;

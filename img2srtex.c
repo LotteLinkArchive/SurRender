@@ -28,12 +28,12 @@ I32 main(I32 argc, CHR *argv[])
 	idata = (CHR *)stbi_load(argv[1], &x, &y, &z, 4);
 	newsrt.width = (U32)x;
 	newsrt.height = (U32)y;
-	newsrt.stbi_type = 4; /* Always 4 channels */
+	newsrt.Bpp = 4; /* Always 4 channels */
 	if (!idata)
 		I2SRERR(3, "stbi_load(): invalid input file format or unable to read input file");
 
-	newsrt.data_length = newsrt.width * newsrt.height * (U32)newsrt.stbi_type;
-	printf("stbi_load(): decoded %u bytes as type %u\n", newsrt.data_length, (U32)newsrt.stbi_type);
+	newsrt.data_length = newsrt.width * newsrt.height * (U32)newsrt.Bpp;
+	printf("stbi_load(): decoded %u bytes as type %u\n", newsrt.data_length, (U32)newsrt.Bpp);
 
 	newsrt.checksum = fnv1b16((U8 *)idata, newsrt.data_length);
 	printf("fnv1b16(): data checksum is %04X\n", newsrt.checksum);
