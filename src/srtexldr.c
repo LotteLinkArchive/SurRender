@@ -66,7 +66,7 @@ STATUS SR_TexBlobToCanvas(
 	return SR_NO_ERROR;
 }
 
-STATUS SR_TexFDToCanvas(I32 fd, SX size, OX offset, SR_Canvas *target)
+STATUS SR_TexFDToCanvas(INAT fd, SX size, OX offset, SR_Canvas *target)
 {
 	/* Zero-fill all of the target canvas values (Initialize everything to zero) */
 	memset(target, 0, sizeof(SR_Canvas));
