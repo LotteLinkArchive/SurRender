@@ -2,14 +2,11 @@
 #include "srtexldr.h"
 #include "srtex.h"
 #include "canvas.h"
+#include "umman.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
+#include <string.h>
 
 /* SRT missing texture */
 static U8 missingtex[] = {
@@ -75,7 +72,7 @@ STATUS SR_TexFDToCanvas(INAT fd, SX size, OX offset, SR_Canvas *target)
 	if (size < SRT_HEADER_WIDTH) return SR_INVALID_HEADER;
 
 	/* Map the file to memory */
-	X0 *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, offset);
+	X0 *mapped = ummap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, offset);
 
 	/* If the map failed, return now. */
 	if (!mapped) return SR_MAP_FAILURE;
@@ -85,7 +82,7 @@ STATUS SR_TexFDToCanvas(INAT fd, SX size, OX offset, SR_Canvas *target)
 
 	/* If it failed, remove the mapping and exit, returning the TexBlobToCanvas code */
 	if (decstat != SR_NO_ERROR) {
-		munmap(mapped, size);
+		umunmap(mapped, size);
 		return decstat;
 	}
 
@@ -106,7 +103,10 @@ STATUS SR_TexFileToCanvas(CHR *filename, SR_Canvas *target)
 	if (!fp) return SR_FILE_ERROR;
 
 	/* Get the size of the file by seeking to the end and then back to the beginning again */
-	fseek(fp, 0, SEEK_END);
+	if (fseek(fp, 0, SEEK_END) != 0) {
+		fclose(fp);
+		return SR_FILE_ERROR;
+	}
 	SX size_boundary = ftell(fp);
 	rewind(fp);
 

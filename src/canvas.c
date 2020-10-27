@@ -2,7 +2,9 @@
 #include "canvas.h"
 #include "colours.h"
 #include "errors.h"
-#include <sys/mman.h>
+#include "umman.h"
+#include <math.h>
+#include <string.h>
 #pragma intrinsic( memset, memcpy, memcmp )
 
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
@@ -144,7 +146,7 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 	X0 *freeadr = canvas->b_addr ? canvas->b_addr : canvas->pixels;
 
 	if (canvas->hflags & 0x08) {
-		munmap(freeadr, canvas->munmap_size);
+		if (umunmap(freeadr, canvas->munmap_size) != 0) return SR_MUNMAP_FAILURE;
 		canvas->hflags ^= 0x08;
 	} else {
 		free(freeadr);

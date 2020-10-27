@@ -1,5 +1,5 @@
-#ifndef SURSS_HEADER_FILE
-#define SURSS_HEADER_FILE
+#ifndef SURSLE_HEADER_FILE
+#define SURSLE_HEADER_FILE
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
