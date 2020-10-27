@@ -1,8 +1,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdlib.h>
-#include "src/surrender.h"
-#include "libs/holyh/src/holy.h"
+#include "../src/surrender.h"
+#include "../libs/holyh/src/holy.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -11,7 +11,7 @@
 
 /* Demo specification */
 #define SR_PCANVAS (convstate->primary_canvas)
-#include <demos.h>
+#include "demos.h"
 #ifndef SR_DEMO_PROG
 #define SR_DEMO_INIT
 #define SR_DEMO_LOOP

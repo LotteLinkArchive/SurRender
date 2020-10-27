@@ -1,13 +1,13 @@
-#include "libs/holyh/src/holy.h"
+#include "../libs/holyh/src/holy.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "libs/stb/stb_image.h"
+#include "../libs/stb/stb_image.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "src/srtex.h"
+#include "../src/srtex.h"
 
 I32 main(I32 argc, CHR *argv[])
 {
