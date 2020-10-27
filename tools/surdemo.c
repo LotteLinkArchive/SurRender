@@ -124,6 +124,8 @@ X0 *DemoThread(X0 *state)
 	if (convstate->demo_status == 0)
 		convstate->demo_status = 1;
 	pthread_exit(NULL);
+
+	return NULL;
 }
 
 /* Global demo state */
