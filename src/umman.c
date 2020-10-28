@@ -15,8 +15,6 @@ X0 *ummap(X0 *addr, SX length, INAT prot, INAT flags, INAT fd, OX offset)
 	X0 *vspace = realloc(addr, length);
 	if (!vspace) return NULL;
 
-	memset(vspace, 0, length);
-
 	FILE *fp = fdopen(fd, "r");
 	if (!fp) goto ummap_free_error;
 
