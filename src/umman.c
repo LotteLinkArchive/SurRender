@@ -21,7 +21,9 @@ X0 *ummap(X0 *addr, SX length, INAT prot, INAT flags, INAT fd, OX offset)
 	if (offset != 0) if (fseek(fp, offset, SEEK_SET) != 0) goto ummap_fclose_error;
 
 	/* May read less than length bytes! */
-	fread(vspace, 1, length, fp);
+	SX nl = fread(vspace, 1, length, fp);
+	if (nl != length) vspace = realloc(vspace, nl);
+	if (!vspace) goto ummap_fclose_error;
 
 	return vspace;
 ummap_fclose_error:
