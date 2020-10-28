@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -59,10 +60,10 @@ I32 main(I32 argc, CHR *argv[])
 
 cexit:
 	if (!status) goto cexitntx;
-	printf(	"Software failure. (Guru Meditation #%08X.%08X, \"%s\")\n\n"
+	printf(	"Software failure. (Guru Meditation #%02X.%016" PRIXPTR ", \"%s\")\n\n"
 		"Usage: %s [INPUT_IMAGE_PATH](.jpg/.jpeg/.png/.bmp/...) [OUTPUT_TEXTURE](.srt/.srtx/...)\n"
 		"Example: %s catpicture.png cattexture.srt\n"
-		, status, (U32)&error, error, argv[0], argv[0]);
+		, status, (UPTR)&error, error, argv[0], argv[0]);
 cexitntx:
 	if (idata) free(idata);
 
