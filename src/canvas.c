@@ -3,6 +3,7 @@
 #include "colours.h"
 #include "errors.h"
 #include "umman.h"
+#include "srtex.h"
 #include <math.h>
 #include <string.h>
 #pragma intrinsic( memset, memcpy, memcmp )
@@ -82,7 +83,8 @@ STATUS SR_ResizeCanvas(
 	 * That way, we can simplify the whole process, as realloc works just like
 	 * malloc does when you feed it a null pointer. Magic!
 	 */
-	canvas->pixels = realloc(canvas->pixels, (U32)canvas->rwidth * (U32)canvas->rheight * sizeof(SR_RGBAPixel));
+	canvas->pixels = realloc(canvas->pixels,
+		SRT_WIDTH_ROUNDUP((U32)canvas->rwidth) * (U32)canvas->rheight * sizeof(SR_RGBAPixel));
 
 	/* Return the allocation state. */
 	return canvas->pixels ? SR_NO_ERROR : SR_MALLOC_FAILURE;

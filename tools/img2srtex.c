@@ -33,7 +33,10 @@ I32 main(I32 argc, CHR *argv[])
 	if (!idata)
 		I2SRERR(3, "stbi_load(): invalid input file format or unable to read input file");
 
-	newsrt.data_length = newsrt.width * newsrt.height * (U32)newsrt.Bpp;
+	newsrt.data_length = SRT_WIDTH_ROUNDUP(newsrt.width) * newsrt.height * (U32)newsrt.Bpp;
+	idata = realloc(idata, newsrt.data_length);
+	if (!idata) I2SRERR(4, "unable to allocate extra memory");
+
 	printf("stbi_load(): decoded %u bytes as type %u\n", newsrt.data_length, (U32)newsrt.Bpp);
 
 	newsrt.checksum = fnv1b16((U8 *)idata, newsrt.data_length);

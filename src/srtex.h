@@ -44,4 +44,7 @@ __extension__ struct SRTHeader {
 
 #define SRT_HEADER_WIDTH sizeof(struct SRTHeader)
 
+/* Round up the width to the nearest 16 pixels as an additional buffer size */
+#define SRT_WIDTH_ROUNDUP(n) (((n) + 15) / 16) * 16
+
 #endif
