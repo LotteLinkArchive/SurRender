@@ -260,6 +260,9 @@ X0 SR_MergeCanvasIntoCanvas(
  * happen if the source and destination point to the same canvas.
  * The new width and height is the width and height of the destination
  * canvas.
+ * 
+ * BOTH SOURCE AND DESTINATION MUST BE A VALID CANVAS. IF THIS IS NOT THE
+ * CASE, EXPECT UNDEFINED BEHAVIOUR.
  */
 X0 SR_CanvasScale(
 	SR_Canvas *src,
