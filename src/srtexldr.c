@@ -125,7 +125,7 @@ SR_Canvas SR_TexFileCanvSoftFail(CHR *filename)
 {
 	/* Soft-failing functions like this should absolutely not be used. Please use SR_TexFileToCanvas instead. */
 
-	SR_Canvas target = {};
+	SR_Canvas target;
 
 	STATUS isostat = SR_TexFileToCanvas(filename, &target);
 	if (isostat != SR_NO_ERROR) {

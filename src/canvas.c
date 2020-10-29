@@ -165,7 +165,7 @@ SR_Canvas SR_CopyCanvas(
 	U16 new_height)
 {
 	/* Create the destination canvas */
-	SR_Canvas new = {};
+	SR_Canvas new;
 	SR_NewCanvas(&new, new_width, new_height); /* @warn: couldfail */
 
 	/* If it isn't valid, just return the metadata and pray it doesn't get used */
@@ -577,7 +577,7 @@ SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 	 */
 
 	/* Static declaration prevents a dangling pointer */
-	SR_BBox bbox = {};
+	__extension__ SR_BBox bbox = {};
 	U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
 	for (y = 0; y < src->height; y++)
@@ -635,7 +635,7 @@ SR_OffsetCanvas SR_CanvasShear(
 	skew = (R32)skew_amount / (R32)mcenter;
 	skew_amount = abs(skew_amount);
 
-	SR_OffsetCanvas final = {};
+	__extension__ SR_OffsetCanvas final = {};
 
 	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1)); /* @warn: couldfail */
 	else      SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h); /* @warn: couldfail */
@@ -675,7 +675,7 @@ SR_OffsetCanvas SR_CanvasRotate(
 	I32 x, y, nxM, nyM, half_w, half_h;
 	R32 the_sin, the_cos;
 	SR_RGBAPixel pixel, pixbuf;
-	SR_OffsetCanvas final = {};
+	__extension__ SR_OffsetCanvas final = {};
 
 	/* There's no point in considering unique values above 359. 360 -> 0 */
 	degrees = fmod(degrees, 360);
