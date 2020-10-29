@@ -301,12 +301,13 @@ X0 SR_MergeCanvasIntoCanvas(
 				sizeof(pixbuf_t));
 			
 			#define PREALPHA\
-			destbuf.sU32x16 = ((\
-				((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8\
-			) * 0x00010101);
+			destbuf.sU32x16 = (((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8);
+
+			#define PREALPHA_MID destbuf.sU32x16 *= 0x00010101;
 
 			#define PREMULTIPLY\
 			PREALPHA\
+			PREALPHA_MID\
 			blendbufA.sU16x64x2.c1 = hcl_vector_convert( srcAbuf.sU8x64, U16x64);\
 			blendbufA.sU16x64x2.c2 = hcl_vector_convert( srcBbuf.sU8x64, U16x64);\
 			blendbufB.sU16x64x2.c1 = hcl_vector_convert( destbuf.sU8x64, U16x64);\
@@ -323,7 +324,14 @@ X0 SR_MergeCanvasIntoCanvas(
 
 				break;
 			case SR_BLEND_OVERLAY:
-				/* TODO: Implement actual overlay mode? */
+				PREALPHA
+				destbuf.sU32x16  = (destbuf.sU32x16 / 0xFF) * 0x00010101;
+				srcAbuf.sU8x64  *= destbuf.sU8x64;
+				destbuf.sU32x16 ^= 0x01010101;
+				srcBbuf.sU8x64  *= destbuf.sU8x64;
+				destbuf.sU8x64   = srcAbuf.sU8x64 | srcBbuf.sU8x64;
+
+				break;
 			case SR_BLEND_ADDITIVE:
 				PREMULTIPLY
 			case SR_BLEND_ADDITIVE_PAINT:
@@ -346,7 +354,7 @@ X0 SR_MergeCanvasIntoCanvas(
 				break;
 			case SR_BLEND_REPLACE_WALPHA_MOD:
 				PREALPHA
-				destbuf.sU32x16 = (srcAbuf.sU32x16 & 0x00FFFFFF) | ((destbuf.sU32x16 & 0xFF) << 24);
+				destbuf.sU32x16 = (srcAbuf.sU32x16 & 0x00FFFFFF) | (destbuf.sU32x16 << 24);
 
 				break;
 			case SR_BLEND_DIRECT_XOR_ALL:
@@ -355,6 +363,7 @@ X0 SR_MergeCanvasIntoCanvas(
 				break;
 			case SR_BLEND_INVERTED_DRAW:
 				PREALPHA
+				PREALPHA_MID
 				destbuf.sU8x64 = srcBbuf.sU8x64 - destbuf.sU8x64;
 
 				break;
@@ -365,6 +374,8 @@ X0 SR_MergeCanvasIntoCanvas(
 			}
 
 			#undef PREMULTIPLY
+			#undef PREALPHA_MID
+			#undef PREALPHA
 
 			/* Copy the final product clump into the destination canvas.
 			 * TODO: Avoid using memcpy? Align bytes? Do something about fstate, somehow? */
