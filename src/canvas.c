@@ -473,10 +473,10 @@ X0 SR_MergeCanvasIntoCanvas(
 				&dest_canvas->pixels[idt],
 				sizeof(pixbuf_t));
 			
-			destbuf.sU8x64 &= srcAbuf.sU8x64;
+			destbuf.sU64x8 &= srcAbuf.sU64x8;
 			srcAbuf.sU64x8 ^= 0xFFFFFFFFFFFFFFFF;
-			srcBbuf.sU8x64 &= srcAbuf.sU8x64;
-			destbuf.sU8x64 |= srcBbuf.sU8x64;
+			srcBbuf.sU64x8 &= srcAbuf.sU64x8;
+			destbuf.sU64x8 |= srcBbuf.sU64x8;
 
 			memcpy(	&dest_canvas->pixels[idt],
 				&destbuf,
