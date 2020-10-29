@@ -3,26 +3,26 @@
 #include "glbl.h"
 
 typedef union {
-	struct {
+	__extension__ struct {
 		U8 red;
 		U8 green;
 		U8 blue;
 		U8 alpha;
-	} chn;
+	} __attribute__ ((packed)) chn;
 	U32 whole;
 	U8x4 splitvec;
 } SR_RGBAPixel;
 
 typedef union {
 	U64 whole;
-	struct {
+	__extension__ struct {
 		U32 left;
 		U32 right;
-	} uparts;
-	struct {
+	} __attribute__ ((packed)) uparts;
+	__extension__ struct {
 		SR_RGBAPixel left;
 		SR_RGBAPixel right;
-	} srparts;
+	} __attribute__ ((packed)) srparts;
 	U8x8 splitvec;
 } SR_RGBADoublePixel;
 

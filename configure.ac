@@ -3,8 +3,8 @@
 
 AC_PREREQ([2.69])
 AC_INIT([SurRender], [0.0.0.0000], [naphtha@lotte.link])
-AC_CONFIG_SRCDIR([demo.c], [src/surrender.h])
-# AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([tools/surdemo.c], [tools/img2srtex.c], [src/surrender.h])
+AC_CONFIG_HEADERS([config.h])
 
 LT_INIT
 AM_INIT_AUTOMAKE([subdir-objects])
@@ -46,5 +46,5 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([atexit floor getcwd memmove memset mkdir pow setlocale sqrt strchr strdup strrchr strstr strtol])
 
 AC_CONFIG_MACRO_DIRS([m4])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tools/Makefile])
 AC_OUTPUT

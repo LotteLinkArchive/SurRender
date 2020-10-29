@@ -108,3 +108,7 @@ Makefile
 libtool
 .libs/
 surdemo
+img2srtex
+config.h.in~
+config.h
+bin/

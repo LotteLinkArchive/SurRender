@@ -2,6 +2,7 @@
 #define SURCV_HEADER_FILE
 #include "glbl.h"
 #include "colours.h"
+#include "errors.h"
 
 /* Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead! */
 #ifndef SR_MAX_CANVAS_SIZE
@@ -29,7 +30,7 @@ typedef struct SR_Canvas {
 	 *     X X | | | | | \- Canvas is a reference to another canvas' pixels
 	 *         | | | | \--- Canvas is indestructible
 	 *         | | | \----- Canvas is important             [UNIMPLEMENTED]
-	 *         | | \------- Canvas is a memory-mapped file  [UNIMPLEMENTED]
+	 *         | | \------- Canvas is a memory-mapped file
 	 *         | \--------- Canvas Rsize is a power of two
 	 *         \----------- Canvas Csize is a power of two
 	 */
@@ -48,6 +49,12 @@ typedef struct SR_Canvas {
 	/* The amount of references a canvas has. A canvas cannot be destroyed if its reference count is above 0. */
 	U32 references;
 	X0 *refsrc; /* Keep track of the referenced source so we can decrement the reference counter on it. */
+
+	/* Base address to free. */
+	X0 *b_addr;
+	
+	/* Size to feed to munmap */
+	SX munmap_size;
 } SR_Canvas;
 
 /* An SR_OffsetCanvas is just a regular canvas, but with additional offset
@@ -99,7 +106,7 @@ X0 SR_GenCanvLUT(SR_Canvas *canvas);
 /* Make a canvas larger or smaller. Preserves the contents, but not
  * accurately. May ruin the current contents of the canvas.
  */
-U1 SR_ResizeCanvas(
+STATUS SR_ResizeCanvas(
 	SR_Canvas *canvas,
 	U16 width,
 	U16 height);
@@ -116,8 +123,12 @@ X0 SR_TileTo(
 /* A canvas may contain garbage data when initially created. This will zero fill it for you, if needed. */
 X0 SR_ZeroFill(SR_Canvas *canvas);
 
-/* Create a new canvas of the given size */
-SR_Canvas SR_NewCanvas(U16 width, U16 height);
+/* Create a new canvas of the given size. (Will initially be filled with garbage data, use SR_ZeroFill to correct this)
+ * 
+ * target -> Must be a blank, unused SR_Canvas variable. You can create it like this...
+ *  * SR_Canvas mycanvas = {};
+ */
+STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height);
 
 /* Get the height and width of a canvas */
 #define SR_CanvasGetWidth(canvas) ((canvas)->width)
@@ -169,13 +180,11 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 /* Destroy the in-memory representation of the canvas
  * (Must create a new canvas or resize the current one in order to access)
  * 
- * Returned status codes:
- * 0 - Success
- * 1 - Canvas is indestructible
- * 2 - Canvas is referenced by another canvas
- * 3 - Canvas is a null pointer (already destroyed?)
+ * See errors.h for STATUS codes. SR_DestroyCanvaas errors are typically
+ * non-fatal (aka the program will not crash) but may be responsible for a
+ * memory leak (you should report them as warnings, not errors)
  */
-U8 SR_DestroyCanvas(SR_Canvas *canvas);
+STATUS SR_DestroyCanvas(SR_Canvas *canvas);
 
 /* Check if the canvas has been successfully allocated. You must ALWAYS
  * check if a canvas is valid before you use it.
