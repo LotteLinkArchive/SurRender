@@ -6,7 +6,6 @@
 #include "srtex.h"
 #include <math.h>
 #include <string.h>
-#pragma intrinsic( memset, memcpy, memcmp )
 
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
