@@ -132,17 +132,16 @@ STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height)
 STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	/* Just in case we need to free anything else */
-	if      (canvas->hflags & 0x02)  return SR_CANVAS_CONSTANT;
-	else if (canvas->references > 0) return SR_NONZERO_REFCOUNT;
-	else if (!canvas->pixels)        return SR_NULL_CANVAS;
-	else if (canvas->hflags & 0x01) {
+	if      ( canvas->hflags     & 0x02) return SR_CANVAS_CONSTANT;
+	else if ( canvas->references > 0x00) return SR_NONZERO_REFCOUNT;
+	else if (!canvas->pixels           ) return SR_NULL_CANVAS;
+	else if ( canvas->hflags     & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
 		canvas->pixels = canvas->b_addr = NULL;
 
 		return SR_NO_ERROR;
 	}
 
-	/* If it is a source canvas */
 	X0 *freeadr = canvas->b_addr ? canvas->b_addr : canvas->pixels;
 
 	if (canvas->hflags & 0x08) {
@@ -171,10 +170,10 @@ SR_Canvas SR_CopyCanvas(
 	/* If it isn't valid, just return the metadata and pray it doesn't get used */
 	if (!new.pixels) goto srcc_finish;
 
-	if (	copy_start_x == 0 &&
-		copy_start_y == 0 &&
-		new.width    == canvas->width  &&
-		new.height   == canvas->height &&
+	if (	copy_start_x   == 0 &&
+		copy_start_y   == 0 &&
+		new.width      == canvas->width  &&
+		new.height     == canvas->height &&
 		!canvas->xclip &&
 		!canvas->yclip ) {
 		/* Super fast memcpy when possible, hopefully. */
@@ -185,7 +184,7 @@ SR_Canvas SR_CopyCanvas(
 
 	/* Slower copying, but not much slower - used for cropping/panning */
 	U16 x, y;
-	for (x = 0; x < new.width; x++)
+	for (x = 0; x < new.width ; x++)
 	for (y = 0; y < new.height; y++)
 		SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
 
@@ -436,7 +435,7 @@ static X0 SR_NearestNeighborCanvasScale(
 	R32 y_factor = (R32)src->height / (R32)dest->height;
 	
 	U16 x, y;
-	for (x = 0; x < dest->width; x++)
+	for (x = 0; x < dest->width ; x++)
 	for (y = 0; y < dest->height; y++) {
 		SR_RGBAPixel sample = SR_CanvasGetPixel(src, x * x_factor, y * y_factor);
 		SR_CanvasSetPixel(dest, x, y, sample);
@@ -472,21 +471,21 @@ SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 	U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
 	for (y = 0; y < src->height; y++)
-	for (x = 0; x < src->width; x++)
+	for (x = 0; x < src->width ; x++)
 		if (SR_CanvasPixelCNZ(src, x, y))
 			{ firstX = x, firstY = y; goto srnzbbx_first_pixel_done; }
 	
 	goto srnzbbx_empty; /* No data found in image - commit die */
 srnzbbx_first_pixel_done: /* Exit loop */
 	for (y = src->height - 1; y > 0; y--)
-	for (x = src->width - 1; x > 0; x--)
+	for (x = src->width  - 1; x > 0; x--)
 		if (SR_CanvasPixelCNZ(src, x, y))
 			{ lastX = x, lastY = y; goto srnzbbx_last_pixel_done; }
 
 	goto srnzbbx_empty;
 srnzbbx_last_pixel_done:
-	for (xC = 0; xC <= firstX; xC++)
-	for (yC = firstY; yC <= lastY; yC++)
+	for (xC = 0     ; xC <= firstX; xC++)
+	for (yC = firstY; yC <= lastY ; yC++)
 		if (SR_CanvasPixelCNZ(src, xC, yC)) {
 			bbox.named.sx = xC; bbox.named.sy = firstY;
 			goto srnzbbx_found_first;
@@ -494,8 +493,8 @@ srnzbbx_last_pixel_done:
 
 	goto srnzbbx_empty;
 srnzbbx_found_first:
-	for (xC = src->width - 1; xC > lastX; xC--)
-	for (yC = lastY; yC >= firstY; yC--)
+	for (xC = src->width - 1; xC >  lastX ; xC--)
+	for (yC = lastY         ; yC >= firstY; yC--)
 		if (SR_CanvasPixelCNZ(src, xC, yC)) {
 			bbox.named.ex = xC; bbox.named.ey = lastY;
 			goto srnzbbx_bounded;
@@ -529,7 +528,7 @@ SR_OffsetCanvas SR_CanvasShear(
 	SR_OffsetCanvas final = {};
 
 	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1)); /* @warn: couldfail */
-	else SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h); /* @warn: couldfail */
+	else      SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h); /* @warn: couldfail */
 	SR_ZeroFill(&(final.canvas));
 
 	final.offset_x = mode ? 0 : -skew_amount;
@@ -717,8 +716,8 @@ SR_Canvas SR_RefCanvTile(
 	U16 row)
 {
 	U16 columns, rows;
-	columns = ceilf((R32)atlas->width / tile_w);
-	rows = ceilf((R32)atlas->height / tile_h);
+	columns = ceilf((R32)atlas->width  / tile_w);
+	rows    = ceilf((R32)atlas->height / tile_h);
 
 	return SR_RefCanv(atlas,
 		(col % columns) * tile_w,
