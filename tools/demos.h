@@ -8,7 +8,7 @@
 SR_Canvas afont = SR_TexFileCanvSoftFail("./assets/AFONT.PNG.SRT"); \
 SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10); \
 SR_Canvas brick_tileset = SR_TexFileCanvSoftFail("./assets/BRICKS.BMP.SRT"); \
-SR_Canvas brick_tileset_res = {}; \
+SR_Canvas brick_tileset_res; \
 SR_NewCanvas(&brick_tileset_res, 192, 192); \
 SR_CanvasScale(&brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN); \
 SR_DestroyCanvas(&brick_tileset); \
@@ -17,7 +17,7 @@ static uint16_t hstri[] = u"This is the atlas demo!\n\nEnjoy!"; \
 afonta.rescalewidth  = afonta.charwidth  * 3; \
 afonta.rescaleheight = afonta.charheight * 2; \
 U16x4 bbox = SR_PrintToCanvas(&afonta, NULL, hstri, sizeof(hstri) / 2, 0, 0, 0, 0, true); \
-SR_Canvas text_demo = {}; \
+SR_Canvas text_demo; \
 SR_NewCanvas(&text_demo, bbox[2], bbox[3]); \
 SR_ZeroFill(&text_demo); \
 afonta.colour = SR_CreateRGBA(255, 255, 255, 127); \
@@ -75,5 +75,26 @@ SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &monkas, SR_PCANVAS.width - monkas.width, 
 SR_DestroyCanvas(&ball); \
 SR_DestroyCanvas(&logo); \
 SR_DestroyCanvas(&monkas);
+#elif SR_DEMO_PROG == 3 // Blender
+#define SR_DEMO_INIT \
+SR_Canvas goodra = SR_TexFileCanvSoftFail("./assets/GOODRA.BMP.SRT"); \
+SR_Canvas temp; \
+SR_NewCanvas(&temp, 64, 64); \
+U16 gpos, gxpos, gypos; \
+gpos = gxpos = gypos = 0;
+#define SR_DEMO_LOOP \
+gxpos = gpos % 64; \
+gypos = (gpos / 64) % 64; \
+SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(0, 0, 0, 255), 0, 0, SR_PCANVAS.width, SR_PCANVAS.height); \
+SR_DrawRect(&temp, SR_CreateRGBA(0, 0, 0, 255), 0, 0, temp.width, temp.height); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &goodra, 128, 128, 255, SR_BLEND_OVERLAY); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &goodra, 32 + gxpos, 32 + gypos, 255, SR_BLEND_OVERLAY); \
+SR_MergeCanvasIntoCanvas(&temp, &goodra, gxpos, gypos, 255, SR_BLEND_OVERLAY); \
+SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), 31, 31, 66, 66); \
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &temp, 32, 32, 255, SR_BLEND_OVERLAY); \
+gpos++;
+#define SR_DEMO_CLRF \
+SR_DestroyCanvas(&goodra); \
+SR_DestroyCanvas(&temp);
 #endif
 #endif
