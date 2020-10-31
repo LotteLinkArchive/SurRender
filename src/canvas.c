@@ -196,40 +196,16 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 	return SR_NO_ERROR;
 }
 
-SR_Canvas SR_CopyCanvas(
+X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
+	SR_Canvas *new,
 	U16 copy_start_x,
-	U16 copy_start_y,
-	U16 new_width,
-	U16 new_height)
+	U16 copy_start_y)
 {
-	/* Create the destination canvas */
-	SR_Canvas new;
-	SR_NewCanvas(&new, new_width, new_height); /* @warn: couldfail */
-
-	/* If it isn't valid, just return the metadata and pray it doesn't get used */
-	if (!new.pixels) goto srcc_finish;
-
-	if (	copy_start_x   == 0 &&
-		copy_start_y   == 0 &&
-		new.width      == canvas->width  &&
-		new.height     == canvas->height &&
-		!canvas->xclip &&
-		!canvas->yclip ) {
-		/* Super fast memcpy when possible, hopefully. */
-		memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
-
-		goto srcc_finish; /* Just jump to finish here, saves ident level */
-	}
-
-	/* Slower copying, but not much slower - used for cropping/panning */
 	U16 x, y;
-	for (x = 0; x < new.width ; x++)
-	for (y = 0; y < new.height; y++)
-		SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
-
-srcc_finish:
-	return new;
+	for (x = 0; x < new->width ; x++)
+	for (y = 0; y < new->height; y++)
+		SR_CanvasSetPixel(new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
 }
 
 SR_Canvas SR_RefCanv(

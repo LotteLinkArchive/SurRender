@@ -191,18 +191,15 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas);
  */
 #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels))
 
-/* Malloc a new canvas of given size and start copying every pixel from the
- * specified old canvas to the new one, starting at the given position.
- * This also allows you to create cropped versions of a canvas! :)
- * Note: This does not destroy the old canvas. If you don't need it anymore
- * don't forget to destroy it, or it will remain allocated.
+/* Fills the whole "new" canvas with the contents of the original canvas.
+ *
+ * Copying from the original canvas starts at (copy_start_x, copy_start_y)
  */
-SR_Canvas SR_CopyCanvas(
+X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
+	SR_Canvas *new,
 	U16 copy_start_x,
-	U16 copy_start_y,
-	U16 new_width,
-	U16 new_height);
+	U16 copy_start_y);
 
 /* Takes pretty much the same arguments as SR_CopyCanvas, except it doesn't
  * malloc a new canvas - it returns essentially a segment of the original
