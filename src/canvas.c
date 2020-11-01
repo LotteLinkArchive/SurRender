@@ -225,47 +225,21 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * would have 3 extra pixels that should not be overwritten */
 	fsub = (emax * CLUMPS) - src_canvas->width;
 
-	#define ZSEMP {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	U16 isxmap[CLUMPS] = ZSEMP, idxmap[CLUMPS] = ZSEMP;
-	U32 cxybmap[CLUMPS] = ZSEMP;
-
-	#define ZSDUFFP(PIF) PIF z++;
-	#define ZSDUFF(PIF) switch (fstate) {\
-	default:\
-	case  0: z = 0; break;\
-	case  1: z = 0; PIF break;\
-	case  2: z = 0; PIF PIF break;\
-	case  3: z = 0; PIF PIF PIF break;\
-	case  4: z = 0; PIF PIF PIF PIF break;\
-	case  5: z = 0; PIF PIF PIF PIF PIF break;\
-	case  6: z = 0; PIF PIF PIF PIF PIF PIF break;\
-	case  7: z = 0; PIF PIF PIF PIF PIF PIF PIF break;\
-	case  8: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case  9: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 10: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 11: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 12: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 13: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 14: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 15: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;\
-	case 16: z = 0; PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF PIF break;}
-	#define ZSPIF_A srcposx = (x * CLUMPS) + z;\
-	isxmap[z] = SR_AxisPositionCRCTRM(\
-		src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);\
-	idxmap[z] = SR_AxisPositionCRCTRM(\
-		dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
-	#define ZSPIF_B\
-	srcAbuf.sU32x16[z] = src_canvas->pixels [\
-		SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;\
-	cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);\
-	srcBbuf.sU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
-	#define ZSPIF_C dest_canvas->pixels[cxybmap[z]].whole = destbuf.sU32x16[z];
+	U16 isxmap[CLUMPS], idxmap[CLUMPS];
+	U32 cxybmap[CLUMPS];
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
 		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
-		ZSDUFF(ZSDUFFP(ZSPIF_A));
+		for (z = 0; z < fstate; z++) {
+			srcposx = (x * CLUMPS) + z;
+
+			isxmap[z] = SR_AxisPositionCRCTRM(
+				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
+			idxmap[z] = SR_AxisPositionCRCTRM(
+				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
+		}
 
 		for (y = 0; y < src_canvas->height; y++) {
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
@@ -276,10 +250,16 @@ X0 SR_MergeCanvasIntoCanvas(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			ZSDUFF(ZSDUFFP(ZSPIF_B));
+			for (z = 0; z < fstate; z++) {
+				srcAbuf.sU32x16[z] = src_canvas->pixels [
+					SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;
+				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
+				srcBbuf.sU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
+			}
 			
 			destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
-			ZSDUFF(ZSDUFFP(ZSPIF_C));
+
+			for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.sU32x16[z];
 		}
 	}
 
