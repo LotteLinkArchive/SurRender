@@ -347,7 +347,7 @@ X0 SR_MergeCanvasIntoCanvas(
 			srcposx = (x * CLUMPS) + z;
 
 			isxmap[z] = SR_AxisPositionCRCTRM(
-				src_canvas->rwidth , src_canvas->cwidth , srcposx, src_canvas->xclip );
+				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
 			idxmap[z] = SR_AxisPositionCRCTRM(
 				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
 		}
@@ -356,14 +356,14 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
 			isy = SR_AxisPositionCRCTRM(
-				src_canvas->rheight , src_canvas->cheight , y    , src_canvas->yclip );
+				src_canvas->rheight, src_canvas->cheight , y, src_canvas->yclip);
 			idy = SR_AxisPositionCRCTRM(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
 			for (z = 0; z < fstate; z++) {
 				srcAbuf.sU32x16[z] = src_canvas->pixels [
-					SR_CombnAxisPosCalcXY(src_canvas , isxmap[z], isy)].whole;
+					SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;
 				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
 				srcBbuf.sU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
 			}
