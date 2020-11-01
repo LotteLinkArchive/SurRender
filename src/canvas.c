@@ -251,15 +251,15 @@ X0 SR_MergeCanvasIntoCanvas(
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
 			for (z = 0; z < fstate; z++) {
-				srcAbuf.sU32x16[z] = src_canvas->pixels [
+				srcAbuf.aU32x16[z] = src_canvas->pixels [
 					SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;
 				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
-				srcBbuf.sU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
+				srcBbuf.aU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
 			}
 			
 			destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
 
-			for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.sU32x16[z];
+			for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.aU32x16[z];
 		}
 	}
 

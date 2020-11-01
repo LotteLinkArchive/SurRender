@@ -31,6 +31,7 @@ typedef union {
 	U16x32 sU16x32;
 	U64x8  sU64x8;
 	U32x16 sU32x16;
+	U32 aU32x16[16];
 } pixbuf_t;
 
 typedef union {
