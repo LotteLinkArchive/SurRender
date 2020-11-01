@@ -226,7 +226,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	fsub = (emax * CLUMPS) - src_canvas->width;
 
 	U16 isxmap[CLUMPS], idxmap[CLUMPS];
-	U32 cxybmap[CLUMPS];
+	U32 cxybmap[CLUMPS], cxycchk;
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
@@ -250,16 +250,20 @@ X0 SR_MergeCanvasIntoCanvas(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
+			cxycchk = 0;
 			for (z = 0; z < fstate; z++) {
 				srcAbuf.aU32x16[z] = src_canvas->pixels [
 					SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;
 				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
+				cxycchk |= cxybmap[z] - z;
 				srcBbuf.aU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
 			}
 			
 			destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
-
-			for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.aU32x16[z];
+			if (cxycchk == cxybmap[0])
+				for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.aU32x16[z];
+			else
+				*(pixbuf_t *)&dest_canvas->pixels[cxycchk] = destbuf;
 		}
 	}
 
