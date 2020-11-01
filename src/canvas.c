@@ -231,6 +231,8 @@ X0 SR_MergeCanvasIntoCanvas(
 
 	#define ZSDUFFP(PIF) PIF z++;
 	#define ZSDUFF(PIF) switch (fstate) {\
+	default:\
+	case  0: z = 0; break;\
 	case  1: z = 0; PIF break;\
 	case  2: z = 0; PIF PIF break;\
 	case  3: z = 0; PIF PIF PIF break;\
