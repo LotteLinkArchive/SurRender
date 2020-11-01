@@ -225,8 +225,11 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * would have 3 extra pixels that should not be overwritten */
 	fsub = (emax * CLUMPS) - src_canvas->width;
 
-	U16 isxmap[CLUMPS], idxmap[CLUMPS];
-	U32 cxybmap[CLUMPS], cxycchk;
+	pixbuf_t isxmap, idxmap, isxtmap, idxtmap;
+	U32 sxycchk, cxycchk;
+
+	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
+	#define VMOVE(dest, src) memcpy(dest, src, sizeof(pixbuf_t));
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
@@ -235,13 +238,15 @@ X0 SR_MergeCanvasIntoCanvas(
 		for (z = 0; z < fstate; z++) {
 			srcposx = (x * CLUMPS) + z;
 
-			isxmap[z] = SR_AxisPositionCRCTRM(
+			isxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
 				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
-			idxmap[z] = SR_AxisPositionCRCTRM(
+			idxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
 				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
 		}
 
 		for (y = 0; y < src_canvas->height; y++) {
+			sxycchk = cxycchk = 0;
+
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
 			isy = SR_AxisPositionCRCTRM(
@@ -249,25 +254,39 @@ X0 SR_MergeCanvasIntoCanvas(
 			idy = SR_AxisPositionCRCTRM(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
+			isxtmap.sU32x16 = SR_CombnAxisPosCalcXY(src_canvas, isxmap.sU32x16, isy);
+			idxtmap.sU32x16 = SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy);
+
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			cxycchk = 0;
 			for (z = 0; z < fstate; z++) {
-				srcAbuf.aU32x16[z] = src_canvas->pixels [
-					SR_CombnAxisPosCalcXY(src_canvas, isxmap[z], isy)].whole;
-				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
-				cxycchk |= cxybmap[z] - z;
-				srcBbuf.aU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
+				sxycchk |= isxtmap.aU32x16[z] - z;
+				cxycchk |= idxtmap.aU32x16[z] - z;
 			}
 			
-			destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
-			if (cxycchk == cxybmap[0])
-				for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.aU32x16[z];
-			else
-				*(pixbuf_t *)&dest_canvas->pixels[cxycchk] = destbuf;
+			if (cxycchk != idxtmap.aU32x16[0] || sxycchk != isxtmap.aU32x16[0] || fstate != CLUMPS) {
+				for (z = 0; z < fstate; z++) {
+					srcAbuf.aU32x16[z] = src_canvas->pixels[isxtmap.aU32x16[z]].whole;
+					srcBbuf.aU32x16[z] = dest_canvas->pixels[idxtmap.aU32x16[z]].whole;
+				}
+
+				MBLEND
+
+				for (z = 0; z < fstate; z++)
+					dest_canvas->pixels[idxtmap.aU32x16[z]].whole = destbuf.aU32x16[z];
+			} else {
+				VMOVE(&srcAbuf, &src_canvas->pixels[sxycchk]);
+				VMOVE(&srcBbuf, &dest_canvas->pixels[cxycchk]);
+
+				MBLEND
+
+				VMOVE(&dest_canvas->pixels[cxycchk], &destbuf);
+			}
 		}
 	}
 
+	#undef MBLEND
 	#undef CLUMPS
+	#undef VMOVE
 
 	return;
 }
