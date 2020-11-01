@@ -12,45 +12,6 @@ __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
 __extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
 #undef SR_MXCS_P1
 
-/* This lookup table is really important - it defines how many bytes need to be masked when overwriting canvas memory
- * during a 64-byte merge.
- */
-static const U32 fstatelkp[17][16] = {
-	{/*00*/ 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*04*/ 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*08*/ 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*12*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*16*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*20*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*24*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*28*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*32*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*36*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*40*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*44*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*48*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-	{/*52*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000},
-	{/*56*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000},
-	{/*60*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000},
-	{/*64*/ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
-		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}};
-
 /* Private vector types, particularly used for alpha blending */
 typedef union {
 	U8x64  sU8x64;
@@ -362,8 +323,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * to fallback to using standard AVX or even previous SSE instructions.
 	 */
 
-	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate, isx, isy, idx, idy;
-	U32 ist, idt;
+	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
 	pixbuf_t srcAbuf, srcBbuf, destbuf;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
@@ -374,53 +334,43 @@ X0 SR_MergeCanvasIntoCanvas(
 
 	/* fsub represnts the number of extra pixels in each clumped row, e.g a 125 pixel row with 16-pixel clumps
 	 * would have 3 extra pixels that should not be overwritten */
-	fsub = ((emax * CLUMPS) - src_canvas->width) * sizeof(SR_RGBAPixel);
+	fsub = (emax * CLUMPS) - src_canvas->width;
+
+	U16 isxmap[CLUMPS], idxmap[CLUMPS];
+	U32 cxybmap[CLUMPS];
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
-		srcposx = x * CLUMPS;
-		dposx   = srcposx + paste_start_x;
-		fstate  = x + 1 == emax ? sizeof(pixbuf_t) - fsub : sizeof(pixbuf_t);
-		isx     = SR_AxisPositionCRCTRM(src_canvas->rwidth , src_canvas->cwidth , srcposx, src_canvas->xclip );
-		idx     = SR_AxisPositionCRCTRM(dest_canvas->rwidth, dest_canvas->cwidth, dposx  , dest_canvas->xclip);
+		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		for (z = 0; z < fstate; z++) {
+			srcposx = (x * CLUMPS) + z;
+
+			isxmap[z] = SR_AxisPositionCRCTRM(
+				src_canvas->rwidth , src_canvas->cwidth , srcposx, src_canvas->xclip );
+			idxmap[z] = SR_AxisPositionCRCTRM(
+				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
+		}
 
 		for (y = 0; y < src_canvas->height; y++) {
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
-			dposy = y + paste_start_y;
 			isy = SR_AxisPositionCRCTRM(
 				src_canvas->rheight , src_canvas->cheight , y    , src_canvas->yclip );
 			idy = SR_AxisPositionCRCTRM(
-				dest_canvas->rheight, dest_canvas->cheight, dposy, dest_canvas->yclip);
-			ist = SR_CombnAxisPosCalcXY(src_canvas , isx, isy);
-			idt = SR_CombnAxisPosCalcXY(dest_canvas, idx, idy);
+				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			memcpy(	&srcAbuf,
-				&src_canvas->pixels[ist],  /* top */
-				sizeof(pixbuf_t));
-			memcpy(	&srcBbuf,
-				&dest_canvas->pixels[idt], /* base */
-				sizeof(pixbuf_t));
+			for (z = 0; z < fstate; z++) {
+				srcAbuf.sU32x16[z] = src_canvas->pixels [
+					SR_CombnAxisPosCalcXY(src_canvas , isxmap[z], isy)].whole;
+				cxybmap[z] = SR_CombnAxisPosCalcXY(dest_canvas, idxmap[z], idy);
+				srcBbuf.sU32x16[z] = dest_canvas->pixels[cxybmap[z]].whole;
+			}
 			
 			destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
 
-			memcpy(	&srcAbuf,
-				&fstatelkp[fstate >> 2],
-				sizeof(pixbuf_t));
-			memcpy(	&srcBbuf,
-				&dest_canvas->pixels[idt],
-				sizeof(pixbuf_t));
-			
-			destbuf.sU64x8 &= srcAbuf.sU64x8;
-			srcAbuf.sU64x8 ^= 0xFFFFFFFFFFFFFFFF;
-			srcBbuf.sU64x8 &= srcAbuf.sU64x8;
-			destbuf.sU64x8 |= srcBbuf.sU64x8;
-
-			memcpy(	&dest_canvas->pixels[idt],
-				&destbuf,
-				sizeof(pixbuf_t));
+			for (z = 0; z < fstate; z++) dest_canvas->pixels[cxybmap[z]].whole = destbuf.sU32x16[z];
 		}
 	}
 
