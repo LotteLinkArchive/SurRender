@@ -12,28 +12,6 @@ __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
 __extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
 #undef SR_MXCS_P1
 
-/* Private vector types, particularly used for alpha blending */
-typedef union {
-	U8x64  sU8x64;
-	U16x32 sU16x32;
-	U64x8  sU64x8;
-	U32x16 sU32x16;
-} pixbuf_t;
-
-typedef union {
-	U8x128 sU8x128;
-	U16x64 sU16x64;
-	U32x32 sU32x32;
-} bigpixbuf_t;
-
-typedef union {
-	U16x128 sU16x128;
-	__extension__ struct {
-		U16x64 c1;
-		U16x64 c2;
-	} __attribute__ ((packed)) sU16x64x2;
-} largepixbuf_t;
-
 X0 SR_FillModLUT(U16 moperand)
 {
 	if (modlut_complete[moperand]) goto sr_fmlutexit;
@@ -208,95 +186,6 @@ SR_Canvas SR_RefCanv(
 	SR_GenCanvLUT(&temp);
 
 	return temp;
-}
-
-static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBlend(
-	pixbuf_t srcAbuf,
-	pixbuf_t srcBbuf,
-	U8 alpha_modifier,
-	I8 mode)
-{
-	largepixbuf_t blendbufA, blendbufB;
-	pixbuf_t destbuf;
-
-	#define PREALPHA\
-	destbuf.sU32x16 = (((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8);
-
-	#define PREALPHA_MID destbuf.sU32x16 *= 0x00010101;
-
-	#define PREMULTIPLY\
-	PREALPHA\
-	PREALPHA_MID\
-	blendbufA.sU16x64x2.c1 = hcl_vector_convert( srcAbuf.sU8x64, U16x64);\
-	blendbufA.sU16x64x2.c2 = hcl_vector_convert( srcBbuf.sU8x64, U16x64);\
-	blendbufB.sU16x64x2.c1 = hcl_vector_convert( destbuf.sU8x64, U16x64);\
-	blendbufB.sU16x64x2.c2 = hcl_vector_convert(~destbuf.sU8x64, U16x64);\
-	blendbufA.sU16x128     = ((blendbufA.sU16x128 * blendbufB.sU16x128) + 0xFF) >> 8;\
-	srcAbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c1, U8x64);\
-	srcBbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c2, U8x64);
-
-	switch (mode) {
-	case SR_BLEND_XOR:
-		PREMULTIPLY
-	case SR_BLEND_DIRECT_XOR:
-		destbuf.sU32x16 = srcBbuf.sU32x16 ^ (srcAbuf.sU32x16 & 0x00FFFFFF);
-
-		break;
-	case SR_BLEND_OVERLAY:
-		PREALPHA
-		destbuf.sU32x16  = (destbuf.sU32x16 / 0xFF) * 0x00010101;
-		srcAbuf.sU8x64  *= destbuf.sU8x64;
-		destbuf.sU32x16 ^= 0x01010101;
-		srcBbuf.sU8x64  *= destbuf.sU8x64;
-		destbuf.sU8x64   = srcAbuf.sU8x64 | srcBbuf.sU8x64;
-
-		break;
-	case SR_BLEND_ADDITIVE:
-		PREMULTIPLY
-	case SR_BLEND_ADDITIVE_PAINT:
-		destbuf.sU32x16 = srcBbuf.sU32x16 & 0xFF000000;
-
-		srcAbuf.sU32x16 &= 0x00FFFFFF;
-		srcBbuf.sU32x16 &= 0x00FFFFFF;
-		destbuf.sU8x64  |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
-
-		break;
-	case SR_BLEND_REPLACE:
-		destbuf = srcAbuf;
-
-		break;
-	case SR_BLEND_INVERT_DROP:
-		srcAbuf.sU64x8 = ~srcAbuf.sU64x8; 
-	case SR_BLEND_DROP:
-		destbuf.sU32x16 = (srcBbuf.sU32x16 & 0x00FFFFFF) | (srcAbuf.sU32x16 & 0xFF000000);
-
-		break;
-	case SR_BLEND_REPLACE_WALPHA_MOD:
-		PREALPHA
-		destbuf.sU32x16 = (srcAbuf.sU32x16 & 0x00FFFFFF) | (destbuf.sU32x16 << 24);
-
-		break;
-	case SR_BLEND_DIRECT_XOR_ALL:
-		destbuf.sU64x8 = srcAbuf.sU64x8 ^ srcBbuf.sU64x8;
-
-		break;
-	case SR_BLEND_INVERTED_DRAW:
-		PREALPHA
-		PREALPHA_MID
-		destbuf.sU8x64 = srcBbuf.sU8x64 - destbuf.sU8x64;
-
-		break;
-	case SR_BLEND_PAINT:
-		destbuf.sU32x16 = (srcBbuf.sU32x16 & 0xFF000000) | (srcAbuf.sU32x16 & 0x00FFFFFF);
-
-		break;
-	}
-
-	#undef PREMULTIPLY
-	#undef PREALPHA_MID
-	#undef PREALPHA
-
-	return destbuf;
 }
 
 X0 SR_MergeCanvasIntoCanvas(
