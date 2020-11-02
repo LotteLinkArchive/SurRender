@@ -204,12 +204,32 @@ pixbuf_t fstatelkp[17] = {
 	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12,  0,  0,  0}},
 	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,  0,  0}},
 	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  0}},
-	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}}
 };
 
+#define D32 0x00000000
+#define A32 0xFFFFFFFF
 pixbuf_t fstatelkp2[17] = {
-	{.sU32x16 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}},
+	{.sU32x16 = {D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32}}
 };
+#undef D32
+#undef A32
 
 X0 SR_MergeCanvasIntoCanvas(
 	SR_Canvas *dest_canvas,
@@ -277,14 +297,22 @@ X0 SR_MergeCanvasIntoCanvas(
 			idy = SR_AxisPositionCRCTRM(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
-			isxtmap.sU32x16 = SR_CombnAxisPosCalcXY(src_canvas, isxmap.sU32x16, isy) - fstatelkp[fstate].sU32x16;
-			idxtmap.sU32x16 = SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16;
+			isxtmap.sU32x16 = (
+				SR_CombnAxisPosCalcXY(src_canvas, isxmap.sU32x16, isy) - fstatelkp[fstate].sU32x16
+			) & fstatelkp2[fstate].sU32x16;
+			idxtmap.sU32x16 = (
+				SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16
+			) & fstatelkp2[fstate].sU32x16;
 
 			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			for (z = 0; z < fstate; z++) {
-				sxycchk |= isxtmap.aU32x16[z];
-				cxycchk |= idxtmap.aU32x16[z];
-			}
+			#define SXYOR sxycchk |= isxtmap.aU32x16[z]; z++;
+			#define CXYOR cxycchk |= idxtmap.aU32x16[z]; z++;
+			z = 0;
+			SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR
+			z = 0;
+			CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR
+			#undef SXYOR
+			#undef CXYOR
 			
 			if (cxycchk != idxtmap.aU32x16[0] || sxycchk != isxtmap.aU32x16[0] || fstate != CLUMPS) {
 				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
