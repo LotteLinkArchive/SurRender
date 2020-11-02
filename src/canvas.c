@@ -303,16 +303,16 @@ X0 SR_MergeCanvasIntoCanvas(
 				SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16
 			) & fstatelkp2[fstate].sU32x16;
 
-			#define SXYOR sxycchk |= isxtmap.sU32x16[z]; z++;
-			#define CXYOR cxycchk |= idxtmap.sU32x16[z]; z++;
-			z = 0;
-			SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR
-			z = 0;
-			CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR
+			#define SXYOR(zix) sxycchk |= isxtmap.sU32x16[zix];
+			#define CXYOR(zix) cxycchk |= idxtmap.sU32x16[zix];
+			SXYOR( 0) SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
+			SXYOR( 8) SXYOR( 9) SXYOR(10) SXYOR(11) SXYOR(12) SXYOR(13) SXYOR(14) SXYOR(15)
+			CXYOR( 0) CXYOR( 1) CXYOR( 2) CXYOR( 3) CXYOR( 4) CXYOR( 5) CXYOR( 6) CXYOR( 7)
+			CXYOR( 8) CXYOR( 9) CXYOR(10) CXYOR(11) CXYOR(12) CXYOR(13) CXYOR(14) CXYOR(15)
 			#undef SXYOR
 			#undef CXYOR
 
-			if (cxycchk != idxtmap.aU32x16[0] || sxycchk != isxtmap.aU32x16[0] || fstate != CLUMPS) {
+			if (cxycchk != idxtmap.sU32x16[0] || sxycchk != isxtmap.sU32x16[0] || fstate != CLUMPS) {
 				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 				idxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 
