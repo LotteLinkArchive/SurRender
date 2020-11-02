@@ -190,6 +190,7 @@ SR_Canvas SR_RefCanv(
 
 pixbuf_t fstatelkp[17] = {
 	{.sU32x16 = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
 	{.sU32x16 = { 0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
 	{.sU32x16 = { 0,  1,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
 	{.sU32x16 = { 0,  1,  2,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
@@ -256,7 +257,8 @@ X0 SR_MergeCanvasIntoCanvas(
 	 */
 
 	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
-	pixbuf_t srcAbuf, srcBbuf, destbuf;
+	U32 sxycchk, cxycchk;
+	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
@@ -267,9 +269,6 @@ X0 SR_MergeCanvasIntoCanvas(
 	/* fsub represnts the number of extra pixels in each clumped row, e.g a 125 pixel row with 16-pixel clumps
 	 * would have 3 extra pixels that should not be overwritten */
 	fsub = (emax * CLUMPS) - src_canvas->width;
-
-	pixbuf_t isxmap, idxmap, isxtmap, idxtmap;
-	U32 sxycchk, cxycchk;
 
 	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
 	#define VMOVE(dest, src) memcpy(dest, src, sizeof(pixbuf_t));
@@ -304,16 +303,15 @@ X0 SR_MergeCanvasIntoCanvas(
 				SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16
 			) & fstatelkp2[fstate].sU32x16;
 
-			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			#define SXYOR sxycchk |= isxtmap.aU32x16[z]; z++;
-			#define CXYOR cxycchk |= idxtmap.aU32x16[z]; z++;
+			#define SXYOR sxycchk |= isxtmap.sU32x16[z]; z++;
+			#define CXYOR cxycchk |= idxtmap.sU32x16[z]; z++;
 			z = 0;
 			SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR SXYOR
 			z = 0;
 			CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR CXYOR
 			#undef SXYOR
 			#undef CXYOR
-			
+
 			if (cxycchk != idxtmap.aU32x16[0] || sxycchk != isxtmap.aU32x16[0] || fstate != CLUMPS) {
 				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 				idxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
