@@ -259,6 +259,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
 	U32 sxycchk, cxycchk;
 	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
+	U1 precheck;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
@@ -277,6 +278,7 @@ X0 SR_MergeCanvasIntoCanvas(
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
 		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		precheck = fstate != CLUMPS;
 		for (z = 0; z < fstate; z++) {
 			srcposx = (x * CLUMPS) + z;
 
@@ -317,9 +319,8 @@ X0 SR_MergeCanvasIntoCanvas(
 			SXYOR( 8) SXYOR( 9) SXYOR(10) SXYOR(11) SXYOR(12) SXYOR(13) SXYOR(14) SXYOR(15)
 			#undef SXYOR
 
-
 			/* Perform the final stage of the continuity check */
-			if (cxycchk != idxtmap.sU32x16[0] || sxycchk != isxtmap.sU32x16[0] || fstate != CLUMPS) {
+			if (cxycchk != idxtmap.sU32x16[0] || sxycchk != isxtmap.sU32x16[0] || precheck) {
 				/* If we know the addresses aren't continuous, which is usually unlikely, but
 				 * can happen, then we can just iterate over each pixel in "safe mode" */
 				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
