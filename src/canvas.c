@@ -280,6 +280,10 @@ X0 SR_MergeCanvasIntoCanvas(
 		for (z = 0; z < fstate; z++) {
 			srcposx = (x * CLUMPS) + z;
 
+			/* Create the X axis coordinate mappings for the source and destination canvases.
+			 * This step is important because the X positions may not be continuous (it may
+			 * loop back around to the start of the canvas if you reach the edge, for example)
+			 */
 			isxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
 				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
 			idxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
@@ -287,8 +291,6 @@ X0 SR_MergeCanvasIntoCanvas(
 		}
 
 		for (y = 0; y < src_canvas->height; y++) {
-			sxycchk = cxycchk = 0;
-
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
 			isy = SR_AxisPositionCRCTRM(
@@ -296,6 +298,9 @@ X0 SR_MergeCanvasIntoCanvas(
 			idy = SR_AxisPositionCRCTRM(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
+			/* Create the pixel index map using the row (Y) position and the contents of the X position
+			 * map.
+			 */
 			isxtmap.sU32x16 = (
 				SR_CombnAxisPosCalcXY(src_canvas, isxmap.sU32x16, isy) - fstatelkp[fstate].sU32x16
 			) & fstatelkp2[fstate].sU32x16;
@@ -303,6 +308,10 @@ X0 SR_MergeCanvasIntoCanvas(
 				SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16
 			) & fstatelkp2[fstate].sU32x16;
 
+			/* We can check if all of the memory regions are contiguous before we write to them, as we
+			 * can save a significant amount of iteration and memory accesses if they are contiguous.
+			 */
+			sxycchk = cxycchk = 0;
 			#define SXYOR(zix) sxycchk |= isxtmap.sU32x16[zix];
 			#define CXYOR(zix) cxycchk |= idxtmap.sU32x16[zix];
 			SXYOR( 0) SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
@@ -312,7 +321,10 @@ X0 SR_MergeCanvasIntoCanvas(
 			#undef SXYOR
 			#undef CXYOR
 
+			/* Perform the final stage of the continuity check */
 			if (cxycchk != idxtmap.sU32x16[0] || sxycchk != isxtmap.sU32x16[0] || fstate != CLUMPS) {
+				/* If we know the addresses aren't continuous, which is usually unlikely, but
+				 * can happen, then we can just iterate over each pixel in "safe mode" */
 				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 				idxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 
@@ -326,6 +338,10 @@ X0 SR_MergeCanvasIntoCanvas(
 				for (z = 0; z < fstate; z++)
 					dest_canvas->pixels[idxtmap.aU32x16[z]].whole = destbuf.aU32x16[z];
 			} else {
+				/* If the addresses ARE continuous, we can move up to 512 bits in a single
+				 * cycle and manipulate them simultaneously, then write them back all in one
+				 * go too. Fast!
+				 */
 				VMOVE(&srcAbuf, &src_canvas->pixels[sxycchk]);
 				VMOVE(&srcBbuf, &dest_canvas->pixels[cxycchk]);
 
