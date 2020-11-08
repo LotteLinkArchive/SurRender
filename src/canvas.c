@@ -111,10 +111,10 @@ STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height)
 STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	/* Just in case we need to free anything else */
-	if      ( canvas->hflags     & 0x02) return SR_CANVAS_CONSTANT;
+	if      ( canvas->hflags      & 0x02) return SR_CANVAS_CONSTANT;
 	else if ( canvas->references > 0x00) return SR_NONZERO_REFCOUNT;
 	else if (!canvas->pixels           ) return SR_NULL_CANVAS;
-	else if ( canvas->hflags     & 0x01) {
+	else if ( canvas->hflags      & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
 		canvas->pixels = canvas->b_addr = NULL;
 
@@ -167,7 +167,7 @@ SR_Canvas SR_RefCanv(
 
 	/* @direct */
 	SR_Canvas temp = {
-		.hflags  = absorb_host ? 0x00 : 0x01,
+		.hflags   = absorb_host ? 0x00 : 0x01,
 		.width   = width,
 		.height  = height,
 		.ratio   = (R32)width / height,
