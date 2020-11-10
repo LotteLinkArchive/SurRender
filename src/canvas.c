@@ -6,34 +6,11 @@
 #include "srtex.h"
 #include <math.h>
 #include <string.h>
-#pragma intrinsic( memset, memcpy, memcmp )
 
 #define SR_MXCS_P1 SR_MAX_CANVAS_SIZE + 1
 __extension__ U16 modlut[SR_MXCS_P1][SR_MXCS_P1] = {};
 __extension__ U1  modlut_complete   [SR_MXCS_P1] = {};
 #undef SR_MXCS_P1
-
-/* Private vector types, particularly used for alpha blending */
-typedef union {
-	U8x64  sU8x64;
-	U16x32 sU16x32;
-	U64x8  sU64x8;
-	U32x16 sU32x16;
-} pixbuf_t;
-
-typedef union {
-	U8x128 sU8x128;
-	U16x64 sU16x64;
-	U32x32 sU32x32;
-} bigpixbuf_t;
-
-typedef union {
-	U16x128 sU16x128;
-	__extension__ struct {
-		U16x64 c1;
-		U16x64 c2;
-	} __attribute__ ((packed)) sU16x64x2;
-} largepixbuf_t;
 
 X0 SR_FillModLUT(U16 moperand)
 {
@@ -134,10 +111,10 @@ STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height)
 STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	/* Just in case we need to free anything else */
-	if      ( canvas->hflags     & 0x02) return SR_CANVAS_CONSTANT;
+	if      ( canvas->hflags      & 0x02) return SR_CANVAS_CONSTANT;
 	else if ( canvas->references > 0x00) return SR_NONZERO_REFCOUNT;
 	else if (!canvas->pixels           ) return SR_NULL_CANVAS;
-	else if ( canvas->hflags     & 0x01) {
+	else if ( canvas->hflags      & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
 		canvas->pixels = canvas->b_addr = NULL;
 
@@ -158,40 +135,16 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 	return SR_NO_ERROR;
 }
 
-SR_Canvas SR_CopyCanvas(
+X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
+	SR_Canvas *new,
 	U16 copy_start_x,
-	U16 copy_start_y,
-	U16 new_width,
-	U16 new_height)
+	U16 copy_start_y)
 {
-	/* Create the destination canvas */
-	SR_Canvas new = {};
-	SR_NewCanvas(&new, new_width, new_height); /* @warn: couldfail */
-
-	/* If it isn't valid, just return the metadata and pray it doesn't get used */
-	if (!new.pixels) goto srcc_finish;
-
-	if (	copy_start_x   == 0 &&
-		copy_start_y   == 0 &&
-		new.width      == canvas->width  &&
-		new.height     == canvas->height &&
-		!canvas->xclip &&
-		!canvas->yclip ) {
-		/* Super fast memcpy when possible, hopefully. */
-		memcpy(new.pixels, canvas->pixels, SR_CanvasCalcSize(&new));
-
-		goto srcc_finish; /* Just jump to finish here, saves ident level */
-	}
-
-	/* Slower copying, but not much slower - used for cropping/panning */
 	U16 x, y;
-	for (x = 0; x < new.width ; x++)
-	for (y = 0; y < new.height; y++)
-		SR_CanvasSetPixel(&new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
-
-srcc_finish:
-	return new;
+	for (x = 0; x < new->width ; x++)
+	for (y = 0; y < new->height; y++)
+		SR_CanvasSetPixel(new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
 }
 
 SR_Canvas SR_RefCanv(
@@ -214,7 +167,7 @@ SR_Canvas SR_RefCanv(
 
 	/* @direct */
 	SR_Canvas temp = {
-		.hflags  = absorb_host ? 0x00 : 0x01,
+		.hflags   = absorb_host ? 0x00 : 0x01,
 		.width   = width,
 		.height  = height,
 		.ratio   = (R32)width / height,
@@ -235,93 +188,49 @@ SR_Canvas SR_RefCanv(
 	return temp;
 }
 
-const static U8 fstatelkp[17][64] = {
-	{ /* CPY 0  BYTES */
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 4  BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 8  BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 12 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 16 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 20 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 24 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 28 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 32 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 36 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 40 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 44 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 48 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 52 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 56 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 60 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00},
-	{ /* CPY 64 BYTES */
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+pixbuf_t fstatelkp[17] = {
+	{.sU32x16 = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  0,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  0,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  0,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,  0,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  0,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12,  0,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,  0,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,  0}},
+	{.sU32x16 = { 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15}}
 };
+
+#define D32 0x00000000
+#define A32 0xFFFFFFFF
+pixbuf_t fstatelkp2[17] = {
+	{.sU32x16 = {D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, D32}},
+	{.sU32x16 = {A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32, A32}}
+};
+#undef D32
+#undef A32
 
 X0 SR_MergeCanvasIntoCanvas(
 	SR_Canvas *dest_canvas,
@@ -347,10 +256,10 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * to fallback to using standard AVX or even previous SSE instructions.
 	 */
 
-	U16 x, y, dposx, dposy, srcposx, emax, fsub, fstate, isx, isy, idx, idy;
-	U32 ist, idt;
-	pixbuf_t srcAbuf, srcBbuf, destbuf;
-	largepixbuf_t blendbufA, blendbufB;
+	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
+	U32 sxycchk, cxycchk;
+	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
+	U1 precheck;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
@@ -360,132 +269,90 @@ X0 SR_MergeCanvasIntoCanvas(
 
 	/* fsub represnts the number of extra pixels in each clumped row, e.g a 125 pixel row with 16-pixel clumps
 	 * would have 3 extra pixels that should not be overwritten */
-	fsub = ((emax * CLUMPS) - src_canvas->width) * sizeof(SR_RGBAPixel);
+	fsub = (emax * CLUMPS) - src_canvas->width;
+
+	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
+	#define VMOVE(dest, src) memcpy(dest, src, sizeof(pixbuf_t));
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
-		srcposx = x * CLUMPS;
-		dposx   = srcposx + paste_start_x;
-		fstate  = x + 1 == emax ? sizeof(pixbuf_t) - fsub : sizeof(pixbuf_t);
-		isx     = SR_AxisPositionCRCTRM(src_canvas->rwidth , src_canvas->cwidth , srcposx, src_canvas->xclip );
-		idx     = SR_AxisPositionCRCTRM(dest_canvas->rwidth, dest_canvas->cwidth, dposx  , dest_canvas->xclip);
+		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		precheck = fstate != CLUMPS;
+		for (z = 0; z < fstate; z++) {
+			srcposx = (x * CLUMPS) + z;
+
+			/* Create the X axis coordinate mappings for the source and destination canvases.
+			 * This step is important because the X positions may not be continuous (it may
+			 * loop back around to the start of the canvas if you reach the edge, for example)
+			 */
+			isxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
+				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
+			idxmap.aU32x16[z] = SR_AxisPositionCRCTRM(
+				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
+		}
 
 		for (y = 0; y < src_canvas->height; y++) {
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
-			dposy = y + paste_start_y;
 			isy = SR_AxisPositionCRCTRM(
-				src_canvas->rheight , src_canvas->cheight , y    , src_canvas->yclip );
+				src_canvas->rheight, src_canvas->cheight , y, src_canvas->yclip);
 			idy = SR_AxisPositionCRCTRM(
-				dest_canvas->rheight, dest_canvas->cheight, dposy, dest_canvas->yclip);
-			ist = SR_CombnAxisPosCalcXY(src_canvas , isx, isy);
-			idt = SR_CombnAxisPosCalcXY(dest_canvas, idx, idy);
+				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
-			/* Copy the top layer and bottom layer pixel clumps into a malleable buffer. */
-			memcpy(	&srcAbuf,
-				&src_canvas->pixels[ist],  /* top */
-				sizeof(pixbuf_t));
-			memcpy(	&srcBbuf,
-				&dest_canvas->pixels[idt], /* base */
-				sizeof(pixbuf_t));
-			
-			#define PREALPHA\
-			destbuf.sU32x16 = (((((srcAbuf.sU32x16 & 0xFF000000) >> 24) * alpha_modifier) + 0xFF) >> 8);
+			/* Create the pixel index map using the row (Y) position and the contents of the X position
+			 * map.
+			 */
+			isxtmap.sU32x16 = (
+				SR_CombnAxisPosCalcXY(src_canvas, isxmap.sU32x16, isy) - fstatelkp[fstate].sU32x16
+			) & fstatelkp2[fstate].sU32x16;
+			idxtmap.sU32x16 = (
+				SR_CombnAxisPosCalcXY(dest_canvas, idxmap.sU32x16, idy) - fstatelkp[fstate].sU32x16
+			) & fstatelkp2[fstate].sU32x16;
 
-			#define PREALPHA_MID destbuf.sU32x16 *= 0x00010101;
+			/* We can check if all of the memory regions are contiguous before we write to them, as we
+			 * can save a significant amount of iteration and memory accesses if they are contiguous.
+			 */
+			sxycchk = cxycchk = 0;
+			#define SXYOR(zix) sxycchk |= isxtmap.sU32x16[zix]; cxycchk |= idxtmap.sU32x16[zix];
+			SXYOR( 0) SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
+			SXYOR( 8) SXYOR( 9) SXYOR(10) SXYOR(11) SXYOR(12) SXYOR(13) SXYOR(14) SXYOR(15)
+			#undef SXYOR
 
-			#define PREMULTIPLY\
-			PREALPHA\
-			PREALPHA_MID\
-			blendbufA.sU16x64x2.c1 = hcl_vector_convert( srcAbuf.sU8x64, U16x64);\
-			blendbufA.sU16x64x2.c2 = hcl_vector_convert( srcBbuf.sU8x64, U16x64);\
-			blendbufB.sU16x64x2.c1 = hcl_vector_convert( destbuf.sU8x64, U16x64);\
-			blendbufB.sU16x64x2.c2 = hcl_vector_convert(~destbuf.sU8x64, U16x64);\
-			blendbufA.sU16x128     = ((blendbufA.sU16x128 * blendbufB.sU16x128) + 0xFF) >> 8;\
-			srcAbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c1, U8x64);\
-			srcBbuf.sU8x64         = hcl_vector_convert(blendbufA.sU16x64x2.c2, U8x64);
+			/* Perform the final stage of the continuity check */
+			if (cxycchk != idxtmap.sU32x16[0] || sxycchk != isxtmap.sU32x16[0] || precheck) {
+				/* If we know the addresses aren't continuous, which is usually unlikely, but
+				 * can happen, then we can just iterate over each pixel in "safe mode" */
+				isxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
+				idxtmap.sU32x16 += fstatelkp[fstate].sU32x16;
 
-			switch (mode) {
-			case SR_BLEND_XOR:
-				PREMULTIPLY
-			case SR_BLEND_DIRECT_XOR:
-				destbuf.sU32x16 = srcBbuf.sU32x16 ^ (srcAbuf.sU32x16 & 0x00FFFFFF);
+				for (z = 0; z < fstate; z++) {
+					srcAbuf.aU32x16[z] = src_canvas->pixels[isxtmap.aU32x16[z]].whole;
+					srcBbuf.aU32x16[z] = dest_canvas->pixels[idxtmap.aU32x16[z]].whole;
+				}
 
-				break;
-			case SR_BLEND_OVERLAY:
-				PREALPHA
-				destbuf.sU32x16  = (destbuf.sU32x16 / 0xFF) * 0x00010101;
-				srcAbuf.sU8x64  *= destbuf.sU8x64;
-				destbuf.sU32x16 ^= 0x01010101;
-				srcBbuf.sU8x64  *= destbuf.sU8x64;
-				destbuf.sU8x64   = srcAbuf.sU8x64 | srcBbuf.sU8x64;
+				MBLEND
 
-				break;
-			case SR_BLEND_ADDITIVE:
-				PREMULTIPLY
-			case SR_BLEND_ADDITIVE_PAINT:
-				destbuf.sU32x16 = srcBbuf.sU32x16 & 0xFF000000;
+				for (z = 0; z < fstate; z++)
+					dest_canvas->pixels[idxtmap.aU32x16[z]].whole = destbuf.aU32x16[z];
+			} else {
+				/* If the addresses ARE continuous, we can move up to 512 bits in a single
+				 * cycle and manipulate them simultaneously, then write them back all in one
+				 * go too. Fast!
+				 */
+				VMOVE(&srcAbuf, &src_canvas->pixels[sxycchk]);
+				VMOVE(&srcBbuf, &dest_canvas->pixels[cxycchk]);
 
-				srcAbuf.sU32x16 &= 0x00FFFFFF;
-				srcBbuf.sU32x16 &= 0x00FFFFFF;
-				destbuf.sU8x64  |= srcAbuf.sU8x64 + srcBbuf.sU8x64;
+				MBLEND
 
-				break;
-			case SR_BLEND_REPLACE:
-				destbuf = srcAbuf;
-
-				break;
-			case SR_BLEND_INVERT_DROP:
-				srcAbuf.sU64x8 = ~srcAbuf.sU64x8; 
-			case SR_BLEND_DROP:
-				destbuf.sU32x16 = (srcBbuf.sU32x16 & 0x00FFFFFF) | (srcAbuf.sU32x16 & 0xFF000000);
-
-				break;
-			case SR_BLEND_REPLACE_WALPHA_MOD:
-				PREALPHA
-				destbuf.sU32x16 = (srcAbuf.sU32x16 & 0x00FFFFFF) | (destbuf.sU32x16 << 24);
-
-				break;
-			case SR_BLEND_DIRECT_XOR_ALL:
-				destbuf.sU64x8 = srcAbuf.sU64x8 ^ srcBbuf.sU64x8;
-
-				break;
-			case SR_BLEND_INVERTED_DRAW:
-				PREALPHA
-				PREALPHA_MID
-				destbuf.sU8x64 = srcBbuf.sU8x64 - destbuf.sU8x64;
-
-				break;
-			case SR_BLEND_PAINT:
-				destbuf.sU32x16 = (srcBbuf.sU32x16 & 0xFF000000) | (srcAbuf.sU32x16 & 0x00FFFFFF);
-
-				break;
+				VMOVE(&dest_canvas->pixels[cxycchk], &destbuf);
 			}
-
-			#undef PREMULTIPLY
-			#undef PREALPHA_MID
-			#undef PREALPHA
-
-			memcpy(	&srcAbuf,
-				&fstatelkp[fstate >> 2],
-				sizeof(pixbuf_t));
-			memcpy(	&srcBbuf,
-				&dest_canvas->pixels[idt],
-				sizeof(pixbuf_t));
-			
-			destbuf.sU8x64 &= srcAbuf.sU8x64;
-			srcAbuf.sU64x8 ^= 0xFFFFFFFFFFFFFFFF;
-			srcBbuf.sU8x64 &= srcAbuf.sU8x64;
-			destbuf.sU8x64 |= srcBbuf.sU8x64;
-
-			memcpy(	&dest_canvas->pixels[idt],
-				&destbuf,
-				sizeof(pixbuf_t));
 		}
 	}
 
+	#undef MBLEND
 	#undef CLUMPS
+	#undef VMOVE
 
 	return;
 }
@@ -578,7 +445,7 @@ SR_BBox SR_NZBoundingBox(SR_Canvas *src)
 	 */
 
 	/* Static declaration prevents a dangling pointer */
-	SR_BBox bbox = {};
+	__extension__ SR_BBox bbox = {};
 	U16 xC, yC, firstX, firstY, lastX, lastY, x, y;
 
 	for (y = 0; y < src->height; y++)
@@ -620,203 +487,6 @@ srnzbbx_empty:
 	/* We can return a 0-size box if we believe there is nothing here. */
 	bbox.whole = 0;
 	goto srnzbbx_bounded;
-}
-
-SR_OffsetCanvas SR_CanvasShear(
-	SR_Canvas *src,
-	I32 skew_amount,
-	U1 mode)
-{
-	U16 w, h, mcenter;
-	R32 skew;
-
-	w = src->width;
-	h = src->height;
-	mcenter = mode ? w >> 1 : h >> 1;
-	skew = (R32)skew_amount / (R32)mcenter;
-	skew_amount = abs(skew_amount);
-
-	SR_OffsetCanvas final = {};
-
-	if (mode) SR_NewCanvas(&final.canvas, w, h + (skew_amount << 1)); /* @warn: couldfail */
-	else      SR_NewCanvas(&final.canvas, w + (skew_amount << 1), h); /* @warn: couldfail */
-	SR_ZeroFill(&(final.canvas));
-
-	final.offset_x = mode ? 0 : -skew_amount;
-	final.offset_y = mode ? -skew_amount : 0;
-
-	U16 x, y;
-	I32 mshift;
-
-	#define TMP_SKEWTRFS(ol, olc, il, ilc, ils0, ils1)\
-	for (ol = 0; olc; ol++) {\
-		mshift = skew_amount + (ol - mcenter) * skew;\
-		for (il = 0; ilc; il++) {\
-			SR_RGBAPixel pixel = SR_CanvasGetPixel(src, x, y);\
-			SR_CanvasSetPixel(&(final.canvas), ils0, ils1, pixel);\
-		}\
-	}
-
-	if (mode) TMP_SKEWTRFS(x, x < w, y, y < h, x, y + mshift)
-	else      TMP_SKEWTRFS(y, y < h, x, x < w, x + mshift, y)
-	#undef TMP_SKEWTRFS
-
-	return final;
-}
-
-SR_OffsetCanvas SR_CanvasRotate(
-	SR_Canvas *src,
-	R32 degrees,
-	U1 safety_padding,
-	U1 autocrop)
-{
-	/* Declare everything here */
-	SR_Canvas temp;
-	U16 w, h, boundary, xC, yC, nx, ny;
-	I32 x, y, nxM, nyM, half_w, half_h;
-	R32 the_sin, the_cos;
-	SR_RGBAPixel pixel, pixbuf;
-	SR_OffsetCanvas final = {};
-
-	/* There's no point in considering unique values above 359. 360 -> 0 */
-	degrees = fmod(degrees, 360);
-
-	/* For simplicity's sake */
-	w = src->width;
-	h = src->height;
-
-	final.offset_x = 0;
-	final.offset_y = 0;
-
-	if (safety_padding) {
-		/* Create additional padding in case rotated data goes off-canvas */
-		boundary = MAX(w, h) << 1; /* Double the largest side length */
-		SR_NewCanvas(&final.canvas, boundary, boundary); /* @warn: couldfail */
-		final.offset_x = -(int)(boundary >> 2);
-		final.offset_y = -(int)(boundary >> 2);
-	} else {
-		SR_NewCanvas(&final.canvas, w, h); /* @warn: couldfail */
-	}
-	/* Prevent garbage data seeping in */
-	SR_ZeroFill(&final.canvas);
-
-	/* Rotation not 0, 90, 180 or 270 degrees? Use inaccurate method instead */
-	if (fmod(degrees, 90) != .0) goto srcvrot_mismatch;
-
-	/* Trying to rotate 0 degrees? Just copy the canvas, I guess. */
-	if (!((U16)degrees % 360)) {
-		SR_MergeCanvasIntoCanvas(
-			&final.canvas,
-			src,
-			-final.offset_x, /* Still need to use the offset incase padding */
-			-final.offset_y,
-			255,
-			SR_BLEND_REPLACE); /* Fastest and safest, also no background alpha */
-
-		goto srcvrot_finished; /* Jump to the finishing/cleanup line */
-	}
-
-	/* TODO: Mismatching width and height causes accurate rotation bug.
-	 * We should probably fix this, but for now it's fine to use inaccurate
-	 * rotation.
-	 */
-	if (w != h) goto srcvrot_mismatch;
-
-	/* This is the accurate rotation system, but it only works on degrees where x % 90 == 0 */
-	for (xC = 0; xC < w; xC++)
-	for (yC = 0; yC < h; yC++) {
-		pixbuf = SR_CanvasGetPixel(src, xC, yC);
-		nx = 0, ny = 0;
-		switch (((U16)degrees) % 360) {
-		case 90:
-			nx = (h - 1) - yC;
-			ny = xC;
-			break;
-		case 180:
-			nx = (w - 1) - xC;
-			ny = (h - 1) - yC;
-			break;
-		case 270:
-			nx = yC;
-			ny = (w - 1) - xC;
-			break;
-		}
-
-		SR_CanvasSetPixel(
-			&final.canvas,
-			nx - final.offset_x, /* Correct for offset */
-			ny - final.offset_y,
-			pixbuf);
-	}
-
-	goto srcvrot_finished;
-
-srcvrot_mismatch:
-	/* Convert to radians and then modulo by 2pi */
-	degrees = fmod(degrees * 0.017453292519943295, 6.28318530718);
-
-	the_sin = -sin(degrees);
-	the_cos = cos(degrees);
-	half_w = w >> 1;
-	half_h = h >> 1;
-
-	for (x = -half_w; x < half_w; x++)
-	for (y = -half_h; y < half_h; y++) {
-		nxM = (x * the_cos + y * the_sin + half_w) - final.offset_x;
-		nyM = (y * the_cos - x * the_sin + half_h) - final.offset_y;
-		pixel = SR_CanvasGetPixel(src, x + half_w, y + half_h);
-
-		/* Set target AND a single nearby pixel to de-alias */
-		SR_CanvasSetPixel(&final.canvas, nxM	, nyM	, pixel);
-		SR_CanvasSetPixel(&final.canvas, nxM - 1, nyM	, pixel);
-	}
-
-srcvrot_finished:
-	if (autocrop) {
-		/* If autocropping is enabled, auto-crop padded images. This is slow,
-		 * but speeds up merging a fair bit. Use if you only intend to rotate once.
-		 */
-		SR_BBox bbox = SR_NZBoundingBox(&final.canvas);
-		if (bbox.whole) {
-			temp = SR_RefCanv(
-				&final.canvas,
-				bbox.named.sx,
-				bbox.named.sy,
-				(bbox.named.ex - bbox.named.sx) + 1,
-				(bbox.named.ey - bbox.named.sy) + 1,
-				true);
-
-			final.canvas = temp;
-
-			final.offset_x += bbox.named.sx;
-			final.offset_y += bbox.named.sy;
-		}
-	}
-
-	return final;
-}
-
-X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical)
-{
-	/* Flipping canvases honestly doesn't need a new canvas to be allocated,
-	 * so we can do it in-place just fine for extra speed and less memory usage.
-	 */
-	U16 x, y, wmax, hmax, xdest, ydest;
-	SR_RGBAPixel temp, pixel;
-
-	wmax = vertical ? src->width : src->width >> 1;
-	hmax = vertical ? src->height >> 1 : src->height;
-
-	for (x = 0; x < wmax; x++)
-	for (y = 0; y < hmax; y++) {
-		xdest = vertical ? x : (src->width  - 1) - x;
-		ydest = vertical ? (src->height - 1) - y : y;
-
-		temp  = SR_CanvasGetPixel(src, xdest, ydest);
-		pixel = SR_CanvasGetPixel(src, x, y);
-		SR_CanvasSetPixel(src, xdest, ydest, pixel);
-		SR_CanvasSetPixel(src, x, y, temp);
-	}
 }
 
 SR_Canvas SR_RefCanvTile(

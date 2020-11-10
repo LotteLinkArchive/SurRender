@@ -57,18 +57,6 @@ typedef struct SR_Canvas {
 	SX munmap_size;
 } SR_Canvas;
 
-/* An SR_OffsetCanvas is just a regular canvas, but with additional offset
- * data which you will probably need in order to "place" the canvas
- * correctly using merge functions. Essentially, take the coordinates you
- * originally intended to paste the canvas at, and apply the offset values
- * to those coordinates.
- */
-typedef struct SR_OffsetCanvas {
-	I32 offset_x;
-	I32 offset_y;
-	SR_Canvas canvas;
-} SR_OffsetCanvas;
-
 /* An Atlas Canvas is a canvas supplied with a tile width and tile height to make it easier to retrieve tiles in a
  * texture atlas.
  */
@@ -161,7 +149,7 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 /* Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates. */
 #define SR_AxisPositionCRCTRM(a, b, c, d) (modlut[(a)][\
 	(modlut[(b)][(c) & SR_MAX_CANVAS_SIZE] + (d)) & SR_MAX_CANVAS_SIZE])
-#define SR_CombnAxisPosCalcXY(canvas, x, y) ((canvas)->rwidth * y) + x
+#define SR_CombnAxisPosCalcXY(canvas, x, y) (x) + (U32)((canvas)->rwidth * y)
 #define SR_CanvasCalcPosition(canvas, x, y) SR_CombnAxisPosCalcXY((canvas), \
 	SR_AxisPositionCRCTRM((canvas)->rwidth, (canvas)->cwidth, (x), (canvas)->xclip), \
 	SR_AxisPositionCRCTRM((canvas)->rheight, (canvas)->cheight, (y), (canvas)->yclip))
@@ -191,18 +179,15 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas);
  */
 #define SR_CanvasIsValid(canvas) (BOOLIFY((canvas)->pixels))
 
-/* Malloc a new canvas of given size and start copying every pixel from the
- * specified old canvas to the new one, starting at the given position.
- * This also allows you to create cropped versions of a canvas! :)
- * Note: This does not destroy the old canvas. If you don't need it anymore
- * don't forget to destroy it, or it will remain allocated.
+/* Fills the whole "new" canvas with the contents of the original canvas.
+ *
+ * Copying from the original canvas starts at (copy_start_x, copy_start_y)
  */
-SR_Canvas SR_CopyCanvas(
+X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
+	SR_Canvas *new,
 	U16 copy_start_x,
-	U16 copy_start_y,
-	U16 new_width,
-	U16 new_height);
+	U16 copy_start_y);
 
 /* Takes pretty much the same arguments as SR_CopyCanvas, except it doesn't
  * malloc a new canvas - it returns essentially a segment of the original
@@ -260,6 +245,9 @@ X0 SR_MergeCanvasIntoCanvas(
  * happen if the source and destination point to the same canvas.
  * The new width and height is the width and height of the destination
  * canvas.
+ * 
+ * BOTH SOURCE AND DESTINATION MUST BE A VALID CANVAS. IF THIS IS NOT THE
+ * CASE, EXPECT UNDEFINED BEHAVIOUR.
  */
 X0 SR_CanvasScale(
 	SR_Canvas *src,
@@ -278,44 +266,6 @@ X0 SR_CanvasScale(
  * Note that this is a particularly slow operation.
  */
 SR_BBox SR_NZBoundingBox(SR_Canvas *src);
-
-/* Returns a canvas with the input canvas's content skewed
- * set mode for vertical shearing, else turn off for horizontal
- * 
- * Will malloc a new canvas!
- */
-SR_OffsetCanvas SR_CanvasShear(
-	SR_Canvas *src,
-	I32 skew_amount,
-	U1 mode);
-
-/* Returns a canvas that is hecking rotated, hopefully.
- * Expects an angle in degrees - will rotate clockwise.
- *
- * Enable safety padding in order to prevent rotated images potentially
- * going off-scanvas.
- * 
- * When safety padding is enabled, offset_x and offset_y will be non-zero
- * (these are parameters of the SR_OffsetCanvas struct returned). Use
- * these offsets to properly determine where the rotated canvas should be
- * placed on-screen.
- * 
- * Will malloc a new canvas!
- * 
- * NEW: Autocrop option will automatically crop a padded rotated canvas
- * in order to remove extra space. Useful for feeding rotated canvases
- * into the rotation function.
- */
-SR_OffsetCanvas SR_CanvasRotate(
-	SR_Canvas *src,
-	R32 degrees,
-	U1 safety_padding,
-	U1 autocrop);
-
-/* Flip the target canvas - does not malloc, works in-place.
- * Enable vertical to flip vertically. Leave disabled for horizontal.
- */
-X0 SR_InplaceFlip(SR_Canvas *src, U1 vertical);
 
 /* Creates a reference canvas based on a given tile inside another canvas.
  * The col/row argument is modulo'd by the amount of columns and rows in

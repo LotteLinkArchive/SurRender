@@ -34,18 +34,18 @@ STATUS SR_TexBlobToCanvas(
 	struct SRTHeader *head = blob;
 
 	/* Perform careful boundary checking before accessing anything to try to prevent a buffer overflow */
-	if (size_boundary < SRT_HEADER_WIDTH)                                                 return SR_BUFFER_OVERFLOW;
-	if (head->magicno != SRT_MAGIC_NUMBER)                                                return SR_INVALID_HEADER;
+	if  (size_boundary  < SRT_HEADER_WIDTH)                                               return SR_BUFFER_OVERFLOW;
+	if  (head->magicno != SRT_MAGIC_NUMBER)                                               return SR_INVALID_HEADER;
 	if ((head->height * SRT_WIDTH_ROUNDUP(head->width) * head->Bpp) != head->data_length) return SR_INVALID_HEADER;
 
 	/* Header is clean by now */
 	SX dangerzone = SRT_HEADER_WIDTH + head->offset;
 
 	/* Check canvas eligbility and data body bounds */
-	if (head->data_length > (size_boundary - dangerzone))                                 return SR_BUFFER_OVERFLOW;
-	if (head->Bpp != 4)                                                                   return SR_INVALID_TEXTURE;
+	if  (head->data_length > (size_boundary - dangerzone))                                return SR_BUFFER_OVERFLOW;
+	if  (head->Bpp  != 4)                                                                 return SR_INVALID_TEXTURE;
 	if ((head->width > SR_MAX_CANVAS_SIZE) || (head->height > SR_MAX_CANVAS_SIZE))        return SR_INVALID_SIZE;
-	if ((head->width < 1) || (head->height < 1))                                          return SR_INVALID_SIZE;
+	if ((head->width < 1)                  || (head->height < 1))                         return SR_INVALID_SIZE;
 
 	/* Define the boundary between header and image content */
 	X0 *body = (CHR *)blob + dangerzone;
@@ -125,7 +125,7 @@ SR_Canvas SR_TexFileCanvSoftFail(CHR *filename)
 {
 	/* Soft-failing functions like this should absolutely not be used. Please use SR_TexFileToCanvas instead. */
 
-	SR_Canvas target = {};
+	SR_Canvas target;
 
 	STATUS isostat = SR_TexFileToCanvas(filename, &target);
 	if (isostat != SR_NO_ERROR) {

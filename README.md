@@ -60,7 +60,7 @@ make CFLAGS='-Ofast -march=znver2 -mtune=znver2 -msse -msse2 -msse3 -mssse3 -mss
 make CFLAGS='-g -Og' CC='clang' clean all
 
 # Run the demo, if you'd like
-./surdemo
+./tools/surdemo
 
 # Install SurRender?
 # TODO: Explain this step more!
