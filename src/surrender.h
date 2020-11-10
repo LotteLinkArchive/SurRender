@@ -8,4 +8,5 @@
 #include "errors.h"
 #include "srtex.h"
 #include "srtexldr.h"
+#include "canvmerge.h"
 #endif
