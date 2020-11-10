@@ -30,34 +30,12 @@ SR_TileTo(&the, SR_PCANVAS.width, SR_PCANVAS.height); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &the, 0, 0, 255, SR_BLEND_REPLACE); \
 SR_DestroyCanvas(&the); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &brick_tileset, 24, 24, 255, SR_BLEND_OVERLAY); \
-SR_DrawRectOutline( \
-	&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), \
-	(((cheese_timer >> 3) & 3) << 5) + 23, \
-	(((cheese_timer >> 5) % 6) << 5) + 23, \
-	33, 33); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 128, 128, 255, SR_BLEND_ADDITIVE);
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&brick_tileset); \
 SR_DestroyCanvas(&afont); \
 SR_DestroyCanvas(&text_demo);
-#elif SR_DEMO_PROG == 1 // Puck
-#define SR_DEMO_INIT \
-SR_Canvas imagetest = SR_TexFileCanvSoftFail("./assets/PUCK.BMP.SRT"); \
-SR_OffsetCanvas rotcanvas; \
-float speeen = 0.0;
-#define SR_DEMO_LOOP \
-speeen += 1; \
-rotcanvas = SR_CanvasRotate(&imagetest, speeen, 1, 1); \
-unsigned short spx = 128 + rotcanvas.offset_x; \
-unsigned short spy = 128 + rotcanvas.offset_y; \
-SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(255, 255, 255, 255), 0, 0, SR_PCANVAS.width, SR_PCANVAS.height); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &(rotcanvas.canvas), spx, spy, 255, SR_BLEND_ADDITIVE); \
-SR_DrawRectOutline(&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), spx, spy, rotcanvas.canvas.width, \
-	rotcanvas.canvas.height); \
-SR_DestroyCanvas(&(rotcanvas.canvas));
-#define SR_DEMO_CLRF \
-SR_DestroyCanvas(&imagetest);
-#elif SR_DEMO_PROG == 2 // Doki
+#elif SR_DEMO_PROG == 1 // Doki
 #define SR_DEMO_INIT \
 SR_Canvas ball = SR_TexFileCanvSoftFail("./assets/TILEROTTEX.BMP.SRT"); \
 SR_Canvas logo = SR_TexFileCanvSoftFail("./assets/DDLC.BMP.SRT"); \
@@ -75,26 +53,5 @@ SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &monkas, SR_PCANVAS.width - monkas.width, 
 SR_DestroyCanvas(&ball); \
 SR_DestroyCanvas(&logo); \
 SR_DestroyCanvas(&monkas);
-#elif SR_DEMO_PROG == 3 // Blender
-#define SR_DEMO_INIT \
-SR_Canvas goodra = SR_TexFileCanvSoftFail("./assets/GOODRA.BMP.SRT"); \
-SR_Canvas temp; \
-SR_NewCanvas(&temp, 64, 64); \
-U16 gpos, gxpos, gypos; \
-gpos = gxpos = gypos = 0;
-#define SR_DEMO_LOOP \
-gxpos = gpos % 64; \
-gypos = (gpos / 64) % 64; \
-SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(0, 0, 0, 255), 0, 0, SR_PCANVAS.width, SR_PCANVAS.height); \
-SR_DrawRect(&temp, SR_CreateRGBA(0, 0, 0, 255), 0, 0, temp.width, temp.height); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &goodra, 128, 128, 255, SR_BLEND_OVERLAY); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &goodra, 32 + gxpos, 32 + gypos, 255, SR_BLEND_OVERLAY); \
-SR_MergeCanvasIntoCanvas(&temp, &goodra, gxpos, gypos, 255, SR_BLEND_OVERLAY); \
-SR_DrawRect(&SR_PCANVAS, SR_CreateRGBA(255, 167, 15, 255), 31, 31, 66, 66); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &temp, 32, 32, 255, SR_BLEND_OVERLAY); \
-gpos++;
-#define SR_DEMO_CLRF \
-SR_DestroyCanvas(&goodra); \
-SR_DestroyCanvas(&temp);
 #endif
 #endif
