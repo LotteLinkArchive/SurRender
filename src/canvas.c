@@ -137,14 +137,14 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 
 X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
-	SR_Canvas *new,
+	SR_Canvas *dest,
 	U16 copy_start_x,
 	U16 copy_start_y)
 {
 	U16 x, y;
-	for (x = 0; x < new->width ; x++)
-	for (y = 0; y < new->height; y++)
-		SR_CanvasSetPixel(new, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
+	for (x = 0; x < dest->width ; x++)
+	for (y = 0; y < dest->height; y++)
+		SR_CanvasSetPixel(dest, x, y, SR_CanvasGetPixel(canvas, x + copy_start_x, y + copy_start_y));
 }
 
 SR_Canvas SR_RefCanv(

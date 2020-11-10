@@ -185,7 +185,7 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas);
  */
 X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
-	SR_Canvas *new,
+	SR_Canvas *dest,
 	U16 copy_start_x,
 	U16 copy_start_y);
 
