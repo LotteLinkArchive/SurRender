@@ -30,7 +30,7 @@ SR_TileTo(&the, SR_PCANVAS.width, SR_PCANVAS.height); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &the, 0, 0, 255, SR_BLEND_REPLACE); \
 SR_DestroyCanvas(&the); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &brick_tileset, 24, 24, 255, SR_BLEND_OVERLAY); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 128, 128, 255, SR_BLEND_ADDITIVE);
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 24, 256, 255, SR_BLEND_ADDITIVE);
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&brick_tileset); \
 SR_DestroyCanvas(&afont); \
