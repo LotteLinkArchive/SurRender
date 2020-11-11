@@ -1,4 +1,6 @@
 #include "textrender.h"
+#include "blendvec.h"
+#include "canvmerge.h"
 
 SR_FontAtlas SR_MakeFontAtlas(
 	SR_Canvas *font,
@@ -68,7 +70,7 @@ U16x4 SR_PrintToCanvas(
 		if ((font->rescalewidth  != font->charwidth) ||
 			(font->rescaleheight != font->charheight)) {
 			__extension__ SR_Canvas temp = {};
-			if (SR_NewCanvas(&temp, font->rescalewidth, font->rescaleheight) != SR_NO_ERROR) break;
+			if (SR_NewCanvas(&temp, font->rescalewidth, font->rescaleheight, 0) != SR_NO_ERROR) break;
 			/* @warn: couldfail */
 
 			SR_CanvasScale(&character, &temp, font->rescalemode);

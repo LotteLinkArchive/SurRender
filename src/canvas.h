@@ -3,6 +3,7 @@
 #include "glbl.h"
 #include "colours.h"
 #include "errors.h"
+#include <math.h>
 
 /* Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead! */
 #ifndef SR_MAX_CANVAS_SIZE
@@ -27,12 +28,13 @@ typedef struct SR_Canvas {
 
 	/* Internal canvas properties - FORMAT:
 	 * 0 b 0 0 0 0 0 0 0 0
-	 *     X X | | | | | \- Canvas is a reference to another canvas' pixels
-	 *         | | | | \--- Canvas is indestructible
-	 *         | | | \----- Canvas is important             [UNIMPLEMENTED]
-	 *         | | \------- Canvas is a memory-mapped file
-	 *         | \--------- Canvas Rsize is a power of two
-	 *         \----------- Canvas Csize is a power of two
+	 *     X | | | | | | \- Canvas is a reference to another canvas' pixels
+	 *       | | | | | \--- Canvas is indestructible
+	 *       | | | | \----- Canvas is important             [UNIMPLEMENTED]
+	 *       | | | \------- Canvas is a memory-mapped file
+	 *       | | \--------- Canvas Rsize is a power of two
+	 *       | \----------- Canvas Csize is a power of two
+	 *       \------------- Canvas needs an equivalently sized depth buffer
 	 */
 	U8 hflags;
 
@@ -55,6 +57,9 @@ typedef struct SR_Canvas {
 	
 	/* Size to feed to munmap */
 	SX munmap_size;
+
+	/* If needed, a reference to a depth buffer canvas */
+	SR_RGBAPixel *depth_buffer;
 } SR_Canvas;
 
 /* An Atlas Canvas is a canvas supplied with a tile width and tile height to make it easier to retrieve tiles in a
@@ -82,6 +87,12 @@ typedef union {
 enum SR_ScaleModes {
 	SR_SCALE_NEARESTN,
 	SR_SCALE_BILINEAR
+};
+
+enum SR_NewCanvasFlags {
+	SR_CANVAS_IMPORTANT = 0x04,
+	SR_CANVAS_DEPTH     = 0x40,
+	SR_CANVAS_NODESTROY = 0x02
 };
 
 /* Returns an appropriate HFLAG if tex is power of 2 */
@@ -115,8 +126,11 @@ X0 SR_ZeroFill(SR_Canvas *canvas);
  * 
  * target -> Must be a blank, unused SR_Canvas variable. You can create it like this...
  *  * SR_Canvas mycanvas = {};
+ * (or by using memset)
+ *
+ * flags -> see SR_NewCanvasFlags
  */
-STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height);
+STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height, U8 flags);
 
 /* Get the height and width of a canvas */
 #define SR_CanvasGetWidth(canvas) ((canvas)->width)
@@ -154,6 +168,18 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 	SR_AxisPositionCRCTRM((canvas)->rwidth, (canvas)->cwidth, (x), (canvas)->xclip), \
 	SR_AxisPositionCRCTRM((canvas)->rheight, (canvas)->cheight, (y), (canvas)->yclip))
 
+/* Calculate a uniform position on the canvas with a float between the range 0 and 1.
+ *
+ * E.g for a 256x128 canvas...
+ *
+ * X 1.0  Y 1.0  -> X 256 Y 128
+ * X 0.0  Y 0.0  -> X 0   Y 0
+ * X 0.13 Y 0.82 -> X 33  Y 105
+ */
+#define SR_CanvasUniformPos(canvas, x, y) SR_CanvasCalcPosition((canvas),\
+	(U16)round((float)(x) * (float)((canvas)->width)),\
+	(U16)round((float)(y) * (float)((canvas)->height)))
+
 /* Set the value of a pixel in the canvas */
 #define SR_CanvasSetPixel(canvas, x, y, pixel) (canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))] =\
 (pixel)
@@ -185,7 +211,7 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas);
  */
 X0 SR_CopyCanvas(
 	SR_Canvas *canvas,
-	SR_Canvas *new,
+	SR_Canvas *dest,
 	U16 copy_start_x,
 	U16 copy_start_y);
 
@@ -222,24 +248,6 @@ SR_Canvas SR_RefCanv(
 	U16 width,
 	U16 height,
 	U1  absorb_host);
-
-/* Allows you to blend/merge a source canvas on to a destination canvas.
- * Can be pasted at a given offset (paste_start_x and paste_start_y)
- * Uses alpha modifier and mode values just like SR_RGBABlender. Usually
- * you'll just want a modifier of 255 and mode SR_BLEND_ADDITIVE.
- * 
- * Note that if the base canvas is completely transparent (which will be
- * the case if you create a completely new canvas) then you will want to
- * use SR_BLEND_REPLACE, as other blend modes will re-use the alpha value
- * of the base canvas in order to perform correct blending.
- */
-X0 SR_MergeCanvasIntoCanvas(
-	SR_Canvas *dest_canvas,
-	SR_Canvas *src_canvas,
-	U16 paste_start_x,
-	U16 paste_start_y,
-	U8 alpha_modifier,
-	I8 mode);
 
 /* Scales the source canvas into the destination canvas. Bad things will
  * happen if the source and destination point to the same canvas.
@@ -283,4 +291,27 @@ SR_Canvas SR_RefCanvTile(
 	U16 tile_h,
 	U16 col,
 	U16 row);
+
+/* Get a reference canvas which points to the depth buffer of the source
+ * canvas. Has the same limitations as SR_RefCanv. You MUST destroy this
+ * reference after you're done using it with SR_DestroyCanvas, or the
+ * source canvas will become indestructible (you will create a memory
+ * leak).
+ *
+ * Do NOT call this on a canvas that has no depth buffer.
+ */
+SR_Canvas SR_RefCanvDepth(
+	SR_Canvas *src,
+	U16 xclip,
+	U16 yclip,
+	U16 width,
+	U16 height,
+	U1  absorb_host);
+
+/* Clear the whole memory range for the depth buffer of a canvas. Includes
+ * any clipped regions.
+ *
+ * Fill value could be any 8-bit value, either 0xFF and 0x00 are fine.
+ */
+void SR_EraseCanvDepth(SR_Canvas *target, U8 fill);
 #endif

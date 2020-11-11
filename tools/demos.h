@@ -9,7 +9,7 @@ SR_Canvas afont = SR_TexFileCanvSoftFail("./assets/AFONT.PNG.SRT"); \
 SR_FontAtlas afonta = SR_MakeFontAtlas(&afont, 5, 10); \
 SR_Canvas brick_tileset = SR_TexFileCanvSoftFail("./assets/BRICKS.BMP.SRT"); \
 SR_Canvas brick_tileset_res; \
-SR_NewCanvas(&brick_tileset_res, 192, 192); \
+SR_NewCanvas(&brick_tileset_res, 192, 192, 0); \
 SR_CanvasScale(&brick_tileset, &brick_tileset_res, SR_SCALE_NEARESTN); \
 SR_DestroyCanvas(&brick_tileset); \
 brick_tileset = brick_tileset_res; \
@@ -18,7 +18,7 @@ afonta.rescalewidth  = afonta.charwidth  * 3; \
 afonta.rescaleheight = afonta.charheight * 2; \
 U16x4 bbox = SR_PrintToCanvas(&afonta, NULL, hstri, sizeof(hstri) / 2, 0, 0, 0, 0, true); \
 SR_Canvas text_demo; \
-SR_NewCanvas(&text_demo, bbox[2], bbox[3]); \
+SR_NewCanvas(&text_demo, bbox[2], bbox[3], 0); \
 SR_ZeroFill(&text_demo); \
 afonta.colour = SR_CreateRGBA(255, 255, 255, 127); \
 SR_PrintToCanvas(&afonta, &text_demo, hstri, sizeof(hstri) / 2, 0, 0, 0, SR_BLEND_REPLACE_WALPHA_MOD, false);
@@ -30,7 +30,7 @@ SR_TileTo(&the, SR_PCANVAS.width, SR_PCANVAS.height); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &the, 0, 0, 255, SR_BLEND_REPLACE); \
 SR_DestroyCanvas(&the); \
 SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &brick_tileset, 24, 24, 255, SR_BLEND_OVERLAY); \
-SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 128, 128, 255, SR_BLEND_ADDITIVE);
+SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &text_demo, 24, 256, 255, SR_BLEND_ADDITIVE);
 #define SR_DEMO_CLRF \
 SR_DestroyCanvas(&brick_tileset); \
 SR_DestroyCanvas(&afont); \

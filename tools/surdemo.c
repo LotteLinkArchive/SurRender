@@ -160,7 +160,7 @@ INAT main(X0)
 	prio_lock_t mmutex = PRIO_LOCK_INITIALIZER;
 
 	/* Initialize the primary canvas along with the global state */
-	if (SR_NewCanvas(&state.primary_canvas, 640, 480) != SR_NO_ERROR) {
+	if (SR_NewCanvas(&state.primary_canvas, 640, 480, SR_CANVAS_DEPTH) != SR_NO_ERROR) {
 		status = 1;
 		goto srdm_main_thread_exit;
 	}
