@@ -27,12 +27,13 @@ typedef struct SR_Canvas {
 
 	/* Internal canvas properties - FORMAT:
 	 * 0 b 0 0 0 0 0 0 0 0
-	 *     X X | | | | | \- Canvas is a reference to another canvas' pixels
-	 *         | | | | \--- Canvas is indestructible
-	 *         | | | \----- Canvas is important             [UNIMPLEMENTED]
-	 *         | | \------- Canvas is a memory-mapped file
-	 *         | \--------- Canvas Rsize is a power of two
-	 *         \----------- Canvas Csize is a power of two
+	 *     X | | | | | | \- Canvas is a reference to another canvas' pixels
+	 *       | | | | | \--- Canvas is indestructible
+	 *       | | | | \----- Canvas is important             [UNIMPLEMENTED]
+	 *       | | | \------- Canvas is a memory-mapped file
+	 *       | | \--------- Canvas Rsize is a power of two
+	 *       | \----------- Canvas Csize is a power of two
+	 *       \------------- Canvas needs an equivalently sized depth buffer
 	 */
 	U8 hflags;
 
@@ -55,6 +56,9 @@ typedef struct SR_Canvas {
 	
 	/* Size to feed to munmap */
 	SX munmap_size;
+
+	/* If needed, a reference to a depth buffer canvas */
+	SR_RGBAPixel *depth_buffer;
 } SR_Canvas;
 
 /* An Atlas Canvas is a canvas supplied with a tile width and tile height to make it easier to retrieve tiles in a
@@ -82,6 +86,12 @@ typedef union {
 enum SR_ScaleModes {
 	SR_SCALE_NEARESTN,
 	SR_SCALE_BILINEAR
+};
+
+enum SR_NewCanvasFlags {
+	SR_CANVAS_IMPORTANT = 0x04,
+	SR_CANVAS_DEPTH     = 0x40,
+	SR_CANVAS_NODESTROY = 0x02
 };
 
 /* Returns an appropriate HFLAG if tex is power of 2 */
@@ -115,8 +125,11 @@ X0 SR_ZeroFill(SR_Canvas *canvas);
  * 
  * target -> Must be a blank, unused SR_Canvas variable. You can create it like this...
  *  * SR_Canvas mycanvas = {};
+ * (or by using memset)
+ *
+ * flags -> see SR_NewCanvasFlags
  */
-STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height);
+STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height, U8 flags);
 
 /* Get the height and width of a canvas */
 #define SR_CanvasGetWidth(canvas) ((canvas)->width)
@@ -265,4 +278,20 @@ SR_Canvas SR_RefCanvTile(
 	U16 tile_h,
 	U16 col,
 	U16 row);
+
+/* Get a reference canvas which points to the depth buffer of the source
+ * canvas. Has the same limitations as SR_RefCanv. You MUST destroy this
+ * reference after you're done using it with SR_DestroyCanvas, or the
+ * source canvas will become indestructible (you will create a memory
+ * leak).
+ *
+ * Do NOT call this on a canvas that has no depth buffer.
+ */
+SR_Canvas SR_RefCanvDepth(
+	SR_Canvas *src,
+	U16 xclip,
+	U16 yclip,
+	U16 width,
+	U16 height,
+	U1  absorb_host);
 #endif

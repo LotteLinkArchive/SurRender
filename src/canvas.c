@@ -55,16 +55,20 @@ STATUS SR_ResizeCanvas(
 	/* Not strictly neccessary, but rodger put it here anyway, so whatever. */
 	canvas->ratio = (R32)width / height;
 
+	U32 asize = SRT_WIDTH_ROUNDUP((U32)canvas->rwidth) * (U32)canvas->rheight * sizeof(SR_RGBAPixel);
+
 	/* FYI: We can actually use realloc here if we assume that canvas->pixels
 	 * contains either a valid allocation or none at all (represented by NULL)
 	 * That way, we can simplify the whole process, as realloc works just like
 	 * malloc does when you feed it a null pointer. Magic!
 	 */
-	canvas->pixels = realloc(canvas->pixels,
-		SRT_WIDTH_ROUNDUP((U32)canvas->rwidth) * (U32)canvas->rheight * sizeof(SR_RGBAPixel));
+	canvas->pixels = realloc(canvas->pixels, asize);
+
+	/* If we need a depth buffer too, allocate one */
+	if (canvas->hflags & 0x40) canvas->depth_buffer = realloc(canvas->depth_buffer, asize);
 
 	/* Return the allocation state. */
-	return canvas->pixels ? SR_NO_ERROR : SR_MALLOC_FAILURE;
+	return (canvas->pixels && (canvas->depth_buffer || !(canvas->hflags & 0x40))) ? SR_NO_ERROR : SR_MALLOC_FAILURE;
 }
 
 X0 SR_TileTo(
@@ -99,9 +103,11 @@ X0 SR_ZeroFill(SR_Canvas *canvas)
 	memset(canvas->pixels, 0, SR_CanvasCalcSize(canvas));
 }
 
-STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height)
+STATUS SR_NewCanvas(SR_Canvas *target, U16 width, U16 height, U8 flags)
 {
 	memset(target, 0, sizeof(SR_Canvas));
+
+	target->hflags |= flags;
 
 	/* As long as we set pixels to NULL, ResizeCanvas can be used here too. */
 	return SR_ResizeCanvas(target, width, height);
@@ -112,8 +118,8 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 {
 	/* Just in case we need to free anything else */
 	if      ( canvas->hflags      & 0x02) return SR_CANVAS_CONSTANT;
-	else if ( canvas->references > 0x00) return SR_NONZERO_REFCOUNT;
-	else if (!canvas->pixels           ) return SR_NULL_CANVAS;
+	else if ( canvas->references  > 0x00) return SR_NONZERO_REFCOUNT;
+	else if (!canvas->pixels            ) return SR_NULL_CANVAS;
 	else if ( canvas->hflags      & 0x01) {
 		if (canvas->refsrc) ((SR_Canvas *)canvas->refsrc)->references--;
 		canvas->pixels = canvas->b_addr = NULL;
@@ -127,10 +133,12 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 		if (umunmap(freeadr, canvas->munmap_size) != 0) return SR_MUNMAP_FAILURE;
 		canvas->hflags ^= 0x08;
 	} else {
+		if ((canvas->hflags & 0x40) && canvas->depth_buffer) free(canvas->depth_buffer);
+
 		free(freeadr);
 	}
 
-	canvas->pixels = canvas->b_addr = NULL;
+	canvas->depth_buffer = canvas->pixels = canvas->b_addr = NULL;
 
 	return SR_NO_ERROR;
 }
@@ -167,7 +175,7 @@ SR_Canvas SR_RefCanv(
 
 	/* @direct */
 	SR_Canvas temp = {
-		.hflags   = absorb_host ? 0x00 : 0x01,
+		.hflags  = (absorb_host ? 0x00 : 0x01) | (src->hflags & 0x40),
 		.width   = width,
 		.height  = height,
 		.ratio   = (R32)width / height,
@@ -178,7 +186,10 @@ SR_Canvas SR_RefCanv(
 		.yclip   = yclip,
 		.cwidth  = MIN(src->cwidth , width ),
 		.cheight = MIN(src->cheight, height),
-		.refsrc  = (void *)src
+		.refsrc  = (void *)src,
+
+		/* Extended attributes */
+		.depth_buffer = src->depth_buffer
 	};
 
 	if (absorb_host) src->references++;
@@ -335,4 +346,20 @@ SR_Canvas SR_RefCanvTile(
 		(col % columns) * tile_w,
 		(row % rows   ) * tile_h,
 		tile_w, tile_h, false);
+}
+
+SR_Canvas SR_RefCanvDepth(
+	SR_Canvas *src,
+	U16 xclip,
+	U16 yclip,
+	U16 width,
+	U16 height,
+	U1  absorb_host)
+{
+	SR_Canvas temp = SR_RefCanv(src, xclip, yclip, width, height, absorb_host);
+
+	temp.pixels = src->depth_buffer; 
+	temp.depth_buffer = NULL;
+
+	return temp;
 }
