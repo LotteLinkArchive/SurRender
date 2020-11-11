@@ -117,6 +117,7 @@ pixbuf_t SR_PixbufBlend(
 	return destbuf;
 }
 
+/* Backwards compatibility function used in text rendering - Avoid using this */
 SR_RGBAPixel SR_RGBABlender(
 	SR_RGBAPixel pixel_base,
 	SR_RGBAPixel pixel_top,
