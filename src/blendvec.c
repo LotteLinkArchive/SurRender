@@ -6,14 +6,15 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-const pixbuf_t consdat[7] = {
+const pixbuf_t consdat[8] = {
 	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
 	{.aU32x8 = {0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF}},
 	{.aU32x8 = {0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101}},
 	{.aU32x8 = {0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF}},
 	{.aU32x8 = {0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101}},
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}},
-	{.aU32x8 = {0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001}}};
+	{.aU32x8 = {0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001}},
+	{.aU32x8 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}}};
 
 pixbuf_t SR_PixbufBlend(
 	pixbuf_t srcAbuf,
@@ -21,7 +22,7 @@ pixbuf_t SR_PixbufBlend(
 	U8 alpha_modifier,
 	I8 mode)
 {
-	pixbuf_t destbuf, tempbuf;
+	pixbuf_t destbuf = {.aU32x8 = {0, 0, 0, 0, 0, 0, 0, 0}};
 
 	/* Feed Assumptions:
 	 * srcAbuf = 0xFF37A4B6 (top)
@@ -34,6 +35,7 @@ pixbuf_t SR_PixbufBlend(
 	/* destbuf = 0x000000FF */
 	#define PREALPHA_MID destbuf.vec = simde_mm256_mullo_epi32(destbuf.vec, consdat[2].vec);
 	/* destbuf = 0x00FFFFFF */
+
 	#define PREMULTIPLY PREALPHA PREALPHA_MID\
 	srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, destbuf.vec);\
 	srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
@@ -47,16 +49,13 @@ pixbuf_t SR_PixbufBlend(
 		destbuf.vec = simde_mm256_xor_si256(srcBbuf.vec, simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec));
 
 		break;
-	default:
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_srli_epi32(destbuf.vec, 7); /* 0x01 */
-		srcAbuf.vec = simde_mm256_and_si256(simde_mm256_mullo_epi32(srcAbuf.vec, destbuf.vec), consdat[3].vec);
-		destbuf.vec = simde_mm256_xor_si256(destbuf.vec, consdat[6].vec);
-		tempbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec);
-		srcBbuf.vec = simde_mm256_and_si256(simde_mm256_mullo_epi32(destbuf.vec, srcBbuf.vec), consdat[3].vec);
-		srcBbuf.vec = simde_mm256_or_si256(tempbuf.vec, srcBbuf.vec);
-		destbuf.vec = simde_mm256_or_si256(srcAbuf.vec, srcBbuf.vec);
+		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, consdat[7].vec);
+		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec,
+			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, consdat[5].vec), consdat[0].vec));
+		destbuf.vec = simde_mm256_or_si256(simde_mm256_and_si256(
+			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec), destbuf.vec), srcBbuf.vec);
 
 		break;
 	case SR_BLEND_ADDITIVE:
@@ -66,7 +65,8 @@ pixbuf_t SR_PixbufBlend(
 		destbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec);
 		srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[3].vec);
-		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_add_epi8(srcAbuf.vec, srcBbuf.vec));
+		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_adds_epi8(srcAbuf.vec, srcBbuf.vec));
+		/* TODO: If premultiplication is accurate, adds can be replaced with just add here. */
 
 		break;
 	case SR_BLEND_REPLACE:
