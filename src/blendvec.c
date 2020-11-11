@@ -13,12 +13,12 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-countbuf_t counts[3] = {
+const countbuf_t counts[3] = {
 	{.count = 24},
 	{.count = 7 },
 	{.count = 8 }};
 
-pixbuf_t consdat[6] = {
+const pixbuf_t consdat[6] = {
 	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
 	{.aU32x8 = {0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF}},
 	{.aU32x8 = {0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101}},
