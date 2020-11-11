@@ -51,7 +51,7 @@ pixbuf_t SR_PixbufBlend(
 		break;
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, consdat[7].vec);
+		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, simde_mm256_setzero_si256());
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec,
 			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, consdat[5].vec), consdat[0].vec));
 		destbuf.vec = simde_mm256_or_si256(simde_mm256_and_si256(
