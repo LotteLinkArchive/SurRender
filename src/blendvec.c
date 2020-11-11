@@ -1,12 +1,5 @@
 #include "blendvec.h"
 
-/* TODO:
- * - Fix blue issue
- * - Add the premultiply section
- * - Optimize
- * - Replace memcpies
- */
-
 typedef union {
 	simde__m128i vec;
 	U32 aU32x4[4];
@@ -44,6 +37,7 @@ pixbuf_t SR_PixbufBlend(
 	#define PREMULTIPLY PREALPHA PREALPHA_MID\
 	srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, destbuf.vec);\
 	srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
+	/* TODO: Premultiply properly rather than using AND as a cheap workaround */
 
 	switch (mode) {
 	case SR_BLEND_XOR:
