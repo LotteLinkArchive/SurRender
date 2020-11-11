@@ -310,6 +310,8 @@ SR_Canvas SR_RefCanvDepth(
 
 /* Clear the whole memory range for the depth buffer of a canvas. Includes
  * any clipped regions.
+ *
+ * Fill value could be any 8-bit value, either 0xFF and 0x00 are fine.
  */
-void SR_EraseCanvDepth(SR_Canvas *target);
+void SR_EraseCanvDepth(SR_Canvas *target, U8 fill);
 #endif

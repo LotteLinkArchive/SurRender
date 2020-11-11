@@ -364,7 +364,7 @@ SR_Canvas SR_RefCanvDepth(
 	return temp;
 }
 
-void SR_EraseCanvDepth(SR_Canvas *target)
+void SR_EraseCanvDepth(SR_Canvas *target, U8 fill)
 {
-	memset(target->depth_buffer, 0xFF, (U32)target->rwidth * (U32)target->rheight * sizeof(SR_RGBAPixel));
+	memset(target->depth_buffer, fill, (U32)target->rwidth * (U32)target->rheight * sizeof(SR_RGBAPixel));
 }
