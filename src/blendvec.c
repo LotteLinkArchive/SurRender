@@ -77,7 +77,7 @@ pixbuf_t SR_PixbufBlend(
 
 		break;
 	case SR_BLEND_INVERT_DROP:
-		srcAbuf.vec = simde_mm256_xor_si256(srcAbuf.vec, simde_mm256_set1_epi32(0xFFFFFFFF));
+		srcAbuf.vec = simde_mm256_xor_si256(srcAbuf.vec, consdat[5].vec);
 		/* fallthrough */
 	case SR_BLEND_DROP:
 		destbuf.vec = simde_mm256_or_si256(
