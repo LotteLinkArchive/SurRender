@@ -41,6 +41,13 @@ X0 Trifill_Slow(
 		float t = (float)(vs1x * qy - vs1y * qx) / c;
 		
 		if ((s>=0) && (t>=0) && ((s+t)<=1)) {
+			U32 zz = tri.v0.z - (U32)(
+				(
+					(csx * (I64)(xx - tri.v0.x)) +
+					(csy * (I64)(yy - tri.v0.y))
+				) / csz
+			)
+			
 			SR_CanvasSetPixel(canvas, xx, yy, tri.colour);
 		}
 	}
