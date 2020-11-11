@@ -13,12 +13,8 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-const countbuf_t counts[3] = {
-	{.count = 24},
-	{.count = 7 },
-	{.count = 8 }};
-
 const pixbuf_t consdat[6] = {
+
 	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
 	{.aU32x8 = {0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF}},
 	{.aU32x8 = {0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101}},
@@ -35,11 +31,17 @@ pixbuf_t SR_PixbufBlend(
 	bigpixbuf_t blendbufA, blendbufB;
 	pixbuf_t destbuf;
 
-	#define PREALPHA destbuf.vec = simde_mm256_srl_epi32(simde_mm256_add_epi32(simde_mm256_mullo_epi32(\
-		simde_mm256_srl_epi32(simde_mm256_and_si256(srcAbuf.vec, consdat[0].vec),\
-		counts[0].vec), simde_mm256_set1_epi32(alpha_modifier)), consdat[1].vec),\
-		counts[2].vec);
+	/* Feed Assumptions:
+	 * srcAbuf = 0xFF37A4B6 (top)
+	 * srcBbuf = 0xFF888888 (base)
+	 */
+
+	#define PREALPHA destbuf.vec = simde_mm256_srli_epi32(simde_mm256_add_epi32(simde_mm256_mullo_epi32(\
+		simde_mm256_srli_epi32(simde_mm256_and_si256(srcAbuf.vec, consdat[0].vec), 24),\
+		simde_mm256_set1_epi32(alpha_modifier)), consdat[1].vec), 8);
+	/* destbuf = 0x000000FF */
 	#define PREALPHA_MID destbuf.vec = simde_mm256_mullo_epi32(destbuf.vec, consdat[2].vec);
+	/* destbuf = 0x00FFFFFF */
 	#define PREMULTIPLY 
 
 	switch (mode) {
@@ -47,18 +49,15 @@ pixbuf_t SR_PixbufBlend(
 		PREMULTIPLY
 		/* fallthrough */
 	case SR_BLEND_DIRECT_XOR:
-		destbuf.vec = simde_mm256_xor_si256(
-			srcBbuf.vec, simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec));
+		destbuf.vec = simde_mm256_xor_si256(srcBbuf.vec, simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec));
 
 		break;
 	default:
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_mullo_epi32(simde_mm256_srl_epi32(
-			destbuf.vec, counts[1].vec), consdat[2].vec);
-		srcAbuf.vec = simde_mm256_mullo_epi32(srcAbuf.vec, destbuf.vec);
-		srcBbuf.vec = simde_mm256_mullo_epi32(
-			simde_mm256_xor_si256(destbuf.vec, consdat[4].vec), srcBbuf.vec);
+		destbuf.vec = simde_mm256_mullo_epi32(simde_mm256_srli_epi32(destbuf.vec, 7), consdat[2].vec);
+		srcAbuf.vec = simde_mm256_mullo_epi32(srcAbuf.vec, destbuf.vec); /* Problem: Need 8 bit mul here */
+		srcBbuf.vec = simde_mm256_mullo_epi32(simde_mm256_xor_si256(destbuf.vec, consdat[4].vec), srcBbuf.vec);
 		destbuf.vec = simde_mm256_or_si256(srcAbuf.vec, srcBbuf.vec);
 
 		break;
@@ -89,7 +88,7 @@ pixbuf_t SR_PixbufBlend(
 		PREALPHA
 		destbuf.vec = simde_mm256_or_si256(
 			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec),
-			simde_mm256_sll_epi32(destbuf.vec, counts[0].vec));
+			simde_mm256_slli_epi32(destbuf.vec, 24));
 
 		break;
 	case SR_BLEND_DIRECT_XOR_ALL:
