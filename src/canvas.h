@@ -3,6 +3,7 @@
 #include "glbl.h"
 #include "colours.h"
 #include "errors.h"
+#include <math.h>
 
 /* Must be (a power of 2) - 1. The larger the size, the larger the modulo LUT overhead! */
 #ifndef SR_MAX_CANVAS_SIZE
@@ -166,6 +167,18 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 #define SR_CanvasCalcPosition(canvas, x, y) SR_CombnAxisPosCalcXY((canvas), \
 	SR_AxisPositionCRCTRM((canvas)->rwidth, (canvas)->cwidth, (x), (canvas)->xclip), \
 	SR_AxisPositionCRCTRM((canvas)->rheight, (canvas)->cheight, (y), (canvas)->yclip))
+
+/* Calculate a uniform position on the canvas with a float between the range 0 and 1.
+ *
+ * E.g for a 256x128 canvas...
+ *
+ * X 1.0  Y 1.0  -> X 256 Y 128
+ * X 0.0  Y 0.0  -> X 0   Y 0
+ * X 0.13 Y 0.82 -> X 33  Y 105
+ */
+#define SR_CanvasUniformPos(canvas, x, y) SR_CanvasCalcPosition((canvas),\
+	(U16)round((float)(x) * (float)((canvas)->width)),\
+	(U16)round((float)(y) * (float)((canvas)->height)))
 
 /* Set the value of a pixel in the canvas */
 #define SR_CanvasSetPixel(canvas, x, y, pixel) (canvas)->pixels[SR_CanvasCalcPosition((canvas), (U16)(x), (U16)(y))] =\
