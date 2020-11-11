@@ -294,4 +294,9 @@ SR_Canvas SR_RefCanvDepth(
 	U16 width,
 	U16 height,
 	U1  absorb_host);
+
+/* Clear the whole memory range for the depth buffer of a canvas. Includes
+ * any clipped regions.
+ */
+void SR_EraseCanvDepth(SR_Canvas *target);
 #endif
