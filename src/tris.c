@@ -39,5 +39,8 @@ X0 SR_RenderTris(
 	SR_ScreenTriangle *trilist,
 	U32 list_length)
 {
-	// have a bowl mr squidward
+	for (U32 i = 0; i < list_length; i++)
+	{
+		Trifill_Slow(canvas, trilist[i]);
+	}
 }
