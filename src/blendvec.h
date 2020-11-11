@@ -5,26 +5,20 @@
 #include "remote_simde/x86/avx2.h"
 
 typedef union {
-	U8x64  sU8x64;
-	U16x32 sU16x32;
-	U64x8  sU64x8;
-	U32x16 sU32x16;
-	U32 aU32x16[16];
+	simde__m256i vec;
+	U8  aU8x32[32];
+	U16 aU16x16[16];
+	U32 aU32x8[8];
+	U64 aU64x4[4];
 } pixbuf_t;
 
 typedef union {
-	U8x128 sU8x128;
-	U16x64 sU16x64;
-	U32x32 sU32x32;
+	simde__m512i vec;
+	U8  aU8x64[64];
+	U16 aU16x32[32];
+	U32 aU32x16[16];
+	U64 aU64x8[8];
 } bigpixbuf_t;
-
-typedef union {
-	U16x128 sU16x128;
-	__extension__ struct {
-		U16x64 c1;
-		U16x64 c2;
-	} __attribute__ ((packed)) sU16x64x2;
-} largepixbuf_t;
 
 /* Internal blending functions */
 
