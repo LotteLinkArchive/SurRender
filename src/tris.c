@@ -17,6 +17,18 @@ X0 Trifill_Slow(
 	U16 vs2x = tri.v2.x - tri.v0.x;
 	U16 vs2y = tri.v2.y - tri.v0.y;
 	
+	I64 bx = (I64)(tri.v1.x) - (I64)(tri.v0.x);
+	I64 by = (I64)(tri.v1.y) - (I64)(tri.v0.y);
+	I64 bz = (I64)(tri.v1.z) - (I64)(tri.v0.z);
+	
+	I64 cx = (I64)(tri.v2.x) - (I64)(tri.v0.x);
+	I64 cy = (I64)(tri.v2.y) - (I64)(tri.v0.y);
+	I64 cz = (I64)(tri.v2.z) - (I64)(tri.v0.z);
+	
+	I64 csx = by * cz - bz * cy;
+	I64 csy = bz * cx - bx * cz;
+	I64 csz = bx * cy - by * cx;
+	
 	U16 xx, yy;
 	for (xx = min_x, x <= max_x, x++)
 	for (yy = min_y, y <= min_y, y++)
