@@ -16,13 +16,15 @@ const pixbuf_t consdat[8] = {
 	{.aU32x8 = {0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001}},
 	{.aU32x8 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}}};
 
+#define ZEROVEC simde_mm256_setzero_si256()
+
 pixbuf_t SR_PixbufBlend(
 	pixbuf_t srcAbuf,
 	pixbuf_t srcBbuf,
 	U8 alpha_modifier,
 	I8 mode)
 {
-	pixbuf_t destbuf = {.aU32x8 = {0, 0, 0, 0, 0, 0, 0, 0}};
+	pixbuf_t destbuf;
 
 	/* Feed Assumptions:
 	 * srcAbuf = 0xFF37A4B6 (top)
@@ -51,13 +53,14 @@ pixbuf_t SR_PixbufBlend(
 		break;
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, simde_mm256_setzero_si256());
+		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, ZEROVEC);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec,
 			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, consdat[5].vec), consdat[0].vec));
 		destbuf.vec = simde_mm256_or_si256(simde_mm256_and_si256(
 			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec), destbuf.vec), srcBbuf.vec);
 
 		break;
+	default:
 	case SR_BLEND_ADDITIVE:
 		PREMULTIPLY
 		/* fallthrough */
