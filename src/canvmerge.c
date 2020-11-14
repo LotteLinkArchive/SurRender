@@ -56,6 +56,8 @@ pixbuf_t fstatelkp2[9] = {
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}}
 };
 
+#define ZEROVEC simde_mm256_setzero_si256()
+
 __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBlend(
 	pixbuf_t srcAbuf,
 	pixbuf_t srcBbuf,
@@ -91,7 +93,7 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 		break;
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, simde_mm256_setzero_si256());
+		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, ZEROVEC);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec,
 			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, consdat[5].vec), consdat[0].vec));
 		destbuf.vec = simde_mm256_or_si256(simde_mm256_and_si256(
