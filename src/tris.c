@@ -30,8 +30,8 @@ X0 Trifill_Slow(
 	I64 csz = bx * cy - by * cx;
 	
 	U16 xx, yy;
-	for (xx = min_x, x <= max_x, x++)
-	for (yy = min_y, y <= min_y, y++)
+	for (xx = min_x; x <= max_x; x++)
+	for (yy = min_y; y <= min_y; y++)
 	{
 		U16 qx = xx - tri.v0.x;
 		U16 qy = yy - tri.v0.y;
@@ -49,6 +49,50 @@ X0 Trifill_Slow(
 			)
 			
 			SR_CanvasSetPixel(canvas, xx, yy, tri.colour);
+		}
+	}
+}
+
+X0 Trifill(
+	SR_Canvas *canvas,
+	SR_ScreenTriangle tri)
+{
+	SR_ScreenVertex t0 = tri.v0;
+	SR_ScreenVertex t1 = tri.v1;
+	SR_ScreenVertex t2 = tri.v2;
+	
+	if (t0.y==t1.y && t0.y==t2.y) return;
+
+	if (t0.y > t1.y) SWAPVERTEX(t0, t1);
+	if (t0.y > t2.y) SWAPVERTEX(t0, t2);
+	if (t1.y > t2.y) SWAPVERTEX(t1, t2);
+	
+	U16 t_height = t2.y - t0.y;
+	
+	for (U16 yy = 0; yy < t_height; yy++)
+	{
+		U8 s_half = (yy > t1.y - t0.y || t1.y == t0.y);
+		U16 s_height = s_half ? t2.y - t1.y : t1.y - t0.y;
+		float aa = (float)i/t_height;
+		float bb = (float)(i-(s_half ? t1.y - t0.y : 0))/s_height;
+		
+		U16 ax = t0.x + (t2.x - t0.x) * aa;
+		U16 bx = s_half ? t1.x + (t2.x - t1.x) * bb : t0.x + (t1.x - t0.x) * bb;
+		U16 a2x;
+		U16 b2x;
+		
+		if (ax > bx) {
+			a2x = bx;
+			b2x = ax;
+		} else {
+			a2x = ax;
+			b2x = bx;
+		}
+		
+		for (U16 xx = a2x; xx <= b2x; xx++)
+		{
+			// TODO: compare z value to depth buffer and such
+			SR_CanvasSetPixel(canvas, xx, t0.y + yy, tri.colour);
 		}
 	}
 }
