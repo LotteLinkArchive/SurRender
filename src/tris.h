@@ -17,10 +17,6 @@ typedef struct {
 	SR_RGBAPixel colour;
 } SR_ScreenTriangle;
 
-X0 Trifill_Slow(
-	SR_Canvas *canvas,
-	SR_ScreenTriangle tri);
-
 X0 Trifill(
 	SR_Canvas *canvas,
 	SR_ScreenTriangle tri);
