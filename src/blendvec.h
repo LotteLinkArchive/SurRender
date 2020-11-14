@@ -1,24 +1,20 @@
 #ifndef SURBLVEC_HEADER_FILE
 #define SURBLVEC_HEADER_FILE
 #include "colours.h"
-#include "remote_simde/x86/avx512.h"
 #include "remote_simde/x86/avx2.h"
 
 typedef union {
 	simde__m256i vec;
+	simde__m128i vec128s[2];
 	U8  aU8x32[32];
 	U16 aU16x16[16];
 	U32 aU32x8[8];
 	U64 aU64x4[4];
-} pixbuf_t;
 
-typedef union {
-	simde__m512i vec;
-	U8  aU8x64[64];
-	U16 aU16x32[32];
-	U32 aU32x16[16];
-	U64 aU64x8[8];
-} bigpixbuf_t;
+	U32 pix0;
+
+	U32x8 vevec_epu32;
+} pixbuf_t;
 
 /* Internal blending functions */
 

@@ -129,12 +129,15 @@ STATUS SR_DestroyCanvas(SR_Canvas *canvas)
 
 	X0 *freeadr = canvas->b_addr ? canvas->b_addr : canvas->pixels;
 
+	if ((canvas->hflags & 0x40) && canvas->depth_buffer) {
+		free(canvas->depth_buffer);
+		canvas->hflags ^= 0x40;
+	}
+
 	if (canvas->hflags & 0x08) {
 		if (umunmap(freeadr, canvas->munmap_size) != 0) return SR_MUNMAP_FAILURE;
 		canvas->hflags ^= 0x08;
 	} else {
-		if ((canvas->hflags & 0x40) && canvas->depth_buffer) free(canvas->depth_buffer);
-
 		free(freeadr);
 	}
 

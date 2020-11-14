@@ -51,9 +51,8 @@ X0 SR_MergeCanvasIntoCanvas(
 	 */
 
 	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
-	U32 sxycchk, cxycchk;
+	U32 sxycchk, cxycchk, sxycchk0, cxycchk0;
 	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
-	U1 precheck;
 
 	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
@@ -66,13 +65,11 @@ X0 SR_MergeCanvasIntoCanvas(
 	fsub = (emax * CLUMPS) - src_canvas->width;
 
 	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
-	#define VMOVE(dest, src) memcpy(dest, src, sizeof(pixbuf_t));
 
 	for (x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
 		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
-		precheck = fstate != CLUMPS;
 		for (z = 0; z < fstate; z++) {
 			srcposx = (x * CLUMPS) + z;
 
@@ -112,13 +109,31 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-			sxycchk = cxycchk = 0;
-			#define SXYOR(zix) sxycchk |= isxtmap.aU32x8[zix]; cxycchk |= idxtmap.aU32x8[zix];
-			SXYOR( 0) SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
+			sxycchk = sxycchk0 = simde_mm256_extract_epi32(isxtmap.vec, 0);
+			cxycchk = cxycchk0 = simde_mm256_extract_epi32(idxtmap.vec, 0);
+			#define SXYOR(zix)\
+			sxycchk |= simde_mm256_extract_epi32(isxtmap.vec, zix);\
+			cxycchk |= simde_mm256_extract_epi32(idxtmap.vec, zix);
+			SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
 			#undef SXYOR
 
 			/* Perform the final stage of the continuity check */
-			if (cxycchk != idxtmap.aU32x8[0] || sxycchk != isxtmap.aU32x8[0] || precheck) {
+			if (cxycchk == cxycchk0 && sxycchk == sxycchk0) {
+				/* If the addresses ARE continuous, we can move up to 512 bits in a single
+				 * cycle and manipulate them simultaneously, then write them back all in one
+				 * go too. Fast!
+				 */
+				srcAbuf.vec = simde_mm256_maskload_epi32(
+					(void *)&src_canvas->pixels[sxycchk], fstatelkp2[fstate].vec);
+
+				srcBbuf.vec = simde_mm256_maskload_epi32(
+					(void *)&dest_canvas->pixels[cxycchk], fstatelkp2[fstate].vec);
+
+				MBLEND
+
+				simde_mm256_maskstore_epi32(
+					(void *)&dest_canvas->pixels[cxycchk], fstatelkp2[fstate].vec, destbuf.vec);
+			} else {
 				/* If we know the addresses aren't continuous, which is usually unlikely, but
 				 * can happen, then we can just iterate over each pixel in "safe mode" */
 				isxtmap.vec = simde_mm256_add_epi32(isxtmap.vec, fstatelkp[fstate].vec);
@@ -133,17 +148,6 @@ X0 SR_MergeCanvasIntoCanvas(
 
 				for (z = 0; z < fstate; z++)
 					dest_canvas->pixels[idxtmap.aU32x8[z]].whole = destbuf.aU32x8[z];
-			} else {
-				/* If the addresses ARE continuous, we can move up to 512 bits in a single
-				 * cycle and manipulate them simultaneously, then write them back all in one
-				 * go too. Fast!
-				 */
-				VMOVE(&srcAbuf, &src_canvas->pixels[sxycchk]);
-				VMOVE(&srcBbuf, &dest_canvas->pixels[cxycchk]);
-
-				MBLEND
-
-				VMOVE(&dest_canvas->pixels[cxycchk], &destbuf);
 			}
 		}
 	}
