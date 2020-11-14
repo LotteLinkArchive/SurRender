@@ -1,5 +1,4 @@
 #include "textrender.h"
-#include "blendvec.h"
 #include "canvmerge.h"
 
 SR_FontAtlas SR_MakeFontAtlas(
