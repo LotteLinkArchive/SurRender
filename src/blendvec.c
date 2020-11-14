@@ -22,7 +22,7 @@ pixbuf_t SR_PixbufBlend(
 	U8 alpha_modifier,
 	I8 mode)
 {
-	pixbuf_t destbuf = {.aU32x8 = {0, 0, 0, 0, 0, 0, 0, 0}};
+	pixbuf_t destbuf = destbuf;
 
 	/* Feed Assumptions:
 	 * srcAbuf = 0xFF37A4B6 (top)
