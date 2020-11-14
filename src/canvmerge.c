@@ -58,6 +58,35 @@ pixbuf_t fstatelkp2[9] = {
 
 #define ZEROVEC simde_mm256_setzero_si256()
 
+__extension__ static inline __attribute__((always_inline)) simde__m256i sex_mm256_bimulhi_epu8(
+	simde__m256i a,
+	simde__m256i b)
+{
+	union i256buf {
+		simde__m256i w256;
+		simde__m128i h128[2];
+		simde__m64   q64[4];
+	} ab = {.w256 = a}, bb = {.w256 = b};
+	simde__m256i ax1, ax2, bx1, bx2;
+	simde__m64 temp_m64;
+
+	ax1 = simde_mm256_cvtepu8_epi16(ab.h128[0]);	ax2 = simde_mm256_cvtepu8_epi16(ab.h128[1]);
+	bx1 = simde_mm256_cvtepu8_epi16(bb.h128[0]);	bx2 = simde_mm256_cvtepu8_epi16(bb.h128[1]);
+	ax1 = simde_mm256_mullo_epi16(ax1, bx1);	ax2 = simde_mm256_mullo_epi16(ax2, bx2);
+	bx1 = simde_mm256_set1_epi16(0x00FF);
+	ax1 = simde_mm256_add_epi16(ax1, bx1);		ax2 = simde_mm256_add_epi16(ax2, bx1);
+	ax1 = simde_mm256_srli_epi16(ax1, 8);		ax2 = simde_mm256_srli_epi16(ax2, 8);
+
+	ab.w256 = simde_mm256_packus_epi16(ax1, ax2);
+	/* __m64 : ax1 ax2 ax1 ax2 */
+	temp_m64  = ab.q64[1];
+	ab.q64[1] = ab.q64[2];
+	ab.q64[2] = temp_m64;
+	/* __m64 : ax1 ax1 ax2 ax2 */
+
+	return ab.w256;
+}
+
 __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBlend(
 	pixbuf_t srcAbuf,
 	pixbuf_t srcBbuf,
@@ -79,8 +108,8 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 	/* destbuf = 0x00FFFFFF */
 
 	#define PREMULTIPLY PREALPHA PREALPHA_MID\
-	srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, destbuf.vec);\
-	srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
+	srcAbuf.vec = sex_mm256_bimulhi_epu8(srcAbuf.vec, destbuf.vec);\
+	srcBbuf.vec = sex_mm256_bimulhi_epu8(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
 	/* TODO: Premultiply properly rather than using AND as a cheap workaround */
 
 	switch (mode) {
@@ -107,7 +136,7 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 		destbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec);
 		srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[3].vec);
-		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_adds_epi8(srcAbuf.vec, srcBbuf.vec));
+		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_adds_epu8(srcAbuf.vec, srcBbuf.vec));
 		/* TODO: If premultiplication is accurate, adds can be replaced with just add here. */
 
 		break;
@@ -161,27 +190,11 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode)
 {
-	/* Canvas Blending/Merging with AVX-512 x86_64 Processor Instructions
-	 * ------------------------------------------------------------------
-	 * 
-	 * Z M M   R E G I S T E R   F O R M A T
-	 * .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... sU8x64
-	 * |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ |/|/ sU16x32
-	 * 0 1  2 3  4 5  6 7  8 9  1011 1213 1415 1617 1819 2021 2223 2425 2627 2829 3031
-	 * |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ |--/ sU32x16
-	 * 0    1    2    3    4    5    6    7    8    9    10   11   12   13   14   15
-	 * |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ |-------/ sU64x8
-	 * 0         1         2         3         4         5         6         7
-	 * 
-	 * Intended to use AVX-512 to blend 16 pixels simultaneously. On some machines, it may have
-	 * to fallback to using standard AVX or even previous SSE instructions.
-	 */
-
 	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
 	U32 sxycchk, cxycchk, sxycchk0, cxycchk0;
 	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
 
-	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
+	/* CLUMPS represents the amount of pixels that can be stored in a large vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
 
 	/* emax represents the total number of clumps in each row of the source canvas */
@@ -246,7 +259,7 @@ X0 SR_MergeCanvasIntoCanvas(
 
 			/* Perform the final stage of the continuity check */
 			if (cxycchk == cxycchk0 && sxycchk == sxycchk0) {
-				/* If the addresses ARE continuous, we can move up to 512 bits in a single
+				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
 				 */
