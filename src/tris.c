@@ -3,6 +3,7 @@
 #include "colours.h"
 #include "tris.h"
 
+// TODO: make me healthier
 X0 Trifill(
 	SR_Canvas *canvas,
 	SR_ScreenTriangle tri)
@@ -11,8 +12,10 @@ X0 Trifill(
 	SR_ScreenVertex t1 = tri.v1;
 	SR_ScreenVertex t2 = tri.v2;
 	
+	// exit for nonsense triangles
 	if (t0.y==t1.y && t0.y==t2.y) return;
-
+	
+	// vertex sort by y, t0 at the top, t1 in the middle and t2 on the bottom
 	if (t0.y > t1.y) SWAPVERTEX(t0, t1);
 	if (t0.y > t2.y) SWAPVERTEX(t0, t2);
 	if (t1.y > t2.y) SWAPVERTEX(t1, t2);
@@ -39,6 +42,7 @@ X0 Trifill(
 			b2x = bx;
 		}
 		
+		// draw a scanline
 		for (U16 xx = a2x; xx <= b2x; xx++)
 		{
 			// TODO: compare z value to depth buffer and such
@@ -52,8 +56,9 @@ X0 SR_RenderTris(
 	SR_ScreenTriangle *trilist,
 	U32 list_length)
 {
+	// just iterate over a list of tris and draw them
 	for (U32 i = 0; i < list_length; i++)
 	{
-		Trifill_Slow(canvas, trilist[i]);
+		Trifill(canvas, trilist[i]);
 	}
 }
