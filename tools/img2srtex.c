@@ -1,5 +1,7 @@
 #include "../libs/holyh/src/holy.h"
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
 #include "../libs/stb/stb_image.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +16,7 @@ I32 main(I32 argc, CHR *argv[])
 {
 	CHR error[256];
 	I32 status = 0;
-	X0 *idata;
+	X0 *idata = NULL;
 	#define I2SRERR(statno, errmsg) { status = statno; strcpy(error, errmsg); goto cexit; }
 
 	if (argc < 3)

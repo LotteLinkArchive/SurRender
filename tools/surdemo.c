@@ -136,7 +136,6 @@ INAT main(X0)
 {
 	/* Per frame timing */
 	struct timeval t0, t1;
-	float elapsed;
 
 	/* Create the initial canvas surface for use with SDL2, as well as declaring the window surface */
 	SDL_Surface *sdl_srcanv_surf, *sdl_window_surf;
