@@ -8,6 +8,8 @@ typedef struct {
 	U32 z;
 } SR_ScreenVertex;
 
+#define SWAPVERTEX(x, y) do { SR_ScreenVertex TEMP = x; y = x; x = TEMP; } while (0)
+
 typedef struct {
 	SR_ScreenVertex v0;
 	SR_ScreenVertex v1;
@@ -16,6 +18,10 @@ typedef struct {
 } SR_ScreenTriangle;
 
 X0 Trifill_Slow(
+	SR_Canvas *canvas,
+	SR_ScreenTriangle tri);
+
+X0 Trifill(
 	SR_Canvas *canvas,
 	SR_ScreenTriangle tri);
 
