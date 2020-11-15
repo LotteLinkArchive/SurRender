@@ -2,6 +2,7 @@
 #include "colours.h"
 #include "remote_simde/x86/avx2.h"
 #include <string.h>
+#include <omp.h>
 
 typedef union {
 	simde__m256i vec;
@@ -212,6 +213,7 @@ X0 SR_MergeCanvasIntoCanvas(
 
 	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
 
+	#pragma omp parallel for
 	for (U16 x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
