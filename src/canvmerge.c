@@ -189,7 +189,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	I8 mode)
 {
 	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
-	U32 sxycchk, cxycchk, sxycchk0, cxycchk0;
+	U32 sxycchk, cxycchk;
 	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
 
 	/* CLUMPS represents the amount of pixels that can be stored in a large vector */
@@ -247,16 +247,13 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-			sxycchk = sxycchk0 = simde_mm256_extract_epi32(isxtmap.vec, 0);
-			cxycchk = cxycchk0 = simde_mm256_extract_epi32(idxtmap.vec, 0);
-			#define SXYOR(zix)\
-			sxycchk |= simde_mm256_extract_epi32(isxtmap.vec, zix);\
-			cxycchk |= simde_mm256_extract_epi32(idxtmap.vec, zix);
-			SXYOR( 1) SXYOR( 2) SXYOR( 3) SXYOR( 4) SXYOR( 5) SXYOR( 6) SXYOR( 7)
-			#undef SXYOR
+			sxycchk = simde_mm256_extract_epi32(isxtmap.vec, 0);
+			cxycchk = simde_mm256_extract_epi32(idxtmap.vec, 0);
+			#define CONTIGCHK(imap, vc) simde_mm256_testc_si256(\
+				simde_mm256_set1_epi32(vc), imap)
 
 			/* Perform the final stage of the continuity check */
-			if (cxycchk == cxycchk0 && sxycchk == sxycchk0) {
+			if (CONTIGCHK(isxtmap.vec, sxycchk) && CONTIGCHK(idxtmap.vec, cxycchk)) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
