@@ -8,4 +8,5 @@
 #include "srtex.h"
 #include "srtexldr.h"
 #include "canvmerge.h"
+#include "tris.h"
 #endif
