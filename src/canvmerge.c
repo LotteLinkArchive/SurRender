@@ -22,7 +22,8 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-const pixbuf_t consdat[8] = {
+const static pixbuf_t consdat[8] = {
+	/* General table of constants. */
 	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
 	{.aU32x8 = {0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF}},
 	{.aU32x8 = {0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101}},
@@ -32,7 +33,8 @@ const pixbuf_t consdat[8] = {
 	{.aU32x8 = {0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001}},
 	{.aU32x8 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}}};
 
-pixbuf_t fstatelkp[9] = {
+const static pixbuf_t fstatelkp[9] = {
+	/* Addition and subtraction lookup table for the general continuity check */
 	{.aU32x8 = { 0,  0,  0,  0,  0,  0,  0,  0}},
 	{.aU32x8 = { 0,  0,  0,  0,  0,  0,  0,  0}},
 	{.aU32x8 = { 0,  1,  0,  0,  0,  0,  0,  0}},
@@ -44,7 +46,8 @@ pixbuf_t fstatelkp[9] = {
 	{.aU32x8 = { 0,  1,  2,  3,  4,  5,  6,  7}}
 };
 
-pixbuf_t fstatelkp2[9] = {
+const static pixbuf_t fstatelkp2[9] = {
+	/* Masking lookup table to "mask out" elements in a vector depending on the fstate value without branching */
 	{.aU32x8 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}},
 	{.aU32x8 = {0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}},
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}},
@@ -62,6 +65,15 @@ __extension__ static inline __attribute__((always_inline)) simde__m256i sex_mm25
 	simde__m256i a,
 	simde__m256i b)
 {
+	/* This function is equivalent to the following operation:
+	 * U8 a -> U16 a
+	 * U8 b -> U16 b
+	 * a = ((a * b) + 255) >> 8
+	 * U16 a -> U8 a
+	 * return a
+	 * 
+	 * This implementation is quite slow, because there isn't a singular AVX/AVX2 instruction that does it for us.
+	 */
 	union i256buf {
 		simde__m256i w256;
 		simde__m128i h128[2];
