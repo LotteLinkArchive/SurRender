@@ -22,6 +22,11 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
+typedef union {
+	pixbuf_t pbfs[4];
+	U32 pixels[32];
+} localbuf_t;
+
 const static pixbuf_t consdat[8] = {
 	/* General table of constants. */
 	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
@@ -200,8 +205,13 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode)
 {
+	#define CLTYPE localbuf_t
+	#define OBTYPE pixbuf_t
+
 	/* CLUMPS represents the amount of pixels that can be stored in a large vector */
-	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
+	#define CLUMPS (sizeof(CLTYPE) / sizeof(SR_RGBAPixel))
+	#define OBBUFS (sizeof(localbuf_t) / sizeof(pixbuf_t))
+	#define FXLOOP(it) for (it = 0; it < OBBUFS; it++) 
 
 	/* emax represents the total number of clumps in each row of the source canvas */
 	U16 emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
@@ -210,24 +220,25 @@ X0 SR_MergeCanvasIntoCanvas(
 	 * would have 3 extra pixels that should not be overwritten */
 	U16 fsub = (emax * CLUMPS) - src_canvas->width;
 
-	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
-
 	for (U16 x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
-		U16 z;
-		U8 fstate = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
-		pixbuf_t isxmap, idxmap;
-		for (z = 0; z < fstate; z++) {
+		I16 z, obi, fstatew = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		U8 fstate[OBBUFS];
+		FXLOOP(obi) fstate[obi] = MAX(
+			fstatew - ((CLUMPS / OBBUFS) * obi) - MAX(fstatew - ((CLUMPS / OBBUFS) * (obi + 1)), 0), 0);
+
+		CLTYPE isxmap, idxmap;
+		for (z = 0; z < fstatew; z++) {
 			U16 srcposx = (x * CLUMPS) + z;
 
 			/* Create the X axis coordinate mappings for the source and destination canvases.
 			 * This step is important because the X positions may not be continuous (it may
 			 * loop back around to the start of the canvas if you reach the edge, for example)
 			 */
-			isxmap.aU32x8[z] = SR_AxisPositionCRCTRM(
+			isxmap.pixels[z] = SR_AxisPositionCRCTRM(
 				src_canvas->rwidth, src_canvas->cwidth, srcposx, src_canvas->xclip);
-			idxmap.aU32x8[z] = SR_AxisPositionCRCTRM(
+			idxmap.pixels[z] = SR_AxisPositionCRCTRM(
 				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
 		}
 
@@ -242,18 +253,17 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* Create the pixel index map using the row (Y) position and the contents of the X position
 			 * map.
 			 */
-			pixbuf_t isxtmap, idxtmap;
-			isxtmap.vec = simde_mm256_and_si256(simde_mm256_sub_epi32((
-				simde_mm256_add_epi32(isxmap.vec, simde_mm256_set1_epi32(
-					(U32)src_canvas->rwidth * isy))),
-				fstatelkp[fstate].vec),
-				fstatelkp2[fstate].vec);
+			CLTYPE isxtmap, idxtmap;
+			#define PXLMAP(ixt, ix, iy, rwidth, fst) ixt = simde_mm256_and_si256(simde_mm256_sub_epi32((\
+				simde_mm256_add_epi32((ix), simde_mm256_set1_epi32(\
+					(U32)(rwidth) * (iy)))),\
+				fstatelkp[fst].vec),\
+				fstatelkp2[fst].vec);
 
-			idxtmap.vec = simde_mm256_and_si256(simde_mm256_sub_epi32((
-				simde_mm256_add_epi32(idxmap.vec, simde_mm256_set1_epi32(
-					(U32)dest_canvas->rwidth * idy))),
-				fstatelkp[fstate].vec),
-				fstatelkp2[fstate].vec);
+			FXLOOP(obi) PXLMAP(
+				isxtmap.pbfs[obi].vec, isxmap.pbfs[obi].vec, isy, src_canvas->rwidth, fstate[obi])
+			FXLOOP(obi) PXLMAP(
+				idxtmap.pbfs[obi].vec, idxmap.pbfs[obi].vec, idy, dest_canvas->rwidth, fstate[obi])
 
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
@@ -261,47 +271,65 @@ X0 SR_MergeCanvasIntoCanvas(
 			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_broadcastss_ps(\
 				simde_mm256_castps256_ps128(simde_mm256_castsi256_ps(imap))), imap)
 
+			U1 contig = true;
+			FXLOOP(obi) contig = contig && (
+				CONTIGCHK(isxtmap.pbfs[obi].vec) && CONTIGCHK(idxtmap.pbfs[obi].vec));
+
+			#define MBLEND(a, b) SR_PixbufBlend(a, b, alpha_modifier, mode)
+			#define MBLENDA FXLOOP(obi) destbuf.pbfs[obi] = MBLEND(srcAbuf.pbfs[obi], srcBbuf.pbfs[obi]);
+
 			/* Perform the final stage of the continuity check */
-			pixbuf_t srcAbuf, srcBbuf, destbuf;
-			if (CONTIGCHK(isxtmap.vec) && CONTIGCHK(idxtmap.vec)) {
+			CLTYPE srcAbuf, srcBbuf, destbuf;
+			if (contig) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
 				 */
-				#define SRCADR (void *)&src_canvas->pixels [isxtmap.aU32x8[0]]
-				#define DSTADR (void *)&dest_canvas->pixels[idxtmap.aU32x8[0]]
-				srcAbuf.vec = simde_mm256_maskload_epi32(SRCADR, fstatelkp2[fstate].vec);
+				#define SRCADR (OBTYPE *)&src_canvas->pixels [isxtmap.pixels[0]]
+				#define DSTADR (OBTYPE *)&dest_canvas->pixels[idxtmap.pixels[0]]
+				#define LPLOAD(dbuf, addr, pbi) dbuf = simde_mm256_maskload_epi32(\
+					(void *)(addr + pbi), fstatelkp2[fstate[pbi]].vec);
+				FXLOOP(obi) LPLOAD(srcAbuf.pbfs[obi].vec, SRCADR, obi)
+				FXLOOP(obi) LPLOAD(srcBbuf.pbfs[obi].vec, DSTADR, obi)
+				#undef LPLOAD
 
-				srcBbuf.vec = simde_mm256_maskload_epi32(DSTADR, fstatelkp2[fstate].vec);
+				MBLENDA
 
-				MBLEND
-
-				simde_mm256_maskstore_epi32(DSTADR, fstatelkp2[fstate].vec, destbuf.vec);
+				FXLOOP(obi) simde_mm256_maskstore_epi32(
+					(void *)(DSTADR + obi), fstatelkp2[fstate[obi]].vec, destbuf.pbfs[obi].vec);
 
 				#undef SRCADR
 				#undef DSTADR
 			} else {
 				/* If we know the addresses aren't continuous, which is usually unlikely, but
 				 * can happen, then we can just iterate over each pixel in "safe mode" */
-				isxtmap.vec = simde_mm256_add_epi32(isxtmap.vec, fstatelkp[fstate].vec);
-				idxtmap.vec = simde_mm256_add_epi32(idxtmap.vec, fstatelkp[fstate].vec);
 
-				for (z = 0; z < fstate; z++) {
-					srcAbuf.aU32x8[z] = src_canvas->pixels[isxtmap.aU32x8[z]].whole;
-					srcBbuf.aU32x8[z] = dest_canvas->pixels[idxtmap.aU32x8[z]].whole;
+				#define VECINCRS(v, fst) v = simde_mm256_add_epi32(v, fstatelkp[fst].vec)
+				FXLOOP(obi) VECINCRS(isxtmap.pbfs[obi].vec, fstate[obi]);
+				FXLOOP(obi) VECINCRS(idxtmap.pbfs[obi].vec, fstate[obi]);
+				#undef VECINCRS
+
+				for (z = 0; z < fstatew; z++) {
+					srcAbuf.pixels[z] = src_canvas->pixels[isxtmap.pixels[z]].whole;
+					srcBbuf.pixels[z] = dest_canvas->pixels[idxtmap.pixels[z]].whole;
 				}
 
-				MBLEND
+				MBLENDA
 
-				for (z = 0; z < fstate; z++)
-					dest_canvas->pixels[idxtmap.aU32x8[z]].whole = destbuf.aU32x8[z];
+				for (z = 0; z < fstatew; z++)
+					dest_canvas->pixels[idxtmap.pixels[z]].whole = destbuf.pixels[z];
 			}
+
+			#undef MBLEND
+			#undef MBLENDA
 		}
 	}
-
-	#undef MBLEND
 	#undef CLUMPS
 	#undef VMOVE
+	#undef OBTYPE
+	#undef CLTYPE
+	#undef OBBUFS
+	#undef FXLOOP
 
 	return;
 }

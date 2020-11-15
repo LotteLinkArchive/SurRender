@@ -277,8 +277,8 @@ event_loop:
 	}
 	gettimeofday(&t1, 0);
 
-	/* Wait (60 FPS target) */
-	SDL_Delay(abs((int)(20.0f - timedifference_msec(t0, t1))));
+	/* Wait (30 FPS target) */
+	SDL_Delay(abs((int)(33.3f - timedifference_msec(t0, t1))));
 
 	/* Repeat event loop */
 	goto event_loop;
