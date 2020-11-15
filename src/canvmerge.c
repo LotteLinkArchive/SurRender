@@ -258,28 +258,28 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-			U32 sxycchk = simde_mm256_extract_epi32(isxtmap.vec, 0);
-			U32 cxycchk = simde_mm256_extract_epi32(idxtmap.vec, 0);
-			#define CONTIGCHK(imap, vc) simde_mm256_testc_si256(\
-				simde_mm256_set1_epi32(vc), imap)
+			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_broadcastss_ps(\
+				simde_mm256_castps256_ps128(simde_mm256_castsi256_ps(imap))), imap)
 
 			/* Perform the final stage of the continuity check */
 			pixbuf_t srcAbuf, srcBbuf, destbuf;
-			if (CONTIGCHK(isxtmap.vec, sxycchk) && CONTIGCHK(idxtmap.vec, cxycchk)) {
+			if (CONTIGCHK(isxtmap.vec) && CONTIGCHK(idxtmap.vec)) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
 				 */
-				srcAbuf.vec = simde_mm256_maskload_epi32(
-					(void *)&src_canvas->pixels[sxycchk], fstatelkp2[fstate].vec);
+				#define SRCADR (void *)&src_canvas->pixels [isxtmap.aU32x8[0]]
+				#define DSTADR (void *)&dest_canvas->pixels[idxtmap.aU32x8[0]]
+				srcAbuf.vec = simde_mm256_maskload_epi32(SRCADR, fstatelkp2[fstate].vec);
 
-				srcBbuf.vec = simde_mm256_maskload_epi32(
-					(void *)&dest_canvas->pixels[cxycchk], fstatelkp2[fstate].vec);
+				srcBbuf.vec = simde_mm256_maskload_epi32(DSTADR, fstatelkp2[fstate].vec);
 
 				MBLEND
 
-				simde_mm256_maskstore_epi32(
-					(void *)&dest_canvas->pixels[cxycchk], fstatelkp2[fstate].vec, destbuf.vec);
+				simde_mm256_maskstore_epi32(DSTADR, fstatelkp2[fstate].vec, destbuf.vec);
+
+				#undef SRCADR
+				#undef DSTADR
 			} else {
 				/* If we know the addresses aren't continuous, which is usually unlikely, but
 				 * can happen, then we can just iterate over each pixel in "safe mode" */
