@@ -200,28 +200,26 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode)
 {
-	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
-	U32 sxycchk, cxycchk;
-	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
-
 	/* CLUMPS represents the amount of pixels that can be stored in a large vector */
 	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
 
 	/* emax represents the total number of clumps in each row of the source canvas */
-	emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
+	U16 emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
 
 	/* fsub represnts the number of extra pixels in each clumped row, e.g a 125 pixel row with 16-pixel clumps
 	 * would have 3 extra pixels that should not be overwritten */
-	fsub = (emax * CLUMPS) - src_canvas->width;
+	U16 fsub = (emax * CLUMPS) - src_canvas->width;
 
 	#define MBLEND destbuf = SR_PixbufBlend(srcAbuf, srcBbuf, alpha_modifier, mode);
 
-	for (x = 0; x < emax; x++) {
+	for (U16 x = 0; x < emax; x++) {
 		/* We can calculate the X position stuff here instead of per-clump in order to prevent any extra
 		 * pointless calculations */
-		fstate  = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		U16 z;
+		U8 fstate = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
+		pixbuf_t isxmap, idxmap;
 		for (z = 0; z < fstate; z++) {
-			srcposx = (x * CLUMPS) + z;
+			U16 srcposx = (x * CLUMPS) + z;
 
 			/* Create the X axis coordinate mappings for the source and destination canvases.
 			 * This step is important because the X positions may not be continuous (it may
@@ -233,17 +231,18 @@ X0 SR_MergeCanvasIntoCanvas(
 				dest_canvas->rwidth, dest_canvas->cwidth, srcposx + paste_start_x, dest_canvas->xclip);
 		}
 
-		for (y = 0; y < src_canvas->height; y++) {
+		for (U16 y = 0; y < src_canvas->height; y++) {
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
-			isy = SR_AxisPositionCRCTRM(
+			U16 isy = SR_AxisPositionCRCTRM(
 				src_canvas->rheight, src_canvas->cheight , y, src_canvas->yclip);
-			idy = SR_AxisPositionCRCTRM(
+			U16 idy = SR_AxisPositionCRCTRM(
 				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
 
 			/* Create the pixel index map using the row (Y) position and the contents of the X position
 			 * map.
 			 */
+			pixbuf_t isxtmap, idxtmap;
 			isxtmap.vec = simde_mm256_and_si256(simde_mm256_sub_epi32((
 				simde_mm256_add_epi32(isxmap.vec, simde_mm256_set1_epi32(
 					(U32)src_canvas->rwidth * isy))),
@@ -259,12 +258,13 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-			sxycchk = simde_mm256_extract_epi32(isxtmap.vec, 0);
-			cxycchk = simde_mm256_extract_epi32(idxtmap.vec, 0);
+			U32 sxycchk = simde_mm256_extract_epi32(isxtmap.vec, 0);
+			U32 cxycchk = simde_mm256_extract_epi32(idxtmap.vec, 0);
 			#define CONTIGCHK(imap, vc) simde_mm256_testc_si256(\
 				simde_mm256_set1_epi32(vc), imap)
 
 			/* Perform the final stage of the continuity check */
+			pixbuf_t srcAbuf, srcBbuf, destbuf;
 			if (CONTIGCHK(isxtmap.vec, sxycchk) && CONTIGCHK(idxtmap.vec, cxycchk)) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
