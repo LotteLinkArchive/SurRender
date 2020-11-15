@@ -110,7 +110,6 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 	#define PREMULTIPLY PREALPHA PREALPHA_MID\
 	srcAbuf.vec = sex_mm256_bimulhi_epu8(srcAbuf.vec, destbuf.vec);\
 	srcBbuf.vec = sex_mm256_bimulhi_epu8(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
-	/* TODO: Premultiply properly rather than using AND as a cheap workaround */
 
 	switch (mode) {
 	case SR_BLEND_XOR:
@@ -136,8 +135,7 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 		destbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec);
 		srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[3].vec);
-		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_adds_epu8(srcAbuf.vec, srcBbuf.vec));
-		/* TODO: If premultiplication is accurate, adds can be replaced with just add here. */
+		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_add_epi8(srcAbuf.vec, srcBbuf.vec));
 
 		break;
 	case SR_BLEND_REPLACE:
