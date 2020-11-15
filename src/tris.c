@@ -23,8 +23,8 @@ X0 Trifill(
 	{
 		U8 s_half = (yy > t1.y - t0.y || t1.y == t0.y);
 		U16 s_height = s_half ? t2.y - t1.y : t1.y - t0.y;
-		float aa = (float)i/t_height;
-		float bb = (float)(i-(s_half ? t1.y - t0.y : 0))/s_height;
+		float aa = (float)yy/t_height;
+		float bb = (float)(yy-(s_half ? t1.y - t0.y : 0))/s_height;
 		
 		U16 ax = t0.x + (t2.x - t0.x) * aa;
 		U16 bx = s_half ? t1.x + (t2.x - t1.x) * bb : t0.x + (t1.x - t0.x) * bb;
