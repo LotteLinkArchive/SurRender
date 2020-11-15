@@ -21,4 +21,10 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode);
 
+SR_RGBAPixel SR_RGBABlender(
+	SR_RGBAPixel pixel_base,
+	SR_RGBAPixel pixel_top,
+	U8 alpha_modifier,
+	I8 mode);
+
 #endif

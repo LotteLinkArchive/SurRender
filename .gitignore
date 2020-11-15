@@ -112,4 +112,5 @@ img2srtex
 config.h.in~
 config.h
 bin/
+builddir/
 SurRender.kdev4
