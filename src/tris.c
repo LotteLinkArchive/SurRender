@@ -1,6 +1,3 @@
-#include "glbl.h"
-#include "canvas.h"
-#include "colours.h"
 #include "tris.h"
 
 // TODO: make me healthier
