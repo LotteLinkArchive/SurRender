@@ -264,23 +264,23 @@ X0 SR_MergeCanvasIntoCanvas(
 				fstatelkp[fst].vec),\
 				fstatelkp2[fst].vec);
 
-			FXLOOP(obi) PXLMAP(
-				isxtmap.pbfs[obi].vec, isxmap.pbfs[obi].vec, isy, src_canvas->rwidth, fstate[obi])
-			FXLOOP(obi) PXLMAP(
-				idxtmap.pbfs[obi].vec, idxmap.pbfs[obi].vec, idy, dest_canvas->rwidth, fstate[obi])
-
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
 			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_broadcastss_ps(\
 				simde_mm256_castps256_ps128(simde_mm256_castsi256_ps(imap))), imap)
-
 			U1 contig = true;
-			FXLOOP(obi) contig = contig && (
-				CONTIGCHK(isxtmap.pbfs[obi].vec) && CONTIGCHK(idxtmap.pbfs[obi].vec));
-
+			FXLOOP(obi) {
+				PXLMAP(isxtmap.pbfs[obi].vec,
+					isxmap.pbfs[obi].vec, isy, src_canvas->rwidth, fstate[obi])
+				PXLMAP(idxtmap.pbfs[obi].vec,
+					idxmap.pbfs[obi].vec, idy, dest_canvas->rwidth, fstate[obi])
+				contig = contig && (
+					CONTIGCHK(isxtmap.pbfs[obi].vec) && CONTIGCHK(idxtmap.pbfs[obi].vec));
+			}
+			
 			#define MBLEND(a, b) SR_PixbufBlend(a, b, alpha_modifier, mode)
-			#define MBLENDA FXLOOP(obi) destbuf.pbfs[obi] = MBLEND(srcAbuf.pbfs[obi], srcBbuf.pbfs[obi]);
+			#define MBLENDA destbuf.pbfs[obi] = MBLEND(srcAbuf.pbfs[obi], srcBbuf.pbfs[obi]);
 
 			/* Perform the final stage of the continuity check */
 			CLTYPE srcAbuf, srcBbuf, destbuf;
@@ -293,15 +293,14 @@ X0 SR_MergeCanvasIntoCanvas(
 				#define DSTADR ((OBTYPE *)&dest_canvas->pixels[idxtmap.pixels[0]])
 				#define LPLOAD(dbuf, addr, pbi) dbuf = simde_mm256_maskload_epi32(\
 					(void *)(addr + pbi), fstatelkp2[fstate[pbi]].vec);
-				FXLOOP(obi) LPLOAD(srcAbuf.pbfs[obi].vec, SRCADR, obi)
-				FXLOOP(obi) LPLOAD(srcBbuf.pbfs[obi].vec, DSTADR, obi)
+				FXLOOP(obi) {
+					LPLOAD(srcAbuf.pbfs[obi].vec, SRCADR, obi)
+					LPLOAD(srcBbuf.pbfs[obi].vec, DSTADR, obi)
+					MBLENDA
+					simde_mm256_maskstore_epi32((void *)(DSTADR + obi),
+						fstatelkp2[fstate[obi]].vec, destbuf.pbfs[obi].vec);
+				}
 				#undef LPLOAD
-
-				MBLENDA
-
-				FXLOOP(obi) simde_mm256_maskstore_epi32(
-					(void *)(DSTADR + obi), fstatelkp2[fstate[obi]].vec, destbuf.pbfs[obi].vec);
-
 				#undef SRCADR
 				#undef DSTADR
 			} else {
@@ -309,8 +308,10 @@ X0 SR_MergeCanvasIntoCanvas(
 				 * can happen, then we can just iterate over each pixel in "safe mode" */
 
 				#define VECINCRS(v, fst) v = simde_mm256_add_epi32(v, fstatelkp[fst].vec)
-				FXLOOP(obi) VECINCRS(isxtmap.pbfs[obi].vec, fstate[obi]);
-				FXLOOP(obi) VECINCRS(idxtmap.pbfs[obi].vec, fstate[obi]);
+				FXLOOP(obi) {
+					VECINCRS(isxtmap.pbfs[obi].vec, fstate[obi]);
+					VECINCRS(idxtmap.pbfs[obi].vec, fstate[obi]);
+				}
 				#undef VECINCRS
 
 				for (z = 0; z < fstatew; z++) {
