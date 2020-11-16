@@ -22,9 +22,11 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
+
+#define CACHEBYTES 128
 typedef union {
-	pixbuf_t pbfs[4];
-	U32 pixels[32];
+	pixbuf_t pbfs[CACHEBYTES / sizeof(pixbuf_t)];
+	U32 pixels[CACHEBYTES / sizeof(U32)];
 } localbuf_t;
 
 const static pixbuf_t consdat[8] = {
