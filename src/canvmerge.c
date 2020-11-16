@@ -23,7 +23,7 @@ typedef union {
 } countbuf_t;
 
 
-#define CACHEBYTES 128
+#define CACHEBYTES 64
 typedef union {
 	pixbuf_t pbfs[CACHEBYTES / sizeof(pixbuf_t)];
 	U32 pixels[CACHEBYTES / sizeof(U32)];
@@ -247,18 +247,17 @@ X0 SR_MergeCanvasIntoCanvas(
 		for (U16 y = 0; y < src_canvas->height; y++) {
 			/* We already have the X position, so we don't need to calculate it. We CAN calculate the Y
 			 * positions now, however. */
-			U16 isy = SR_AxisPositionCRCTRM(
-				src_canvas->rheight, src_canvas->cheight , y, src_canvas->yclip);
-			U16 idy = SR_AxisPositionCRCTRM(
-				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip);
+			simde__m256i isy = simde_mm256_set1_epi32(src_canvas->rwidth * SR_AxisPositionCRCTRM(
+				src_canvas->rheight, src_canvas->cheight , y, src_canvas->yclip));
+			simde__m256i idy = simde_mm256_set1_epi32(dest_canvas->rwidth * SR_AxisPositionCRCTRM(
+				dest_canvas->rheight, dest_canvas->cheight, y + paste_start_y, dest_canvas->yclip));
 
 			/* Create the pixel index map using the row (Y) position and the contents of the X position
 			 * map.
 			 */
 			CLTYPE isxtmap, idxtmap;
 			#define PXLMAP(ixt, ix, iy, rwidth, fst) ixt = simde_mm256_and_si256(simde_mm256_sub_epi32((\
-				simde_mm256_add_epi32((ix), simde_mm256_set1_epi32(\
-					(U32)(rwidth) * (iy)))),\
+				simde_mm256_add_epi32(ix, iy)),\
 				fstatelkp[fst].vec),\
 				fstatelkp2[fst].vec);
 
@@ -287,8 +286,8 @@ X0 SR_MergeCanvasIntoCanvas(
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
 				 */
-				#define SRCADR (OBTYPE *)&src_canvas->pixels [isxtmap.pixels[0]]
-				#define DSTADR (OBTYPE *)&dest_canvas->pixels[idxtmap.pixels[0]]
+				#define SRCADR ((OBTYPE *)&src_canvas->pixels [isxtmap.pixels[0]])
+				#define DSTADR ((OBTYPE *)&dest_canvas->pixels[idxtmap.pixels[0]])
 				#define LPLOAD(dbuf, addr, pbi) dbuf = simde_mm256_maskload_epi32(\
 					(void *)(addr + pbi), fstatelkp2[fstate[pbi]].vec);
 				FXLOOP(obi) LPLOAD(srcAbuf.pbfs[obi].vec, SRCADR, obi)
