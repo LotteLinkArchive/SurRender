@@ -207,6 +207,8 @@ X0 SR_MergeCanvasIntoCanvas(
 	U8 alpha_modifier,
 	I8 mode)
 {
+	/* This function is a colossal mess, and definitely a work in progress. It's certainly not finished yet. */
+
 	#define CLTYPE localbuf_t
 	#define OBTYPE pixbuf_t
 
