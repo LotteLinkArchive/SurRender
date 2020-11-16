@@ -213,7 +213,7 @@ X0 SR_MergeCanvasIntoCanvas(
 	/* CLUMPS represents the amount of pixels that can be stored in a large vector */
 	#define CLUMPS (sizeof(CLTYPE) / sizeof(SR_RGBAPixel))
 	#define OBBUFS (sizeof(localbuf_t) / sizeof(pixbuf_t))
-	#define FXLOOP(it) for (it = 0; it < OBBUFS; it++) 
+	#define FXLOOP(it) for (it = 0; it < OBBUFS; it++)
 
 	/* emax represents the total number of clumps in each row of the source canvas */
 	U16 emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
