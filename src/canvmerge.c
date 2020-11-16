@@ -23,7 +23,7 @@ typedef union {
 } countbuf_t;
 
 
-#define CACHEBYTES 64
+#define CACHEBYTES 128
 typedef union {
 	pixbuf_t pbfs[CACHEBYTES / sizeof(pixbuf_t)];
 	U32 pixels[CACHEBYTES / sizeof(U32)];
@@ -228,7 +228,8 @@ X0 SR_MergeCanvasIntoCanvas(
 		I16 z, obi, fstatew = x + 1 == emax ? CLUMPS - fsub : CLUMPS;
 		U8 fstate[OBBUFS];
 		FXLOOP(obi) fstate[obi] = MAX(
-			fstatew - ((CLUMPS / OBBUFS) * obi) - MAX(fstatew - ((CLUMPS / OBBUFS) * (obi + 1)), 0), 0);
+			fstatew - (I16)((CLUMPS / OBBUFS) * obi) - MAX(
+				fstatew - (I16)((CLUMPS / OBBUFS) * (obi + 1)), 0), 0);
 
 		CLTYPE isxmap, idxmap;
 		for (z = 0; z < fstatew; z++) {
