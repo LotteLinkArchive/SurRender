@@ -3,10 +3,10 @@
 #include "glbl.h"
 #include "colours.h"
 #include "canvas.h"
-#include "2dscene.h"
 #include "textrender.h"
 #include "errors.h"
 #include "srtex.h"
 #include "srtexldr.h"
 #include "canvmerge.h"
+#include "tris.h"
 #endif
