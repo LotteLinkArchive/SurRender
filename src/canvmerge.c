@@ -267,8 +267,9 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_broadcastss_ps(\
-				simde_mm256_castps256_ps128(simde_mm256_castsi256_ps(imap))), imap)
+			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_castps_si256(\
+				simde_mm256_broadcastss_ps(simde_mm256_castps256_ps128(\
+					simde_mm256_castsi256_ps(imap)))), imap)
 			U1 contig = true;
 			FXLOOP(obi) {
 				PXLMAP(isxtmap.pbfs[obi].vec,
