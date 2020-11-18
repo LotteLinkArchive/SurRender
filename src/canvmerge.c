@@ -22,23 +22,18 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-
 #define CACHEBYTES 128
 typedef union {
 	pixbuf_t pbfs[CACHEBYTES / sizeof(pixbuf_t)];
 	U32 pixels[CACHEBYTES / sizeof(U32)];
 } localbuf_t;
 
-const static pixbuf_t consdat[8] = {
-	/* General table of constants. */
-	{.aU32x8 = {0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000, 0xFF000000}},
-	{.aU32x8 = {0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF, 0x000000FF}},
-	{.aU32x8 = {0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101, 0x00010101}},
-	{.aU32x8 = {0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF}},
-	{.aU32x8 = {0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101, 0x01010101}},
-	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}},
-	{.aU32x8 = {0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001}},
-	{.aU32x8 = {0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000}}};
+#define V00000000 simde_mm256_setzero_si256()
+#define VFFFFFFFF simde_mm256_set1_epi8(0xFF)
+#define VFF000000 simde_mm256_set1_epi32(0xFF000000)
+#define V000000FF simde_mm256_set1_epi32(0x000000FF)
+#define V00010101 simde_mm256_set1_epi32(0x00010101)
+#define V00FFFFFF simde_mm256_set1_epi32(0x00FFFFFF)
 
 const static pixbuf_t fstatelkp[9] = {
 	/* Addition and subtraction lookup table for the general continuity check */
@@ -65,8 +60,6 @@ const static pixbuf_t fstatelkp2[9] = {
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000}},
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}}
 };
-
-#define ZEROVEC simde_mm256_setzero_si256()
 
 __extension__ static inline __attribute__((always_inline)) simde__m256i sex_mm256_bimulhi_epu8(
 	simde__m256i a,
@@ -120,40 +113,40 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 	 */
 
 	#define PREALPHA destbuf.vec = simde_mm256_srli_epi32(simde_mm256_add_epi32(simde_mm256_mullo_epi32(\
-		simde_mm256_srli_epi32(simde_mm256_and_si256(srcAbuf.vec, consdat[0].vec), 24),\
-		simde_mm256_set1_epi32(alpha_modifier)), consdat[1].vec), 8);
+		simde_mm256_srli_epi32(simde_mm256_and_si256(srcAbuf.vec, VFF000000), 24),\
+		simde_mm256_set1_epi32(alpha_modifier)), V000000FF), 8);
 	/* destbuf = 0x000000FF */
-	#define PREALPHA_MID destbuf.vec = simde_mm256_mullo_epi32(destbuf.vec, consdat[2].vec);
+	#define PREALPHA_MID destbuf.vec = simde_mm256_mullo_epi32(destbuf.vec, V00010101);
 	/* destbuf = 0x00FFFFFF */
 
 	#define PREMULTIPLY PREALPHA PREALPHA_MID\
 	srcAbuf.vec = sex_mm256_bimulhi_epu8(srcAbuf.vec, destbuf.vec);\
-	srcBbuf.vec = sex_mm256_bimulhi_epu8(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, consdat[5].vec));
+	srcBbuf.vec = sex_mm256_bimulhi_epu8(srcBbuf.vec, simde_mm256_xor_si256(destbuf.vec, VFFFFFFFF));
 
 	switch (mode) {
 	case SR_BLEND_XOR:
 		PREMULTIPLY
 		/* fallthrough */
 	case SR_BLEND_DIRECT_XOR:
-		destbuf.vec = simde_mm256_xor_si256(srcBbuf.vec, simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec));
+		destbuf.vec = simde_mm256_xor_si256(srcBbuf.vec, simde_mm256_and_si256(srcAbuf.vec, V00FFFFFF));
 
 		break;
 	case SR_BLEND_OVERLAY:
 		PREALPHA
-		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, ZEROVEC);
+		destbuf.vec = simde_mm256_cmpgt_epi32(destbuf.vec, V00000000);
 		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec,
-			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, consdat[5].vec), consdat[0].vec));
+			simde_mm256_or_si256(simde_mm256_xor_si256(destbuf.vec, VFFFFFFFF), VFF000000));
 		destbuf.vec = simde_mm256_or_si256(simde_mm256_and_si256(
-			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec), destbuf.vec), srcBbuf.vec);
+			simde_mm256_and_si256(srcAbuf.vec, V00FFFFFF), destbuf.vec), srcBbuf.vec);
 
 		break;
 	case SR_BLEND_ADDITIVE:
 		PREMULTIPLY
 		/* fallthrough */
 	case SR_BLEND_ADDITIVE_PAINT:
-		destbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec);
-		srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec);
-		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, consdat[3].vec);
+		destbuf.vec = simde_mm256_and_si256(srcBbuf.vec, VFF000000);
+		srcAbuf.vec = simde_mm256_and_si256(srcAbuf.vec, V00FFFFFF);
+		srcBbuf.vec = simde_mm256_and_si256(srcBbuf.vec, V00FFFFFF);
 		destbuf.vec = simde_mm256_or_si256 (destbuf.vec, simde_mm256_add_epi8(srcAbuf.vec, srcBbuf.vec));
 
 		break;
@@ -162,18 +155,18 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 
 		break;
 	case SR_BLEND_INVERT_DROP:
-		srcAbuf.vec = simde_mm256_xor_si256(srcAbuf.vec, consdat[5].vec);
+		srcAbuf.vec = simde_mm256_xor_si256(srcAbuf.vec, VFFFFFFFF);
 		/* fallthrough */
 	case SR_BLEND_DROP:
 		destbuf.vec = simde_mm256_or_si256(
-			simde_mm256_and_si256(srcBbuf.vec, consdat[3].vec),
-			simde_mm256_and_si256(srcAbuf.vec, consdat[0].vec));
+			simde_mm256_and_si256(srcBbuf.vec, V00FFFFFF),
+			simde_mm256_and_si256(srcAbuf.vec, VFF000000));
 
 		break;
 	case SR_BLEND_REPLACE_WALPHA_MOD:
 		PREALPHA
 		destbuf.vec = simde_mm256_or_si256(
-			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec),
+			simde_mm256_and_si256(srcAbuf.vec, V00FFFFFF),
 			simde_mm256_slli_epi32(destbuf.vec, 24));
 
 		break;
@@ -190,8 +183,8 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 		break;
 	case SR_BLEND_PAINT:
 		destbuf.vec = simde_mm256_or_si256(
-			simde_mm256_and_si256(srcBbuf.vec, consdat[0].vec),
-			simde_mm256_and_si256(srcAbuf.vec, consdat[3].vec));
+			simde_mm256_and_si256(srcBbuf.vec, VFF000000),
+			simde_mm256_and_si256(srcAbuf.vec, V00FFFFFF));
 
 		break;
 	}
