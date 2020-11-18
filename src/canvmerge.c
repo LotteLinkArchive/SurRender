@@ -22,7 +22,6 @@ typedef union {
 	U32 count;
 } countbuf_t;
 
-
 #define CACHEBYTES 128
 typedef union {
 	pixbuf_t pbfs[CACHEBYTES / sizeof(pixbuf_t)];
@@ -209,14 +208,6 @@ X0 SR_MergeCanvasIntoCanvas(
 {
 	/* This function is a colossal mess, and definitely a work in progress. It's certainly not finished yet. */
 
-<<<<<<< HEAD
-	U16 x, y, z, srcposx, emax, fsub, fstate, isy, idy;
-	U32 sxycchk, cxycchk;
-	pixbuf_t srcAbuf, srcBbuf, destbuf, isxmap, idxmap, isxtmap, idxtmap;
-	
-	/* CLUMPS represents the amount of pixels that can be stored in an AVX-512-compatible vector */
-	#define CLUMPS (sizeof(pixbuf_t) / sizeof(SR_RGBAPixel))
-=======
 	#define CLTYPE localbuf_t
 	#define OBTYPE pixbuf_t
 
@@ -224,7 +215,6 @@ X0 SR_MergeCanvasIntoCanvas(
 	#define CLUMPS (sizeof(CLTYPE) / sizeof(SR_RGBAPixel))
 	#define OBBUFS (sizeof(localbuf_t) / sizeof(pixbuf_t))
 	#define FXLOOP(it) for (it = 0; it < OBBUFS; it++)
->>>>>>> aa83eea540404938b5f9534138e0a35c3566bbe7
 
 	/* emax represents the total number of clumps in each row of the source canvas */
 	U16 emax = ((src_canvas->width + CLUMPS) - 1) / CLUMPS;
@@ -276,17 +266,6 @@ X0 SR_MergeCanvasIntoCanvas(
 			/* We can check if all of the memory regions are contiguous before we write to them, as we
 			 * can save a significant amount of iteration and memory accesses if they are contiguous.
 			 */
-<<<<<<< HEAD
-
-			sxycchk = simde_mm256_extract_epi32(isxtmap.vec, 0);
-			cxycchk = simde_mm256_extract_epi32(idxtmap.vec, 0);
-			#define CONTIGCHK(imap, vc) simde_mm256_testc_si256(\
-				simde_mm256_set1_epi32(vc), imap)
-
-			/* Perform the final stage of the continuity check */
-			if (CONTIGCHK(isxtmap.vec, sxycchk) && CONTIGCHK(idxtmap.vec, cxycchk)) {
-				/* If the addresses ARE continuous, we can move up to 512 bits in a single
-=======
 			#define CONTIGCHK(imap) simde_mm256_testc_si256(simde_mm256_broadcastss_ps(\
 				simde_mm256_castps256_ps128(simde_mm256_castsi256_ps(imap))), imap)
 			U1 contig = true;
@@ -306,7 +285,6 @@ X0 SR_MergeCanvasIntoCanvas(
 			CLTYPE srcAbuf, srcBbuf, destbuf;
 			if (contig) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
->>>>>>> aa83eea540404938b5f9534138e0a35c3566bbe7
 				 * cycle and manipulate them simultaneously, then write them back all in one
 				 * go too. Fast!
 				 */
