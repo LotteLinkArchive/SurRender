@@ -30,72 +30,17 @@ git clone --recurse-submodules -j8 https://git.lotte.link/naphtha/SurRender.git
 cd SurRender*
 
 # Set up the build environment
-# Re-run this step if you suddenly start having issues with autotools after a pull
 git submodule update --init --recursive
-aclocal
-autoconf
-libtoolize
-automake --add-missing
 
-# Update the project and its submodules (This is a VERY GOOD IDEA)
+# Update the project and its submodules (This is a VERY GOOD IDEA - Do this before building every time)
 git pull --recurse-submodules
 
-# IF, AND ONLY IF, YOU GET A WARNING ABOUT DIVERGENT BRANCHES, RUN THIS
-git config pull.rebase false
-
-# Run the configure script in order to get an appropriate Makefile
-./configure
-
-# Perform a clean-build of the project (Fastest output build)
-# For best results, use the latest version of Clang available.
-make CFLAGS='-Ofast -march=native -mtune=native' CC='clang' clean all
-
-# ALTERNATIVELY: Perform a clean-build of the project (Small, compatible and fast build)
-make CFLAGS='-Os -march=core2 -mtune=generic' CC='clang' clean all
-
-# ALTERNATIVELY: Perform a clean-build of the project (Extremely fast, intended for Zen2+)
-make CFLAGS='-Ofast -march=znver2 -mtune=znver2 -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mavx2' CC='clang' clean all
-
-# ALTERNATIVELY: Perform a clean-build of the project (Debug build)
-make CFLAGS='-g -Og' CC='clang' clean all
+# Create a dev/debug build of the project - Requires Clang
+./devbuild.sh
 
 # Run the demo, if you'd like
-./tools/surdemo
-
-# Install SurRender?
-# TODO: Explain this step more!
-make install
+./bin/tools/surdemo
 ```
-
-**Note**: It is recommended to use [Clang](https://clang.llvm.org/) rather  than [GCC](https://gcc.gnu.org/), primarly because it seems like Clang is far better at optimizing vector-related code (of which SurRender uses quite heavily) than GCC is. You will see bigger benefits depending on how many vector instructions your processor supports. Although SurRender has not been tested on an ARM processor, ARM NEON looks like it could offer some extremely large performance benefits for SurRender.
-
-**Note**: In order to use Clang, simply install it and feed `CC='clang'` into `./configure` or `make` as an argument, as demonstrated above.
-
-**Note**: If you're wondering why Clang is better for vector operations, take a look at an assembly output example [like this](https://godbolt.org/z/4f6eP6). It just seems like Clang is better at handling non-intrinsic (cross-platform) vector operations in many cases. GCC seems to produce massive amounts of wasted cycles seemingly by accident. GCC especially seems to struggle when performing an arithmetic operation between a vector and a scalar value (Even a literal scalar value). Clang usually handles this with ease, however. They both struggle horribly with examples [like this one](https://godbolt.org/z/We65fn), to the point where neither of them produces particularly efficient code. Things get a lot better if you use vector sizes that are natively supported. If you don't, both compilers still do a pretty good job, but can have accidental breakdowns in certain edge cases.
-
-**Note:** See [this Godbolt demonstration](https://godbolt.org/z/ehbYo3) to see the difference between GCC's implementation of the `SR_MergeCanvasIntoCanvas` function and Clang's implementation of it. You will find the results quite eye-opening! Clang's generated code is faster in almost every section except for the final call to `memcpy`, which probably could've been inlined.
-
-### Using SurRender as a Git submodule
-
-You can add SurRender to your Git repository as a submodule like so...
-```
-git submodule add https://git.lotte.link/naphtha/SurRender <destination_folder>
-```
-*Note: When you add the SurRender submodule, keep in mind that SurRender has its own submodules, which you will need to recursively update/pull/initialize too!*
-
-This will effectively clone SurRender into `<destination_folder>` without breaking anything. Once you've done this, you will need to rewrite the build script of your application to depend on SurRender/automatically initialize and compile it.
-
-Alternatively, you can install `libsurrender.so` to your system via `make install` and link your program against it. Then, you only need to use the header files in the submodule for your application.
-
-The following guides may come in handy:
-* https://devconnected.com/how-to-add-and-update-git-submodules/
-* https://www.gnu.org/software/libtool/manual/html_node/Using-Automake.html
-* https://autotools.io/index.html
-* https://opensource.com/article/19/7/introduction-gnu-autotools
-* https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install
-* https://www.gnu.org/software/automake/manual/html_node/Libtool-Libraries.html#Libtool-Libraries
-* https://www.gnu.org/software/automake/manual/html_node/A-Library.html
-* https://autotools.io/whosafraid.html
 
 ## Current Dependencies
 
@@ -108,15 +53,15 @@ In order to use SurRender, you'll need a few dependencies.
 ### SurRender itself
 
 * `stb_image.h` from [nothings/stb](https://github.com/nothings/stb) **(bundled with SurRender as a Git submodule)**
+* [simde-everywhere/simde](https://github.com/simd-everywhere/simde) **(bundled with SurRender as a Git submodule)**
 * [naphtha/HolyH](https://git.lotte.link/naphtha/HolyH) **(bundled with SurRender as a Git submodule)**
 
 ### Building
 
-* gcc *OR* clang
-* make
-* autotools
-* libtoolize
+* clang
 * git
+* meson
+* ninja
 
 **Warning**: This has only been tested on Clang 10.0.0+ and GCC 10.2.1+. Be careful what compiler version you use - many old versions lack the necessary vector extensions (and are generally very buggy). For example, if you're using a GNU/Linux distro that isn't particularly good (e.g Ubuntu), you are very likely going to be stuck with stone-age versions of Clang and GCC. At the time of writing, Ubuntu 18.04 provides only Clang version 3.8.1-24 in its respositories, which is incredibly old, and will not compile SurRender. Please use a GNU/Linux distro that isn't terrible, namely one that provides actual up-to-date packages. Try Artix, OpenSUSE, Fedora, Gentoo and anything else that isn't completely terrible.
 
