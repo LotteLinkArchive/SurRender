@@ -277,7 +277,7 @@ X0 SR_MergeCanvasIntoCanvas(
 			#define MBLENDA destbuf.pbfs[obi] = MBLEND(srcAbuf.pbfs[obi], srcBbuf.pbfs[obi]);
 
 			/* Perform the final stage of the continuity check */
-			CLTYPE srcAbuf, srcBbuf, destbuf;
+			CLTYPE srcAbuf, srcBbuf, destbuf = destbuf;
 			if (contig) {
 				/* If the addresses ARE continuous, we can move up to 256 bits in a single
 				 * cycle and manipulate them simultaneously, then write them back all in one
