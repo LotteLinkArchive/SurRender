@@ -192,7 +192,7 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 	return destbuf;
 }
 
-X0 SR_MergeCanvasIntoCanvas(
+__extension__ __attribute__((optimize("unroll-loops"))) X0 SR_MergeCanvasIntoCanvas(
 	SR_Canvas *dest_canvas,
 	SR_Canvas *src_canvas,
 	U16 paste_start_x,
