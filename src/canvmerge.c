@@ -1,5 +1,6 @@
 #include "canvmerge.h"
 #include "colours.h"
+#include "remote_holy.h"
 #include "remote_simde/x86/avx2.h"
 #include <string.h>
 
@@ -61,7 +62,7 @@ const static pixbuf_t fstatelkp2[9] = {
 	{.aU32x8 = {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}}
 };
 
-__extension__ static inline __attribute__((always_inline)) simde__m256i sex_mm256_bimulhi_epu8(
+FORCED_STATIC_INLINE simde__m256i sex_mm256_bimulhi_epu8(
 	simde__m256i a,
 	simde__m256i b)
 {
@@ -99,7 +100,7 @@ __extension__ static inline __attribute__((always_inline)) simde__m256i sex_mm25
 	return ab.w256;
 }
 
-__extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBlend(
+FORCED_STATIC_INLINE pixbuf_t SR_PixbufBlend(
 	pixbuf_t srcAbuf,
 	pixbuf_t srcBbuf,
 	U8 alpha_modifier,
@@ -192,7 +193,7 @@ __extension__ static inline __attribute__((always_inline)) pixbuf_t SR_PixbufBle
 	return destbuf;
 }
 
-__extension__ __attribute__((optimize("unroll-loops"))) X0 SR_MergeCanvasIntoCanvas(
+FORCED_UNROLL X0 SR_MergeCanvasIntoCanvas(
 	SR_Canvas *dest_canvas,
 	SR_Canvas *src_canvas,
 	U16 paste_start_x,

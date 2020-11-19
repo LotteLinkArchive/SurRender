@@ -11,9 +11,6 @@ typedef struct {
 	U32 z;
 } SR_ScreenVertex;
 
-// vertex swapping macro
-#define SWAPVERTEX(x, y) do { SR_ScreenVertex TEMP = x; y = x; x = TEMP; } while (0)
-
 // screen triangle struct
 typedef struct {
 	SR_ScreenVertex vx[3];

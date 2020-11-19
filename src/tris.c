@@ -1,23 +1,29 @@
 #include "tris.h"
+#include "remote_holy.h"
 
-__extension__ static inline __attribute__((always_inline)) X0 Trifill(
+/* This is a private, inlined function. Only the array triangle fill needs to be public. */
+FORCED_STATIC_INLINE X0 Trifill(
 	SR_Canvas *canvas,
 	SR_ScreenTriangle tri)
 {
+	/* TODO: don't do this */
 	#define t0 tri.vx[0]
 	#define t1 tri.vx[1]
 	#define t2 tri.vx[2]
 	
-	// vertex sort by y, t0 at the top, t1 in the middle and t2 on the bottom
-	if (t0.y > t1.y) SWAPVERTEX(t0, t1);
-	if (t0.y > t2.y) SWAPVERTEX(t0, t2);
-	if (t1.y > t2.y) SWAPVERTEX(t1, t2);
+	/* Vertex sort by y, t0 at the top, t1 in the middle and t2 on the bottom */
+	if (t0.y > t1.y) SWAP(t0, t1);
+	if (t0.y > t2.y) SWAP(t0, t2);
+	if (t1.y > t2.y) SWAP(t1, t2);
 	
 	U16 t_height = t2.y - t0.y;
 	
 	for (U16 yy = 0; yy < t_height; yy++)
 	{
-		/* TODO: EXPLAIN THIS */
+		/* TODO: EXPLAIN THIS, DETAILED COMMENTS
+		 * TODO: CLEARER VARIABLE NAMES
+		 * that's about it.
+		 */
 		U8  s_half   = (yy > t1.y - t0.y || t1.y == t0.y);
 		U16 s_height = s_half ? t2.y - t1.y : t1.y - t0.y;
 
@@ -27,16 +33,10 @@ __extension__ static inline __attribute__((always_inline)) X0 Trifill(
 		U16 ax = t0.x + (t2.x - t0.x) * aa;
 		U16 bx = s_half ? t1.x + (t2.x - t1.x) * bb : t0.x + (t1.x - t0.x) * bb;
 
-		U16 a2x;
-		U16 b2x;
-		
-		if (ax > bx) {
-			a2x = bx;
-			b2x = ax;
-		} else {
-			a2x = ax;
-			b2x = bx;
-		}
+		if (ax > bx) SWAP(ax, bx);
+
+		U16 a2x = ax;
+		U16 b2x = bx;
 		
 		for (U16 xx = a2x; xx <= b2x; xx++)
 		{
