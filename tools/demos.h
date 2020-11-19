@@ -1,5 +1,5 @@
 #ifndef SR_DEMO_PROG
-#define SR_DEMO_PROG 0
+#define SR_DEMO_PROG 2
 #endif
 
 #ifdef SR_DEMO_PROG
@@ -53,5 +53,44 @@ SR_MergeCanvasIntoCanvas(&SR_PCANVAS, &monkas, SR_PCANVAS.width - monkas.width, 
 SR_DestroyCanvas(&ball); \
 SR_DestroyCanvas(&logo); \
 SR_DestroyCanvas(&monkas);
+#elif SR_DEMO_PROG == 2 // TriRAS
+#define SR_DEMO_INIT \
+SR_ScreenTriangle grid[] = {\
+	{\
+		.vx = {{.x = 0, .y = 0, .z = 0}, {.x = 0, .y = 32, .z = 0}, {.x = 32, .y = 32, .z = 0}},\
+		.colour = {.whole = 0xFFFF00FF}\
+	},\
+	{\
+		.vx = {{.x = 0, .y = 0, .z = 0}, {.x = 32, .y = 0, .z = 0}, {.x = 32, .y = 32, .z = 0}},\
+		.colour = {.whole = 0xFFAAAAAA}\
+	},\
+	{\
+		.vx = {{.x = 0, .y = 32, .z = 0}, {.x = 0, .y = 64, .z = 0}, {.x = 32, .y = 64, .z = 0}},\
+		.colour = {.whole = 0xFFFF00FF}\
+	},\
+	{\
+		.vx = {{.x = 0, .y = 32, .z = 0}, {.x = 32, .y = 32, .z = 0}, {.x = 32, .y = 64, .z = 0}},\
+		.colour = {.whole = 0xFFAAAAAA}\
+	},\
+	{\
+		.vx = {{.x = 32, .y = 0, .z = 0}, {.x = 32, .y = 32, .z = 0}, {.x = 64, .y = 32, .z = 0}},\
+		.colour = {.whole = 0xFFFF00FF}\
+	},\
+	{\
+		.vx = {{.x = 32, .y = 0, .z = 0}, {.x = 64, .y = 0, .z = 0}, {.x = 64, .y = 32, .z = 0}},\
+		.colour = {.whole = 0xFFAAAAAA}\
+	},\
+	{\
+		.vx = {{.x = 32, .y = 32, .z = 0}, {.x = 32, .y = 64, .z = 0}, {.x = 64, .y = 64, .z = 0}},\
+		.colour = {.whole = 0xFFFF00FF}\
+	},\
+	{\
+		.vx = {{.x = 32, .y = 32, .z = 0}, {.x = 64, .y = 32, .z = 0}, {.x = 64, .y = 64, .z = 0}},\
+		.colour = {.whole = 0xFFAAAAAA}\
+	}\
+};
+#define SR_DEMO_LOOP \
+SR_RenderTris(&SR_PCANVAS, &grid, 8);
+#define SR_DEMO_CLRF
 #endif
 #endif
