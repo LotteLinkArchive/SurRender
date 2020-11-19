@@ -16,16 +16,9 @@ typedef struct {
 
 // screen triangle struct
 typedef struct {
-	SR_ScreenVertex v0;
-	SR_ScreenVertex v1;
-	SR_ScreenVertex v2;
+	SR_ScreenVertex vx[3];
 	SR_RGBAPixel colour;
 } SR_ScreenTriangle;
-
-// triangle rasterizer, takes a triangle and rasterizes to a specified canvas
-X0 Trifill(
-	SR_Canvas *canvas,
-	SR_ScreenTriangle tri);
 
 // iterates over an array of tris and draws them all
 X0 SR_RenderTris(
