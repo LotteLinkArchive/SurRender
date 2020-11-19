@@ -1,3 +1,5 @@
+#ifndef SURTRI_HEADER_FILE
+#define SURTRI_HEADER_FILE
 #include "glbl.h"
 #include "canvas.h"
 #include "colours.h"
@@ -30,3 +32,4 @@ X0 SR_RenderTris(
 	SR_Canvas *canvas,
 	SR_ScreenTriangle *trilist,
 	U32 list_length);
+#endif
