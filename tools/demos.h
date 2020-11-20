@@ -100,6 +100,7 @@ SR_ScreenTriangle cube[] = {\
 	}\
 };
 #define SR_DEMO_LOOP \
+SR_EraseCanvDepth(&SR_PCANVAS, 0x00);\
 SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&grid, 8);\
 SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&cube, 2);
 #define SR_DEMO_CLRF
