@@ -1,5 +1,4 @@
 #include "tris.h"
-#include "remote_holy.h"
 
 /* This is a private, inlined function. Only the array triangle fill needs to be public. */
 FORCED_STATIC_INLINE X0 Trifill(
