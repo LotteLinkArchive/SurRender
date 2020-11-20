@@ -33,11 +33,8 @@ FORCED_STATIC_INLINE X0 Trifill(
 		U16 bx = s_half ? t1.x + (t2.x - t1.x) * bb : t0.x + (t1.x - t0.x) * bb;
 
 		if (ax > bx) SWAP(ax, bx);
-
-		U16 a2x = ax;
-		U16 b2x = bx;
 		
-		for (U16 xx = a2x; xx < b2x; xx++)
+		for (U16 xx = ax; xx < bx; xx++)
 		{
 			/* TODO: compare z value to depth buffer and such */
 			SR_CanvasSetPixel(canvas, xx, t0.y + yy, tri.colour);
