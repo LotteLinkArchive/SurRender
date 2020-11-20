@@ -54,5 +54,8 @@ X0 SR_RenderTris(
 	SR_ScreenTriangle *trilist,
 	U32 list_length)
 {
+	SR_Canvas z_buffer = SR_RefCanvDepth(canvas, 0, 0,
+		canvas->width, canvas->height, false);
 	for (U32 i = 0; i < list_length; i++) Trifill(canvas, trilist[i]);
+	SR_DestroyCanvas(z_buffer);
 }
