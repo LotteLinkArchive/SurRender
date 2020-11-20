@@ -88,9 +88,20 @@ SR_ScreenTriangle grid[] = {\
 		.vx = {{.x = 32, .y = 32, .z = 0}, {.x = 64, .y = 32, .z = 0}, {.x = 64, .y = 64, .z = 0}},\
 		.colour = {.whole = 0xFFAAAAAA}\
 	}\
+};\
+SR_ScreenTriangle cube[] = {\
+	{\
+		.vx = {{.x = 64, .y = 0, .z = 0}, {.x = 128, .y = 0, .z = 0}, {.x = 64, .y = 64, .z = 64}},\
+		.colour = {.whole = 0xFF0000FF}\
+	},\
+	{\
+		.vx = {{.x = 64, .y = 64, .z = 0}, {.x = 128, .y = 64, .z = 0}, {.x = 64, .y = 0, .z = 64}},\
+		.colour = {.whole = 0xFF00FF00}\
+	}\
 };
 #define SR_DEMO_LOOP \
-SR_RenderTris(&SR_PCANVAS, &grid, 8);
+SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&grid, 8);\
+SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&cube, 2);
 #define SR_DEMO_CLRF
 #endif
 #endif
