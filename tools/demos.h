@@ -1,3 +1,5 @@
+#include "../libs/holyh/src/holy.h"
+
 #ifndef SR_DEMO_PROG
 #define SR_DEMO_PROG 2
 #endif
@@ -89,7 +91,7 @@ SR_ScreenTriangle grid[] = {\
 		.colour = {.whole = 0xFFAAAAAA}\
 	}\
 };\
-SR_ScreenTriangle cube[] = {\
+SR_ScreenTriangle intersect[] = {\
 	{\
 		.vx = {{.x = 64, .y = 0, .z = 0}, {.x = 128, .y = 0, .z = 0}, {.x = 64, .y = 64, .z = 64}},\
 		.colour = {.whole = 0xFF0000FF}\
@@ -98,11 +100,35 @@ SR_ScreenTriangle cube[] = {\
 		.vx = {{.x = 64, .y = 64, .z = 0}, {.x = 128, .y = 64, .z = 0}, {.x = 64, .y = 0, .z = 64}},\
 		.colour = {.whole = 0xFF00FF00}\
 	}\
-};
+};\
+SR_ScreenTriangle coverup[] = {\
+	{\
+		.vx = {{.x = 0, .y = 192, .z = 1}, {.x = 128, .y = 64, .z = 1}, {.x = 128, .y = 192, .z = 1}},\
+		.colour = {.whole = 0xFFFF0000}\
+	},\
+	{\
+		.vx = {{.x = 0, .y = 64, .z = 0}, {.x = 0, .y = 192, .z = 0}, {.x = 128, .y = 192, .z = 0}},\
+		.colour = {.whole = 0xFF0000FF}\
+	}\
+};\
+SR_ScreenTriangle background[] = {\
+	{\
+		.vx = {{.x = 0, .y = 0, .z = 0}, {.x = 0, .y = SR_PCANVAS.height, .z = 0}, {.x = SR_PCANVAS.width, .y = SR_PCANVAS.height, .z = 0}},\
+		.colour = {.whole = 0xFF000000}\
+	},\
+	{\
+		.vx = {{.x = SR_PCANVAS.width, .y = 0, .z = 0}, {.x = 0, .y = 0, .z = 0}, {.x = SR_PCANVAS.width, .y = SR_PCANVAS.height, .z = 0}},\
+		.colour = {.whole = 0xFF000000}\
+	}\
+};\
+U8 framecount = 0;
 #define SR_DEMO_LOOP \
 SR_EraseCanvDepth(&SR_PCANVAS, 0x00);\
+SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&background, 2);\
 SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&grid, 8);\
-SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&cube, 2);
+SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&intersect, 2);\
+coverup[0].vx[0].y = 64 + ((framecount++) % 128);\
+SR_RenderTris(&SR_PCANVAS, (SR_ScreenTriangle *)&coverup, 2);
 #define SR_DEMO_CLRF
 #endif
 #endif
