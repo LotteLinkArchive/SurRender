@@ -1,4 +1,5 @@
 #include "tris.h"
+#include "canvas.h"
 
 /* This is a private, inlined function. Only the array triangle fill needs to be public. */
 FORCED_STATIC_INLINE X0 Trifill(
@@ -18,6 +19,13 @@ FORCED_STATIC_INLINE X0 Trifill(
 	
 	U16 t_height = t2.y - t0.y;
 	
+	I32 normal_x = ((I32)t1.y - (I32)t0.y) * (t2.z - t0.z);
+	normal_x -= (t1.z - t0.z) * ((I32)t2.y - (I32)t0.y);
+	I32 normal_y = (t1.z - t0.z) * ((I32)t2.x - (I32)t0.x);
+	normal_y -= ((I32)t1.x - (I32)t0.x) * (t2.z - t0.z);
+	I32 normal_z = ((I32)t1.x - (I32)t0.x) * ((I32)t2.y - (I32)t0.y);
+	normal_z -= ((I32)t1.y - (I32)t0.y) * ((I32)t2.x - (I32)t0.x);
+
 	for (U16 yy = 0; yy < t_height; yy++)
 	{
 		/* TODO: EXPLAIN THIS, DETAILED COMMENTS
@@ -35,25 +43,27 @@ FORCED_STATIC_INLINE X0 Trifill(
 
 		if (ax > bx) SWAP(ax, bx);
 		
+		/* Correct the Y value for data height, clipping height and Y clipping distance */
+		U16 ycorrected = SR_AxisPositionCRCTRM(canvas->rheight, canvas->cheight, yy + t0.y, canvas->yclip);
+
 		for (U16 xx = ax; xx < bx; xx++)
 		{
-			/* interpolate z by plane equation */
-			/* using I16 here, worried that vertices with large z wont fit */
-			I16 normal_x = ((I16)t1.y - (I16)t0.y) * ((I16)t2.z - (I16)t0.z);
-			normal_x -= ((I16)t1.z - (I16)t0.z) * ((I16)t2.y - (I16)t0.y);
-			I16 normal_y = ((I16)t1.z - (I16)t0.z) * ((I16)t2.x - (I16)t0.x);
-			normal_y -= ((I16)t1.x - (I16)t0.x) * ((I16)t2.z - (I16)t0.z);
-			I16 normal_z = ((I16)t1.x - (I16)t0.x) * ((I16)t2.y - (I16)t0.y);
-			normal_z -= ((I16)t1.y - (I16)t0.y) * ((I16)t2.x - (I16)t0.x);
-			U32 zz = (U32)(t0.z);
-			zz -= (U32)(
-				(normal_x * ((I16)xx - (I16)t0.x) + normal_y * (I16)(yy)) /
-				normal_z);
-			if (SR_CanvasGetPixel(zbuf, xx, yy + t0.y).whole <= zz) {
-				SR_RGBAPixel new_z = SR_CreateRGBA(0,0,0,0);
-				new_z.whole = zz;
-				SR_CanvasSetPixel(zbuf, xx, yy + t0.y, new_z);
-				SR_CanvasSetPixel(canvas, xx, t0.y + yy, tri.colour);
+			/* Correct the X value for data width, cipping width and X clipping distance,
+			 * then turn the corrected X and Y values into an array index for the pixel array.
+			 */
+			U32 gindex = SR_CombnAxisPosCalcXY(canvas, SR_AxisPositionCRCTRM(
+				canvas->rwidth, canvas->cwidth, xx, canvas->xclip), ycorrected);
+
+			/* Calculcate the Z position of this pixel. */
+			U32 zz = (U32)(t0.z) - (U32)(
+				(normal_x * ((I32)xx - (I32)t0.x) + normal_y * (I32)(yy)) / normal_z);
+
+			if (zbuf->pixels[gindex].whole <= zz) {
+				/* Update the Z buffer */
+				zbuf->pixels[gindex].whole = zz;
+
+				/* Set the colour of the destination pixel. */
+				canvas->pixels[gindex] = tri.colour;
 			}
 		}
 	}

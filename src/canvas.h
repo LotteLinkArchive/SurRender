@@ -163,7 +163,7 @@ extern U1  modlut_complete   [SR_MXCS_P1];
 /* Calculate the in-memory (or 1 dimensional) position of a pixel in the canvas based on its X and Y coordinates. */
 #define SR_AxisPositionCRCTRM(a, b, c, d) (modlut[(a)][\
 	(modlut[(b)][(c) & SR_MAX_CANVAS_SIZE] + (d)) & SR_MAX_CANVAS_SIZE])
-#define SR_CombnAxisPosCalcXY(canvas, x, y) (x) + (U32)((canvas)->rwidth * y)
+#define SR_CombnAxisPosCalcXY(canvas, x, y) ((U32)x) + (U32)((canvas)->rwidth * (U32)(y))
 #define SR_CanvasCalcPosition(canvas, x, y) SR_CombnAxisPosCalcXY((canvas), \
 	SR_AxisPositionCRCTRM((canvas)->rwidth, (canvas)->cwidth, (x), (canvas)->xclip), \
 	SR_AxisPositionCRCTRM((canvas)->rheight, (canvas)->cheight, (y), (canvas)->yclip))

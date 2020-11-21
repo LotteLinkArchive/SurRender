@@ -8,7 +8,7 @@
 typedef struct {
 	U16 x;
 	U16 y;
-	U32 z;
+	I32 z;
 } SR_ScreenVertex;
 
 /* screen triangle struct */
