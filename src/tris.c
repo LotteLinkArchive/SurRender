@@ -1,6 +1,5 @@
 #include "tris.h"
 #include "canvas.h"
-#include <omp.h>
 
 /* This is a private, inlined function. Only the array triangle fill needs to be public. */
 FORCED_STATIC_INLINE X0 Trifill(
@@ -47,7 +46,6 @@ FORCED_STATIC_INLINE X0 Trifill(
 		/* Correct the Y value for data height, clipping height and Y clipping distance */
 		U16 ycorrected = SR_AxisPositionCRCTRM(canvas->rheight, canvas->cheight, yy + t0.y, canvas->yclip);
 
-		#pragma omp simd
 		for (U16 xx = ax; xx < bx; xx++)
 		{
 			/* Correct the X value for data width, cipping width and X clipping distance,
