@@ -49,7 +49,7 @@ FORCED_STATIC_INLINE X0 Trifill(
 			zz -= (U32)(
 				(normal_x * ((I16)xx - (I16)t0.x) + normal_y * (I16)(yy)) /
 				normal_z);
-			if (SR_CanvasGetPixel(zbuf, xx, yy + t0.y).whole < zz) {
+			if (SR_CanvasGetPixel(zbuf, xx, yy + t0.y).whole <= zz) {
 				SR_RGBAPixel new_z = SR_CreateRGBA(0,0,0,0);
 				new_z.whole = zz;
 				SR_CanvasSetPixel(zbuf, xx, yy + t0.y, new_z);
